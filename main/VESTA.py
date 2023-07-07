@@ -42,17 +42,17 @@ init(project_dir)
 
 # part1 static analysis
 
-def dfs(call_graph, target_func, call_tree, visited):
+def dfs(call_graph, target_func, call_tree, visited, static_result):
     visited.add(target_func)
     if target_func not in call_graph:
-        print(call_tree)
+        static_result.append("[{}]".format(", ".join(str(x) for x in call_tree)))
         return
     for callee in call_graph[target_func]:
         call_tree.append(callee)
         if callee not in visited:
-            dfs(call_graph, callee, call_tree, visited)
+            dfs(call_graph, callee, call_tree, visited, static_result)
         else:
-            print(call_tree)
+            static_result.append("[{}]".format(", ".join(str(x) for x in call_tree)))
             call_tree.pop()
             return
         call_tree.pop()
@@ -87,11 +87,12 @@ for jar_file in jar_files:
         visited = set()
         call_tree = []
         call_tree.append(vul_function_name)
-        dfs(static_callgraph, vul_function_name, call_tree, visited)
+        static_result = []
+        dfs(static_callgraph, vul_function_name, call_tree, visited, static_result)
         
+        with open(f'{result_directory}/callResult-{jar_file.split("/")[-1]}.txt', 'w') as f:
+             f.write("[{}]".format(", ".join(str(x) for x in static_result)))
         
-        
-
 
 # part2 test generation
 
