@@ -1,6 +1,7 @@
 import sys
 import os
 import glob
+import re
 
 # part0 init project
 def init(project_dir):
@@ -41,7 +42,6 @@ init(project_dir)
 
 
 # part1 static analysis
-
 def dfs(call_graph, target_func, call_tree, visited, static_result):
     visited.add(target_func)
     if target_func not in call_graph:
@@ -56,7 +56,6 @@ def dfs(call_graph, target_func, call_tree, visited, static_result):
             call_tree.pop()
             return
         call_tree.pop()
-    
                 
 #create result dir
 result_directory = f'{project_dir}/result/{cve_number}/{parent_name}'
@@ -97,10 +96,69 @@ for jar_file in jar_files:
 # part2 test generation
 
 
+#get dependency dir
+# def get_package_position(project_name):
+#     total_dir = f"{project_dir}/resource/{cve_number}/{parent_name}"
+#     target_dir = f"{project_dir}/resource/{cve_number}/{child_name}"
+#     command = f"mvn -f {target_dir} dependency:build-classpath  -DincludeScope=compile"
+#     command_result = os.popen(command).read()
+    
+#     command = f"mvn -f {total_dir} dependency:build-classpath  -DincludeScope=compile"
+#     command_result_total = os.popen(command).read()
+    
+#     pattern = r'Dependencies classpath:\n(.*)\n'
+#     match = re.search(pattern, command_result)
+#     match_total = re.search(pattern, command_result_total)
+#     if not match:
+#         raise ValueError('无法解析依赖路径')
+#     path = match.group(1).replace('\\', '/')
+#     # path += ":"
+#     # path+= match_total.group(1).replace('\\', '/') 
+    
+#     return path
+
+# package_postion = get_package_position(child_name)
+# elements = package_postion.split(":")
+# result = ""
+# for element in elements:
+#     # 从右侧查找第一个出现的/或.字符
+#     slash_index = element.rfind("/")
+#     dot_index = element.rfind(".")
+    
+#     # 如果找到了/或.字符
+#     if slash_index != -1 or dot_index != -1:
+#         # 获取/或.字符右侧的子字符串
+#         if slash_index > dot_index:
+#             extension = element[slash_index:]
+#         else:
+#             extension = element[dot_index:]
+        
+#         # 如果子字符串为.jar或/，则保留它
+#         if extension == ".jar" or extension == "/":
+#             result += element + ":"
+#     else:
+#         result += element + ":"
+
+# # 删除最后一个冒号
+# if result.endswith(":"):
+#     result = result[:-1]
+
+# package_postion = result
+
+# generation_command = f"$EVOSUITE  -class org.superbiz.moviefun.utils.TokenUtil -projectCP {project_dir}/resource/{cve_number}/{child_name}/target/classes:{package_postion}"
+# print(generation_command)
+# generation_command_result = os.popen(generation_command).read()
+
+#get dependency dir (You need to change the RUN.sh)
+generation_command_dir = f'{project_dir}/resource/{cve_number}/{parent_name}/RUN.sh'
+generation_command = f'bash {generation_command_dir}'
+generation_command_result = os.popen(generation_command).read()
 
 
-# part3 instrument
+# part3 test migration
+
 
 
 
 # part4 migration and vulnerability catch
+
