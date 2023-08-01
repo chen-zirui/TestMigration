@@ -1,0 +1,6 @@
++0xF
+1
+18
+com/fr/chain/utils/NumberUtil
+createNumber
+java.lang.String

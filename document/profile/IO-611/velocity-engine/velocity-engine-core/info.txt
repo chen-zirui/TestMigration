@@ -1,0 +1,5 @@
+//foo//./bar
+2
+18
+org/apache/velocity/runtime/resource/loader/JarResourceLoader
+getResourceReader

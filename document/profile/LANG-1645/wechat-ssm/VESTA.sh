@@ -1,0 +1,2 @@
+export NOW_DIR=/****/TestMigration/resource/LANG-1645/wechat-ssm
+$PYTHON $PROJECT_DIR/main/VESTA.py LANG-1645 wechat-ssm wechat-ssm "org.apache.commons.lang3.math.NumberUtils:createNumber(java.lang.String)" springboot-ssm-0.0.1-SNAPSHOT.jar NumberFormatException

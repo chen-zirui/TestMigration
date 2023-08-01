@@ -1,0 +1,276 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.esri.geoportal</groupId>
+  <artifactId>geoportal</artifactId>
+  <packaging>war</packaging>
+  <version>2.6.3-SNAPSHOT</version>
+  <name>GeoportalServer</name>
+  <url>http://maven.apache.org</url>
+  
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <log4j.version>2.12.0</log4j.version>
+    <springframework.version>5.1.8.RELEASE</springframework.version>
+    <springsecurity.version>5.1.5.RELEASE</springsecurity.version>
+    <jackson.version>2.9.9</jackson.version>
+  </properties>
+
+	<repositories>
+		<repository>
+			<id>elasticsearch-releases</id>
+			<url>https://artifacts.elastic.co/maven</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+   
+  <dependencies>
+
+    <!-- servlet api -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+      <scope>provided</scope>
+    </dependency>
+  
+    <!-- log4j / jcl / slf4j -->    
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-api</artifactId>
+			<version>${log4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>${log4j.version}</version>
+		</dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-jcl</artifactId>
+      <version>${log4j.version}</version>
+    </dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
+			<version>${log4j.version}</version>
+		</dependency>
+    
+    <!-- json -->
+    <dependency>
+      <groupId>org.glassfish</groupId>
+      <artifactId>javax.json</artifactId>
+      <version>1.1.4</version>
+    </dependency>
+    
+    <!-- jax-rs, jersey -->
+    <dependency>
+      <groupId>javax.ws.rs</groupId>
+      <artifactId>javax.ws.rs-api</artifactId>
+      <version>2.1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.containers</groupId>
+      <!-- if your container implements Servlet API older than 3.0, use "jersey-container-servlet-core" -->
+      <artifactId>jersey-container-servlet</artifactId>
+      <version>2.22.1</version>
+    </dependency>
+
+    <!-- Jetty servlet proxy -->
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-proxy</artifactId>
+      <version>9.4.19.v20190610</version>
+    </dependency>
+    
+    <!-- Elasticsearch -->
+    <dependency>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>x-pack-transport</artifactId>
+      <version>5.1.1</version>
+    </dependency>
+    
+    <!-- Spring -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+      <version>${springframework.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+      <version>${springframework.version}</version>
+    </dependency> 
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-webmvc</artifactId>
+      <version>${springframework.version}</version>
+    </dependency>
+ 
+    <!-- Spring Security -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-web</artifactId>
+      <version>${springsecurity.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-config</artifactId>
+      <version>${springsecurity.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-ldap</artifactId>
+      <version>${springsecurity.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security.oauth</groupId>
+      <artifactId>spring-security-oauth2</artifactId>
+      <version>2.3.6.RELEASE</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-jwt</artifactId>
+      <version>1.0.10.RELEASE</version>
+    </dependency>
+    
+    <!-- for spring mvc -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    
+    <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
+    <dependency>
+      <groupId>commons-cli</groupId>
+      <artifactId>commons-cli</artifactId>
+      <version>1.4</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-text -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>1.7</version>
+    </dependency>
+    
+    <!-- https://mvnrepository.com/artifact/net.sourceforge.saxon/saxon License MPL
+      If you have a bug in a transform, try enabling this library
+       mvn clean package
+       -->
+  <!--    <dependency>
+         <groupId>net.sourceforge.saxon</groupId>
+         <artifactId>saxon</artifactId>
+         <version>9.1.0.8</version>
+       </dependency>
+-->
+  </dependencies> 
+  
+  <build>
+    <finalName>geoportal</finalName>
+    <!-- <sourceDirectory>src</sourceDirectory> -->
+		<resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+		  <resource>
+		    <directory>../geoportal-search/src/main/resources</directory>
+		    <includes>
+		      <include>gs/**</include>
+		    </includes>
+		  </resource>
+		</resources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.1</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.1.2</version>
+        <configuration>
+          <includes>
+            <include>com/**</include>
+          </includes>
+        </configuration>
+        <executions>
+          <execution>
+            <id>geoportal-jar</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>test</phase>
+            <configuration>
+              <tasks>
+                <!--<echo>Ant copy ${project.build.directory}/geoportal.jar to ${project.build.directory}/geoportal/WEB-INF/lib/geoportal.jar</echo>-->
+                <copy overwrite="true" file="${project.build.directory}/geoportal.jar" 
+                  tofile="${project.build.directory}/geoportal/WEB-INF/lib/geoportal.jar" />
+                <copy toDir="${project.build.directory}/geoportal/viewer/widgets/GeoportalSearch/gs">
+                  <fileset dir="../geoportal-search/src/main/resources/gs"/>
+                </copy>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>   
+      <plugin>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>3.2.3</version>
+        <configuration>
+          <warSourceDirectory>src/main/webapp</warSourceDirectory>
+          <failOnMissingWebXml>false</failOnMissingWebXml>
+          <packagingExcludes>WEB-INF/classes/com/**</packagingExcludes>
+          <!-- 
+          <webResources>
+            <resource>
+              <directory>../geoportal-search/src/main/resources</directory>
+              <include>gs/**</include>
+            </resource>
+          </webResources>
+          -->
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  
+</project>

@@ -1,0 +1,2 @@
+export NOW_DIR=/****/TestMigration/resource/Zip-263/easy-sword2-dans-examples-master
+$PYTHON $PROJECT_DIR/main/VESTA.py Zip-263 easy-sword2-dans-examples-master easy-sword2-dans-examples-master "net.lingala.zip4j.ZipFile:<init>(java.io.File)" easy-sword2-dans-examples-1.1.0-SNAPSHOT.jar manual

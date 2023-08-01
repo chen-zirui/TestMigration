@@ -1,0 +1,2 @@
+export NOW_DIR=/****/TestMigration/resource/LANG-1484/jjdz7-drony-refactor/Web
+$PYTHON $PROJECT_DIR/main/VESTA.py LANG-1484 jjdz7-drony-refactor Web "org.apache.commons.lang3.math.NumberUtils:isParsable(java.lang.String)" LibrisWeb.war manual

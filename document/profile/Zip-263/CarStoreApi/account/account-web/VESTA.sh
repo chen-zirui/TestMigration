@@ -1,0 +1,2 @@
+export NOW_DIR=/****/TestMigration/resource/Zip-263/CarStoreApi/account/account-web
+$PYTHON $PROJECT_DIR/main/VESTA.py Zip-263 CarStoreApi account/account-web "net.lingala.zip4j.ZipFile:<init>(java.io.File)" account.jar manual

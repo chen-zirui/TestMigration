@@ -1,0 +1,5 @@
+//foo//./bar
+2
+18
+soj/util/FileReader
+<init>

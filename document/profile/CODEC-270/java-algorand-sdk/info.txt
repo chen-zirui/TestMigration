@@ -1,0 +1,6 @@
+AB==
+3
+18
+com/algorand/algosdk/templates/HTLC
+MakeHTLC
+java.lang.String

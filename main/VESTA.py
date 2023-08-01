@@ -107,7 +107,7 @@ projectCP = projectCP.replace("data0","data1")
 
 
 # target_function_information = "com.esri.geoportal.base.util:unescapeNunmericEntity(java.lang.String)".split(', ')[-1][0:-1]
-target_function_information = static_result[-1].split(', ')[-1][0:-1]
+target_function_information = static_result[0].split(', ')[-1][0:-1]
 if( 'main' in target_function_information):                         
     target_function_information = static_result[-1].split(', ')[-2]
 target_class_name = target_function_information.split(':')[0]

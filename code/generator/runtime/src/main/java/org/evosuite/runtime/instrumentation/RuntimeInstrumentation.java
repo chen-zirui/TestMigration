@@ -168,9 +168,6 @@ public class RuntimeInstrumentation {
 		reader.accept(cn, readFlags);
 		
 
-		///superbiz/moviefun/utils/TokenUtil，of
-		//找到目标函数
-
 		String fileDir = System.getenv("NOW_DIR")+"/info.txt";
 		String poc = "";
 		String methodName = "";
@@ -195,7 +192,6 @@ public class RuntimeInstrumentation {
 		List<MethodNode> methods = cn.methods;
 		for (MethodNode method : methods) {
 			targetMethod = method;
-			// 定位指令位置
 			AbstractInsnNode tokenUtilInsn = null;
 			InsnList instructions = targetMethod.instructions;
 			for (AbstractInsnNode insn = instructions.getFirst(); insn != null; insn = insn.getNext()) {
@@ -208,7 +204,6 @@ public class RuntimeInstrumentation {
 				}
 			}
 			if (tokenUtilInsn != null) {
-				// 创建要插入的指令序列
 				InsnList beforeInsnList = new InsnList();
 				AbstractInsnNode prevInsn = null;
 				prevInsn = tokenUtilInsn.getPrevious();
@@ -224,37 +219,34 @@ public class RuntimeInstrumentation {
 				}
 				
 
-				if (prevInsn != null && (  prevInsn.getOpcode() == typecode) ) {   //这里逻辑很奇怪
+				if (prevInsn != null && (  prevInsn.getOpcode() == typecode) ) {   
 
 					
 					System.out.println("parameter type is"+parameterType);
 					logger.info("parameter type is"+parameterType);
 
-					if(parameterType.contains("File")){                           //规则-filetype
+					if(parameterType.contains("File")){                         
 						System.out.println("Files!!!");
 						logger.info("Files!!!");
 
 						LdcInsnNode newLdcInsn = new LdcInsnNode(new File(poc));
-						// 使用新的 LdcInsnNode 替换原来的
+						
 						instructions.insert(prevInsn, newLdcInsn);
 						instructions.remove(prevInsn);
 					}
-					if(parameterType.contains("java.lang.String[]")){            //string-string[]
+					if(parameterType.contains("java.lang.String[]")){           
 						String[] stringArray0 = new String[6];
 						stringArray0[0] = poc;
-						// LdcInsnNode newLdcInsn = new LdcInsnNode(stringArray0);
-						// // 使用新的 LdcInsnNode 替换原来的
-						// instructions.insert(prevInsn, newLdcInsn);
-						// instructions.remove(prevInsn);
+						
 					}
 					else{
 						LdcInsnNode newLdcInsn = new LdcInsnNode(poc);
-						// 使用新的 LdcInsnNode 替换原来的
+						
 						instructions.insert(prevInsn, newLdcInsn);
 						instructions.remove(prevInsn);
 					}
 				}
-				// 将指令序列插入到目标函数的指令列表中
+				
 				instructions.insertBefore(tokenUtilInsn, beforeInsnList);
 			}
 		}

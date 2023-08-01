@@ -1,0 +1,6 @@
+100.
+1
+18
+com/korpodrony/validation/Validator
+validateInteger
+java.lang.String
