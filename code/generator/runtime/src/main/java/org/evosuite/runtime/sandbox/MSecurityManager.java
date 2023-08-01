@@ -486,7 +486,8 @@ public class MSecurityManager extends SecurityManager {
 	 */
 	private boolean allowPermission(Permission perm) {
 
-		if (RuntimeSettings.sandboxMode.equals(Sandbox.SandboxMode.OFF)) {
+		// if (RuntimeSettings.sandboxMode.equals(Sandbox.SandboxMode.OFF)) {
+		if (true){
 			/*
 			 * allow everything
 			 */

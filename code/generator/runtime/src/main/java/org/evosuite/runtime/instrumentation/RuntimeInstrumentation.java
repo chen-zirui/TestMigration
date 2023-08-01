@@ -24,10 +24,31 @@ import org.evosuite.runtime.util.ComputeClassWriter;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.AnalyzerAdapter;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.InsnList;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.lang.reflect.Constructor;
 
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.NotFoundException;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -40,6 +61,7 @@ import java.util.List;
  *
  * Created by arcuri on 6/11/14.
  */
+
 public class RuntimeInstrumentation {
 
 	private static Logger logger = LoggerFactory.getLogger(RuntimeInstrumentation.class);
@@ -144,7 +166,100 @@ public class RuntimeInstrumentation {
 
 		int readFlags = ClassReader.SKIP_FRAMES;
 		reader.accept(cn, readFlags);
+		
 
+		///superbiz/moviefun/utils/TokenUtil，of
+		//找到目标函数
+
+		String fileDir = System.getenv("NOW_DIR")+"/info.txt";
+		String poc = "";
+		String methodName = "";
+		String InsnName = "";
+		int position = 0;
+		int typecode = 0;
+		String parameterType = "";
+		
+		
+		try (BufferedReader fileReader = new BufferedReader(new FileReader(fileDir))) {
+			poc = fileReader.readLine();
+			position = Integer.valueOf(fileReader.readLine());
+			typecode = Integer.valueOf(fileReader.readLine());
+            methodName = fileReader.readLine();
+            InsnName = fileReader.readLine();
+			parameterType = fileReader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+		MethodNode targetMethod = null;
+		List<MethodNode> methods = cn.methods;
+		for (MethodNode method : methods) {
+			targetMethod = method;
+			// 定位指令位置
+			AbstractInsnNode tokenUtilInsn = null;
+			InsnList instructions = targetMethod.instructions;
+			for (AbstractInsnNode insn = instructions.getFirst(); insn != null; insn = insn.getNext()) {
+				if (insn.getOpcode() == Opcodes.INVOKESTATIC || insn.getOpcode() == Opcodes.INVOKEVIRTUAL || insn.getOpcode() == Opcodes.INVOKESPECIAL) {
+					MethodInsnNode methodInsn = (MethodInsnNode) insn;
+					if (methodInsn.owner.equals(methodName) && methodInsn.name.equals(InsnName)) {
+						tokenUtilInsn = insn;
+						break;
+					}
+				}
+			}
+			if (tokenUtilInsn != null) {
+				// 创建要插入的指令序列
+				InsnList beforeInsnList = new InsnList();
+				AbstractInsnNode prevInsn = null;
+				prevInsn = tokenUtilInsn.getPrevious();
+
+				System.out.println("need"+String.valueOf(prevInsn.getOpcode())); 
+				logger.info("need"+String.valueOf(prevInsn.getOpcode()));
+				
+				//定位
+				for(int i = 0;i<position-1;i++){
+					prevInsn = prevInsn.getPrevious();
+					System.out.println("need"+String.valueOf(prevInsn.getOpcode())); 
+					logger.info("need"+String.valueOf(prevInsn.getOpcode()));
+				}
+				
+
+				if (prevInsn != null && (  prevInsn.getOpcode() == typecode) ) {   //这里逻辑很奇怪
+
+					
+					System.out.println("parameter type is"+parameterType);
+					logger.info("parameter type is"+parameterType);
+
+					if(parameterType.contains("File")){                           //规则-filetype
+						System.out.println("Files!!!");
+						logger.info("Files!!!");
+
+						LdcInsnNode newLdcInsn = new LdcInsnNode(new File(poc));
+						// 使用新的 LdcInsnNode 替换原来的
+						instructions.insert(prevInsn, newLdcInsn);
+						instructions.remove(prevInsn);
+					}
+					if(parameterType.contains("java.lang.String[]")){            //string-string[]
+						String[] stringArray0 = new String[6];
+						stringArray0[0] = poc;
+						// LdcInsnNode newLdcInsn = new LdcInsnNode(stringArray0);
+						// // 使用新的 LdcInsnNode 替换原来的
+						// instructions.insert(prevInsn, newLdcInsn);
+						// instructions.remove(prevInsn);
+					}
+					else{
+						LdcInsnNode newLdcInsn = new LdcInsnNode(poc);
+						// 使用新的 LdcInsnNode 替换原来的
+						instructions.insert(prevInsn, newLdcInsn);
+						instructions.remove(prevInsn);
+					}
+				}
+				// 将指令序列插入到目标函数的指令列表中
+				instructions.insertBefore(tokenUtilInsn, beforeInsnList);
+			}
+		}
+				
+		
 
 		cv = new JSRInlinerClassVisitor(cv);
 

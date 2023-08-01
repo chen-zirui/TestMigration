@@ -37,6 +37,11 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+            <version>2.2.1</version>
+        </dependency>
 
         <dependency>
             <groupId>ch.qos.logback</groupId>
