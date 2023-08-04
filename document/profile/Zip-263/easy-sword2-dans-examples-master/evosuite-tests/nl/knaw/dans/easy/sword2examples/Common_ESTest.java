@@ -158,7 +158,7 @@ public class Common_ESTest extends Common_ESTest_scaffolding {
       
       } catch(IOException e) {
          //
-         // Destination '/data1/ziruichen/TestMigration/resource/Zip-263/easy-sword2-dans-examples-master/target' directory cannot be created
+         // Destination '/****/TestMigration/resource/Zip-263/easy-sword2-dans-examples-master/target' directory cannot be created
          //
          verifyException("org.apache.commons.io.FileUtils", e);
       }
@@ -166,7 +166,7 @@ public class Common_ESTest extends Common_ESTest_scaffolding {
 
   @Test(timeout = 4000)
   public void test11()  throws Throwable  {
-      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/data1/ziruichen/TestMigration/resource/Zip-263/easy-sword2-dans-examples-master/ J");
+      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/****/TestMigration/resource/Zip-263/easy-sword2-dans-examples-master/ J");
       FileSystemHandling.createFolder(evoSuiteFile0);
       MockFile mockFile0 = new MockFile(" J", "");
       File file0 = Common.copyToBagDirectoryInTarget(mockFile0);
@@ -176,7 +176,7 @@ public class Common_ESTest extends Common_ESTest_scaffolding {
       
       } catch(FileNotFoundException e) {
          //
-         // Source '/data1/ziruichen/TestMigration/resource/Zip-263/easy-sword2-dans-examples-master/target/ J' does not exist
+         // Source '/****/TestMigration/resource/Zip-263/easy-sword2-dans-examples-master/target/ J' does not exist
          //
          verifyException("org.apache.commons.io.FileUtils", e);
       }
@@ -231,7 +231,7 @@ public class Common_ESTest extends Common_ESTest_scaffolding {
 
   @Test(timeout = 4000)
   public void test15()  throws Throwable  {
-      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/data1/ziruichen/TestMigration/resource/Zip-263/easy-sword2-dans-examples-master/x-auth-value.txt");
+      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/****/TestMigration/resource/Zip-263/easy-sword2-dans-examples-master/x-auth-value.txt");
       FileSystemHandling.appendStringToFile(evoSuiteFile0, "-;WK.D:D=QpZ7^L/");
       try { 
         Common.trackDeposit((CloseableHttpClient) null, (URI) null);
@@ -300,7 +300,7 @@ public class Common_ESTest extends Common_ESTest_scaffolding {
       
       } catch(RuntimeException e) {
          //
-         // /data1/ziruichen/TestMigration/resource/Zip-263/easy-sword2-dans-examples-master/FAILED/FAILED does not exist
+         // /****/TestMigration/resource/Zip-263/easy-sword2-dans-examples-master/FAILED/FAILED does not exist
          //
          verifyException("gov.loc.repository.bagit.filesystem.FileSystemFactory", e);
       }

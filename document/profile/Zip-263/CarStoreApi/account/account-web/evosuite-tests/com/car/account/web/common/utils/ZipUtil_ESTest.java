@@ -32,7 +32,7 @@ public class ZipUtil_ESTest extends ZipUtil_ESTest_scaffolding {
       
       } catch(IOException e) {
          //
-         // File does not exist: /data1/ziruichen/TestMigration/resource/Zip-263/CarStoreApi/account/account-web/Ng!{d>P3N-%/Ng!{d>P3N-%
+         // File does not exist: /****/TestMigration/resource/Zip-263/CarStoreApi/account/account-web/Ng!{d>P3N-%/Ng!{d>P3N-%
          //
          verifyException("net.lingala.zip4j.util.FileUtils", e);
       }
@@ -181,7 +181,7 @@ public class ZipUtil_ESTest extends ZipUtil_ESTest_scaffolding {
 
   @Test(timeout = 4000)
   public void test13()  throws Throwable  {
-      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/data1/ziruichen/TestMigration/resource/Zip-263/CarStoreApi/account/account-web/V`Z1`SGk-E");
+      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/****/TestMigration/resource/Zip-263/CarStoreApi/account/account-web/V`Z1`SGk-E");
       FileSystemHandling.appendStringToFile(evoSuiteFile0, "net.lingala.zip4j.headers.HeaderWriter");
       MockFile mockFile0 = new MockFile("");
       try { 
@@ -198,7 +198,7 @@ public class ZipUtil_ESTest extends ZipUtil_ESTest_scaffolding {
 
   @Test(timeout = 4000)
   public void test14()  throws Throwable  {
-      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/data1/ziruichen/TestMigration/resource/Zip-263/CarStoreApi/account/account-web/kw.WR99.p[XgFe6oX");
+      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/****/TestMigration/resource/Zip-263/CarStoreApi/account/account-web/kw.WR99.p[XgFe6oX");
       FileSystemHandling.appendLineToFile(evoSuiteFile0, "Nz}[rt&[J");
       ZipUtil.copyFile("kw.WR99.p[XgFe6oX", "Nz}[rt&[J");
   }

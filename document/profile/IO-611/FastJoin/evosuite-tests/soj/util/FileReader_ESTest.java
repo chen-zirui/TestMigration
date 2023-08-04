@@ -30,7 +30,7 @@ public class FileReader_ESTest extends FileReader_ESTest_scaffolding {
 
   @Test(timeout = 4000)
   public void test01()  throws Throwable  {
-      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/data1/ziruichen/TestMigration/resource/IO-611/FastJoin/+");
+      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/****/TestMigration/resource/IO-611/FastJoin/+");
       FileSystemHandling.appendLineToFile(evoSuiteFile0, "*`C");
       FileSystemHandling.shouldThrowIOException(evoSuiteFile0);
       FileReader fileReader0 = new FileReader("+", "j5;a");
@@ -85,7 +85,7 @@ public class FileReader_ESTest extends FileReader_ESTest_scaffolding {
 
   @Test(timeout = 4000)
   public void test05()  throws Throwable  {
-      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/data1/ziruichen/TestMigration/resource/IO-611/FastJoin/+");
+      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/****/TestMigration/resource/IO-611/FastJoin/+");
       FileSystemHandling.appendLineToFile(evoSuiteFile0, "*`C");
       FileReader fileReader0 = new FileReader("+", "j5;0");
       List<String> list0 = fileReader0.readLineAndSplit();
@@ -102,7 +102,7 @@ public class FileReader_ESTest extends FileReader_ESTest_scaffolding {
 
   @Test(timeout = 4000)
   public void test07()  throws Throwable  {
-      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/data1/ziruichen/TestMigration/resource/IO-611/FastJoin/8/Le!#");
+      EvoSuiteFile evoSuiteFile0 = new EvoSuiteFile("/****/TestMigration/resource/IO-611/FastJoin/8/Le!#");
       FileSystemHandling.appendStringToFile(evoSuiteFile0, "k*TV*M_-;%");
       FileReader fileReader0 = new FileReader("8/Le!#", "/W8pTw#lgC;'q8");
       String string0 = fileReader0.readLine();
