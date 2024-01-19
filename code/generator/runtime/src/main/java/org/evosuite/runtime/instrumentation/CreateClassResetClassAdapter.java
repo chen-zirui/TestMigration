@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -76,9 +76,9 @@ public class CreateClassResetClassAdapter extends ClassVisitor {
 	private final String className;
 
 	/** Constant <code>static_classes</code> */
-	public static List<String> staticClasses = new ArrayList<String>();
+	public static List<String> staticClasses = new ArrayList<>();
 
-	private static Logger logger = LoggerFactory.getLogger(CreateClassResetClassAdapter.class);
+	private static final Logger logger = LoggerFactory.getLogger(CreateClassResetClassAdapter.class);
 
 	/**
 	 * Indicates if the current class being visited is an interface
@@ -108,7 +108,7 @@ public class CreateClassResetClassAdapter extends ClassVisitor {
 	/**
 	 * The final fields of this class
 	 */
-	private final List<String> finalFields = new ArrayList<String>();
+	private final List<String> finalFields = new ArrayList<>();
 
 	/**
 	 * Indicates if the current class being visited is an enumeration
@@ -129,7 +129,7 @@ public class CreateClassResetClassAdapter extends ClassVisitor {
 	 */
 	public CreateClassResetClassAdapter(ClassVisitor visitor, String className,
 			boolean removeFinalModifierOnStaticFields) {
-		super(Opcodes.ASM5, visitor);
+		super(Opcodes.ASM9, visitor);
 		this.className = className;
 		this.removeFinalModifierOnStaticFields = removeFinalModifierOnStaticFields;
 	}
@@ -181,13 +181,13 @@ public class CreateClassResetClassAdapter extends ClassVisitor {
 	/**
 	 * The list of the static fields declared in the class being visited
 	 */
-	private final List<StaticField> static_fields = new LinkedList<StaticField>();
+	private final List<StaticField> static_fields = new LinkedList<>();
 
 	/**
 	 * This list saves the static fields whose <code>final</code> modifier was
 	 * removed in the target class
 	 */
-	private final ArrayList<String> modifiedStaticFields = new ArrayList<String>();
+	private final ArrayList<String> modifiedStaticFields = new ArrayList<>();
 
 	/**
 	 * During the visit of each field, static fields are collected. If the
@@ -359,6 +359,7 @@ public class CreateClassResetClassAdapter extends ClassVisitor {
 			if (!finalFields.contains(staticField.name) && !staticField.name.startsWith("__cobertura")
 					&& !staticField.name.startsWith("$jacoco") && !staticField.name.startsWith("$VRc") // Old
 																										// Emma
+					&& !staticField.name.startsWith("$gzoltar")
 			) {
 
 				logger.info("Adding bytecode for initializing field " + staticField.name);

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.junit;
 
 import java.util.ArrayList;
@@ -37,21 +35,15 @@ import org.junit.runner.Request;
  */
 public class JUnitRunner {
 
-	/**
-	 * 
-	 */
+	
 	private List<JUnitResult> testResults;
 
-	/**
-	 * 
-	 */
+	
 	private final Class<?> junitClass;
 
-	/**
-	 * 
-	 */
+	
 	public JUnitRunner(Class<?> junitClass) {
-		this.testResults = new ArrayList<JUnitResult>();
+		this.testResults = new ArrayList<>();
 		this.junitClass = junitClass;
 	}
 
@@ -63,6 +55,22 @@ public class JUnitRunner {
 		junit.run(request);
 	}
 
+	/**
+	 * run junit for a list of methods.
+	 * @param methodNames
+	 */
+	public void run(List<String> methodNames) {
+		
+		for (String methodName : methodNames) {
+			Request request = Request.method(this.junitClass, methodName);
+	
+			JUnitCore junit = new JUnitCore();
+			junit.addListener(new JUnitRunListener(this));
+			junit.run(request);
+		}
+	}
+
+	
 	/**
 	 * 
 	 * @param testResult

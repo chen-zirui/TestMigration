@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -35,9 +35,7 @@ import java.util.ListIterator;
  */
 public class LinkedStringList extends LinkedList<String> {
 
-  /**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 5757225099467215983L;
 
 /**

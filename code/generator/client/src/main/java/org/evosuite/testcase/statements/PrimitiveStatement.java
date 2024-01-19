@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -42,9 +42,11 @@ import java.lang.reflect.WildcardType;
 import java.util.*;
 
 /**
- * Statement assigning a primitive numeric value
+ * A common superclass for statements assigning a primitive (e.g., numeric, boolean, String or
+ * enumeration) value to a variable. The value and the type of the statement are defined by the
+ * primitive variable.
  *
- * @param <T>
+ * @param <T> the type of the primitive variable
  * @author Gordon Fraser
  */
 public abstract class PrimitiveStatement<T> extends AbstractStatement {
@@ -168,7 +170,7 @@ public abstract class PrimitiveStatement<T> extends AbstractStatement {
                             GenericTypeReflector.erase(typeParameter));
                 }
             } else {
-                logger.debug("Creating class primitive with random value / "
+                logger.warn("Creating class primitive with random value / "
                         + genericClass);
                 statement = new ClassPrimitiveStatement(tc);
             }
@@ -312,7 +314,7 @@ public abstract class PrimitiveStatement<T> extends AbstractStatement {
      */
     @Override
     public List<VariableReference> getUniqueVariableReferences() {
-        return new ArrayList<VariableReference>(getVariableReferences());
+        return new ArrayList<>(getVariableReferences());
     }
 
     /**
@@ -363,7 +365,7 @@ public abstract class PrimitiveStatement<T> extends AbstractStatement {
                         org.objectweb.asm.Type[] types = org.objectweb.asm.Type.getArgumentTypes(m);
                         if (types[index].equals(org.objectweb.asm.Type.BOOLEAN_TYPE)) {
                             logger.warn("MUTATING");
-                            ((IntPrimitiveStatement) this).negate();
+                            this.negate();
                             done = true;
                             break;
                         }
@@ -395,7 +397,7 @@ public abstract class PrimitiveStatement<T> extends AbstractStatement {
                 if (Properties.TT && getClass().equals(IntPrimitiveStatement.class)) {
                     if (Randomness.nextDouble() <= Properties.RANDOM_PERTURBATION) {
                         // mutateTransformedBoolean(test);
-                        ((IntPrimitiveStatement) this).negate();
+                        this.negate();
 
                     } else
                         randomize();

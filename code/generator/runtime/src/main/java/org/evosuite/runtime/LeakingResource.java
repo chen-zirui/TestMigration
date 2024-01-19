@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -33,6 +33,6 @@ public interface LeakingResource {
 	 * 
 	 * @throws Exception
 	 */
-	public void release() throws Exception;
+	void release() throws Exception;
 	
 }

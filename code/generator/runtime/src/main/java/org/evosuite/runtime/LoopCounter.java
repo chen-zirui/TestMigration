@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,7 +19,7 @@
  */
 package org.evosuite.runtime;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -46,7 +46,7 @@ public class LoopCounter {
 
 
     private LoopCounter(){
-        counters = new LinkedList<>();
+        counters = new ArrayList<>();
     }
 
     public static LoopCounter getInstance(){
@@ -73,7 +73,7 @@ public class LoopCounter {
      */
     public int getNewIndex(){
         int index = counters.size();
-        counters.add(0l);
+        counters.add(0L);
         return index;
     }
 
@@ -101,25 +101,31 @@ public class LoopCounter {
         int size = counters.size();
         if(index >= size){
             for(int i=0; i < 1 + (index - size); i++){
-                counters.add(0l);
+                counters.add(0L);
             }
         }
         assert index < counters.size();
 
         //do increment
-        long value = counters.get(index) + 1l;
-        counters.set(index , value);
+        try {
+            long value = counters.get(index) + 1L;
+            counters.set(index, value);
 
-        if(value >= RuntimeSettings.maxNumberOfIterationsPerLoop && !isInStaticInit()) {
-            this.reset();
-            throw new TooManyResourcesException("Loop has been executed more times than the allowed " +
-                    RuntimeSettings.maxNumberOfIterationsPerLoop);
+            if(value >= RuntimeSettings.maxNumberOfIterationsPerLoop && !isInStaticInit()) {
+                this.reset();
+                throw new TooManyResourcesException("Loop has been executed more times than the allowed " +
+                        RuntimeSettings.maxNumberOfIterationsPerLoop);
+            }
+        } catch(NullPointerException e) {
+            // Some weird Java internal NPE can happen:
+            // https://github.com/EvoSuite/evosuite/issues/143
+            // Seems safe to swallow this instead of crashing EvoSuite
         }
     }
 
 
     private boolean isInStaticInit() {
-        for (StackTraceElement elem : Thread.currentThread().getStackTrace()) {
+        for (StackTraceElement elem : new Throwable().getStackTrace()) {
             if (elem.getMethodName().startsWith("<clinit>"))
                 return true;
         }

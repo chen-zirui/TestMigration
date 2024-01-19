@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -48,7 +48,7 @@ public class ObjectSignatureAdapter extends ClassVisitor {
 
 	private boolean exclude = false;
 
-	private Map<String, String> descriptors = new HashMap<String, String>();
+	private Map<String, String> descriptors = new HashMap<>();
 
 	/**
 	 * <p>
@@ -61,7 +61,7 @@ public class ObjectSignatureAdapter extends ClassVisitor {
 	 *            a {@link java.lang.String} object.
 	 */
 	public ObjectSignatureAdapter(ClassVisitor visitor, String className) {
-		super(Opcodes.ASM5, visitor);
+		super(Opcodes.ASM9, visitor);
 
 		this.className = ResourceList.getClassNameFromResourcePath(className);
 
@@ -75,7 +75,7 @@ public class ObjectSignatureAdapter extends ClassVisitor {
 			// mutation-report/className.obj contains method signatures
 			File file = new File(Properties.OUTPUT_DIR + "/" + className + ".obj");
 			List<String> lines = FileIOUtils.readFile(file);
-			descriptors = new HashMap<String, String>();
+			descriptors = new HashMap<>();
 			for (String line : lines) {
 				line = line.trim();
 				// Skip comments

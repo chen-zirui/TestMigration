@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -46,14 +46,14 @@ public class TracingTestRunner extends ClassLoader {
 		final String className;
 
 		public StatementTracingVisitor(String className, ClassWriter writer) {
-			super(Opcodes.ASM4, writer);
+			super(Opcodes.ASM9, writer);
 			this.className = className;
 		}
 
 		@Override
 		public MethodVisitor visitMethod(int access, final String name, String desc, String signature,
 				String[] exceptions) {
-			return new MethodVisitor(Opcodes.ASM4, super.visitMethod(access, name, desc, signature, exceptions)) {
+			return new MethodVisitor(Opcodes.ASM9, super.visitMethod(access, name, desc, signature, exceptions)) {
 				@Override
 				public void visitLineNumber(int line, Label start) {
 					visitLdcInsn(className + "#" + name + ":" + line);

@@ -1,6 +1,0 @@
-null
-1
-9999
-nl/knaw/dans/easy/sword2examples/Common
-copyToBagDirectoryInTarget
-java.io.File

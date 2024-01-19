@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- *
- */
+
 package org.evosuite.instrumentation.coverage;
 
 import java.util.Iterator;
@@ -31,7 +29,6 @@ import org.evosuite.graphs.GraphPool;
 import org.evosuite.graphs.cfg.BytecodeInstruction;
 import org.evosuite.graphs.cfg.RawControlFlowGraph;
 import org.evosuite.runtime.instrumentation.AnnotatedLabel;
-import org.evosuite.testcase.execution.ExecutionTrace;
 import org.evosuite.testcase.execution.ExecutionTracer;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -98,6 +95,8 @@ public class BranchInstrumentation implements MethodInstrumentation {
 										logger.debug("Found artificial branch: "+v);
 										Branch b = BranchPool.getInstance(classLoader).getBranchForInstruction(v);
 										b.setInstrumented(true);
+										if(aLabel.shouldIgnoreFalse())
+											b.setIgnoreFalse(true);
 									} else {
 										continue;
 									}
@@ -374,7 +373,7 @@ public class BranchInstrumentation implements MethodInstrumentation {
 		int[] keys = new int[keySize];
 		LabelNode[] labels = new LabelNode[keySize];
 		for (int i = 0; i < keySize; i++) {
-			keys[i] = (Integer) toInstrument.keys.get(i);
+			keys[i] = toInstrument.keys.get(i);
 			labels[i] = caseLabel;
 		}
 

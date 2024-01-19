@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.contracts;
 
 import java.util.ArrayList;
@@ -27,6 +25,7 @@ import java.util.List;
 
 import org.evosuite.Properties;
 import org.evosuite.ga.ConstructionFailedException;
+import org.evosuite.runtime.mock.MockList;
 import org.evosuite.testcase.ConstantInliner;
 import org.evosuite.testcase.DefaultTestCase;
 import org.evosuite.testcase.variable.FieldReference;
@@ -50,7 +49,7 @@ import org.slf4j.LoggerFactory;
 public class ContractViolation {
 
 	@SuppressWarnings("unused")
-	private static Logger logger = LoggerFactory.getLogger(ContractViolation.class);
+	private static final Logger logger = LoggerFactory.getLogger(ContractViolation.class);
 
 	private final Contract contract;
 
@@ -67,7 +66,7 @@ public class ContractViolation {
 	/**
 	 * List of all variables involved in the contract violation
 	 */
-	private final List<VariableReference> variables = new ArrayList<VariableReference>();
+	private final List<VariableReference> variables = new ArrayList<>();
 
 	private boolean isMinimized = false;
 
@@ -78,8 +77,6 @@ public class ContractViolation {
 	 * 
 	 * @param contract
 	 *            a {@link org.evosuite.contracts.Contract} object.
-	 * @param test
-	 *            a {@link org.evosuite.testcase.TestCase} object.
 	 * @param statement
 	 *            a {@link org.evosuite.testcase.statements.Statement} object.
 	 * @param exception
@@ -124,6 +121,37 @@ public class ContractViolation {
 		return statement.getPosition();
 	}
 
+	public Throwable getException() {
+		return exception;
+	}
+
+	public boolean isExceptionOfType(Class<?> throwableClass) {
+		if(exception == null)
+			return false;
+
+		if(MockList.isAMockClass(exception.getClass().getName())) {
+			return throwableClass.equals(exception.getClass().getSuperclass());
+		} else {
+			return throwableClass.equals(exception.getClass());
+		}
+	}
+
+	public boolean resultsFromMethod(String methodName) {
+		if(statement instanceof MethodStatement) {
+			MethodStatement ms = (MethodStatement) statement;
+			String target = ms.getMethodName() + ms.getDescriptor();
+			return target.equals(methodName);
+		} else if(statement instanceof ConstructorStatement) {
+			return methodName.startsWith("<init>");
+		} else {
+			return false;
+		}
+	}
+
+	public Statement getStatement() {
+		return statement;
+	}
+
 	/**
 	 * Remove all statements that do not contribute to the contract violation
 	 */
@@ -140,7 +168,7 @@ public class ContractViolation {
 		}
 		TestCase origTest = test.clone();
 
-		List<Integer> positions = new ArrayList<Integer>();
+		List<Integer> positions = new ArrayList<>();
 
 		for (VariableReference var : variables)
 			positions.add(var.getStPosition());
@@ -157,28 +185,24 @@ public class ContractViolation {
 				if (positions.contains(i))
 					continue;
 
-				try {
-					boolean deleted = testFactory.deleteStatement(test, i);
-					if(!deleted){
-						continue;
-					}
+				boolean deleted = testFactory.deleteStatement(test, i);
+				if(!deleted){
+					continue;
+				}
 
-					if (!contract.fails(test)) {
-						test = origTest.clone();
-					} else {
-						changed = true;
-						for (int j = 0; j < positions.size(); j++) {
-							if (positions.get(j) > i) {
-								positions.set(j,
-								              positions.get(j)
-								                      - (oldLength - test.size()));
-							}
-						}
-						origTest = test.clone();
-						oldLength = test.size();
-					}
-				} catch (ConstructionFailedException e) {
+				if (!contract.fails(test)) {
 					test = origTest.clone();
+				} else {
+					changed = true;
+					for (int j = 0; j < positions.size(); j++) {
+						if (positions.get(j) > i) {
+							positions.set(j,
+									positions.get(j)
+											- (oldLength - test.size()));
+						}
+					}
+					origTest = test.clone();
+					oldLength = test.size();
 				}
 			}
 		}

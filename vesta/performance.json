@@ -1,0 +1,141 @@
+[
+    {
+        "CVE_Number":"CVE-2017-7957",
+        "Category":"exception",
+        "Behavior":"fatal error"
+    },
+    {
+        "CVE_Number":"CVE-2022-41966",
+        "Category":"exception",
+        "Behavior":"StackOverflowError"
+    },
+    {
+        "CVE_Number":"CODEC-263",
+        "Category":"exception",
+        "Behavior":"is a valid base"
+    },
+    {
+        "CVE_Number":"CVE-2022-42889",
+        "Category":"exception",
+        "Behavior":"looking up"
+    },
+    {
+        "CVE_Number":"CVE-2023-1370",
+        "Category":"exception",
+        "Behavior":"StackOverflowError"
+    },
+    {
+        "CVE_Number":"CVE-2021-27568",
+        "Category":"exception",
+        "Behavior":"NumberFormatException"
+    },
+    {
+        "CVE_Number":"CVE-2022-45688",
+        "Category":"exception",
+        "Behavior":"StackOverflowError"
+    },
+    {
+        "CVE_Number":"CVE-2022-24615",
+        "Category":"exception",
+        "Behavior":"NullPointerException"
+    },
+    {
+        "CVE_Number":"CVE-2021-31812",
+        "Category":"exception",
+        "Behavior":"StackOverflowError"
+    },
+    {
+        "CVE_Number":"CVE-2021-35516",
+        "Category":"exception",
+        "Behavior":"milliseconds"
+    }, 
+    {
+        "CVE_Number":"CVE-2021-37714",
+        "Category":"exception",
+        "Behavior":"milliseconds"
+    },
+    {
+        "CVE_Number":"CVE-2021-44228",
+        "Category":"exception",
+        "Behavior":"looking up"
+    },
+    {
+        "CVE_Number":"CVE-2020-13956",
+        "Category":"exception",
+        "Behavior":"apache.org:80"
+    },
+    {
+        "CVE_Number":"CVE-2018-1324",
+        "Category":"exception",
+        "Behavior":"milliseconds"
+    },
+    {
+        "CVE_Number":"CVE-2021-29425",
+        "Category":"exception",
+        "Behavior":" //../foo"
+    },
+    {
+        "CVE_Number":"IO-611",
+        "Category":"exception",
+        "Behavior":" //foo//bar"
+    },
+    {
+        "CVE_Number":"LANG-1645",
+        "Category":"exception",
+        "Behavior":"NumberFormatException"
+    },
+    {
+        "CVE_Number":"LANG-1484",
+        "Category":"no-exception",
+        "Behavior":"100.;NumberFormatException"
+    },
+    {
+        "CVE_Number":"LANG-1385",
+        "Category":"exception",
+        "Behavior":"StringIndexOutOfBoundsException"
+    },
+    {
+        "CVE_Number":"CODEC-270",
+        "Category":"no-exception",
+        "Behavior":"AB==;a valid base 64"
+    },
+    {
+        "CVE_Number":"TEXT-215",
+        "Category":"no-exception",
+        "Behavior":"This is a &#x74aest;Fail"
+    },
+    {
+        "CVE_Number":"CVE-2019-12415",
+        "Category":"exception",
+        "Behavior":"milliseconds"
+    },
+    {
+        "CVE_Number":"Zip-263",
+        "Category":"no-exception",
+        "Behavior":"null;IllegalArgumentException"
+    },
+   
+
+
+
+    {
+        "CVE_Number":"CVE-2021-39144",
+        "Category":"remote",
+        "Behavior":"fatal error"
+    },
+    {
+        "CVE_Number":"CVE-2021-21341",
+        "Category":"exception",
+        "Behavior":"milliseconds"
+    },
+    {
+        "CVE_Number":"CVE-2020-26217",
+        "Category":"remote",
+        "Behavior":"remote code execution"
+    },
+    {
+        "CVE_Number":"Benchmark",
+        "Category":"remote",
+        "Behavior":"remote code execution"
+    }
+]

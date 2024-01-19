@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -48,7 +48,7 @@ public class ConcolicInstrumentingClassLoader extends ClassLoader {
 
 	private final ClassLoader classLoader;
 	private final ConcolicBytecodeInstrumentation instrumentation;
-	private final Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
+	private final Map<String, Class<?>> classes = new HashMap<>();
 	
 	public ConcolicInstrumentingClassLoader() {
 		super(ConcolicInstrumentingClassLoader.class.getClassLoader());

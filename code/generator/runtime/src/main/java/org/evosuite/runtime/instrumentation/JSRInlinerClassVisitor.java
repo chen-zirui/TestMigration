@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -27,7 +27,7 @@ import org.objectweb.asm.commons.JSRInlinerAdapter;
 public class JSRInlinerClassVisitor extends ClassVisitor {
 
 	public JSRInlinerClassVisitor(ClassVisitor parent) {
-		super(Opcodes.ASM5, parent);
+		super(Opcodes.ASM9, parent);
 	}
 	
 	/** {@inheritDoc} */

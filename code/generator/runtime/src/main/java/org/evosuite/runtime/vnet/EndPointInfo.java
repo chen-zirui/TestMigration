@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -27,8 +27,9 @@ import java.io.Serializable;
  * Immutable class used to store connection info 
  */
 public class EndPointInfo  implements Serializable {
-	
-	private final String host;
+
+    private static final long serialVersionUID = 3226166594839299797L;
+    private final String host;
 	private final int port;
 	private final ConnectionType type;
 	

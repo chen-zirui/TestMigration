@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.coverage.mutation;
 
 /**
@@ -36,6 +34,16 @@ public class MutationExecutionResult {
 	boolean hasTimeout = false;
 
 	boolean hasException = false;
+
+	public MutationExecutionResult clone() {
+		MutationExecutionResult result = new MutationExecutionResult();
+		result.numAssertions = numAssertions;
+		result.impact = impact;
+		result.hasTimeout = hasTimeout;
+		result.hasException = hasException;
+
+		return result;
+	}
 
 	/**
 	 * <p>Getter for the field <code>numAssertions</code>.</p>

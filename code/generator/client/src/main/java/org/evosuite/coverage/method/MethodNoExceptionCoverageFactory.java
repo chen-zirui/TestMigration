@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -20,6 +20,8 @@
 package org.evosuite.coverage.method;
 
 import org.evosuite.Properties;
+import org.evosuite.coverage.MethodNameMatcher;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.graphs.cfg.BytecodeInstruction;
 import org.evosuite.setup.TestUsageChecker;
 import org.evosuite.testsuite.AbstractFitnessFactory;
@@ -29,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +48,7 @@ public class MethodNoExceptionCoverageFactory extends
 		AbstractFitnessFactory<MethodNoExceptionCoverageTestFitness> {
 
 	private static final Logger logger = LoggerFactory.getLogger(MethodNoExceptionCoverageFactory.class);
+	private final MethodNameMatcher matcher = new MethodNameMatcher();
 
 	/*
 	 * (non-Javadoc)
@@ -55,7 +59,7 @@ public class MethodNoExceptionCoverageFactory extends
 	/** {@inheritDoc} */
 	@Override
 	public List<MethodNoExceptionCoverageTestFitness> getCoverageGoals() {
-		List<MethodNoExceptionCoverageTestFitness> goals = new ArrayList<MethodNoExceptionCoverageTestFitness>();
+		List<MethodNoExceptionCoverageTestFitness> goals = new ArrayList<>();
 
 		long start = System.currentTimeMillis();
 
@@ -69,6 +73,14 @@ public class MethodNoExceptionCoverageFactory extends
 				goals.addAll(getCoverageGoals(innerClass, innerClassName));
 			}
 		}
+		try {
+			logger.warn("getting method coverage goals. current size=" + goals.size());
+			goals.addAll(getCoverageGoals(Class.forName(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName), ReachabilityCoverageFactory.targetCalleeClazzAsNormalName));
+			logger.warn("got method coverage goals. size now= " + goals.size() );
+		} catch (ClassNotFoundException e) {
+			logger.error("failed to add callee class names", e);
+		}
+		
 		goalComputationTime = System.currentTimeMillis() - start;
 		return goals;
 	}
@@ -87,7 +99,22 @@ public class MethodNoExceptionCoverageFactory extends
 		Method[] allMethods = clazz.getDeclaredMethods();
 		for (Method m : allMethods) {
 			if (TestUsageChecker.canUse(m)) {
+				if(clazz.isEnum()) {
+					if (m.getName().equals("valueOf") || m.getName().equals("values")
+							|| m.getName().equals("ordinal")) {
+						logger.debug("Excluding valueOf for Enum " + m.toString());
+						continue;
+					}
+				}
+				if(clazz.isInterface() && Modifier.isAbstract(m.getModifiers())) {
+					// Don't count interface declarations as targets
+					continue;
+				}
 				String methodName = m.getName() + Type.getMethodDescriptor(m);
+				if (!matcher.methodMatches(methodName)) {
+					logger.info("Method {} does not match criteria. ",methodName);
+					continue;
+				}
 				logger.info("Adding goal for method " + className + "." + methodName);
 				goals.add(new MethodNoExceptionCoverageTestFitness(className, methodName));
 			}

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,10 +19,11 @@
  */
 package org.evosuite.ga.operators.selection;
 
-import java.util.List;
-
 import org.evosuite.ga.Chromosome;
 import org.evosuite.utils.Randomness;
+
+import java.util.List;
+import java.util.stream.DoubleStream;
 
 
 /**
@@ -30,7 +31,15 @@ import org.evosuite.utils.Randomness;
  *
  * @author Gordon Fraser
  */
-public class FitnessProportionateSelection<T extends Chromosome> extends SelectionFunction<T> {
+public class FitnessProportionateSelection<T extends Chromosome<T>> extends SelectionFunction<T> {
+
+	public FitnessProportionateSelection() {
+	}
+
+	public FitnessProportionateSelection(FitnessProportionateSelection<?> other) {
+		// Copy Constructor
+		this.sumValue = other.sumValue;
+	}
 
 	private static final long serialVersionUID = 5206421079815585026L;
 
@@ -77,20 +86,15 @@ public class FitnessProportionateSelection<T extends Chromosome> extends Selecti
 	 * @param population
 	 */
 	private void setSum(List<T> population) {
-		sumValue = 0;
-		for (T c : population) {
-			double v = c.getFitness();
-			if (!maximize)
-				v = invert(v);
-
-			sumValue += v;
-		}
+		DoubleStream fitnessValues = population.stream().mapToDouble(Chromosome::getFitness);
+		if (!maximize) fitnessValues = fitnessValues.map(FitnessProportionateSelection::invert);
+		sumValue = fitnessValues.sum();
 	}
 
 	/*
 	 * used to handle the case of minimizing the fitness
 	 */
-	private double invert(double x) {
+	private static double invert(final double x) {
 		return 1d / (x + 1d);
 	}
 

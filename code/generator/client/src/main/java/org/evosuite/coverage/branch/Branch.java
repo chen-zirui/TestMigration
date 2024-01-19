@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -131,22 +131,21 @@ public class Branch implements Serializable, Comparable<Branch> {
 	}
 
 	/**
-	 * <p>
-	 * isDefaultCase
-	 * </p>
-	 * 
-	 * @return a boolean.
+	 * Tells whether this branch corresponds to the {@code default} case within a Java
+	 * {@code switch} statement.
+	 *
+	 * @return {@code true} if this branch represents the {@code default} case
 	 */
 	public boolean isDefaultCase() {
 		return isSwitch && targetCaseValue == null;
 	}
 
 	/**
-	 * <p>
-	 * isActualCase
-	 * </p>
-	 * 
-	 * @return a boolean.
+	 * Tells whether this branch corresponds to a statement labeled with {@code case} within a Java
+	 * {@code switch} statement.
+	 *
+	 * @return {@code true} if the statement represented by this branch is labeled with {@code case}
+	 * @see Branch#isDefaultCase()
 	 */
 	public boolean isActualCase() {
 		return isSwitch && targetCaseValue != null;
@@ -299,5 +298,15 @@ public class Branch implements Serializable, Comparable<Branch> {
 	 */
 	public void setInstrumented(boolean isInstrumented) {
 		this.isInstrumented = isInstrumented;
+	}
+
+	private boolean ignoreFalse = false;
+
+	public boolean ignoreFalseBranch() {
+		return ignoreFalse;
+	}
+
+	public void setIgnoreFalse(boolean value) {
+		ignoreFalse = value;
 	}
 }

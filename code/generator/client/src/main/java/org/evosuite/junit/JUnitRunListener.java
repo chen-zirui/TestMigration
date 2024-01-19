@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,10 +17,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.junit;
+
+import java.util.Arrays;
+import java.util.List;
 
 import org.evosuite.testcase.execution.ExecutionTracer;
 import org.evosuite.utils.LoggingUtils;
@@ -38,19 +39,13 @@ import org.junit.runner.notification.RunListener;
  */
 public class JUnitRunListener extends RunListener {
 
-	/**
-	 * 
-	 */
+	
 	private JUnitRunner junitRunner = null;
 
-	/**
-	 * 
-	 */
+	
 	private JUnitResult testResult = null;
 
-	/**
-	 * 
-	 */
+	
 	private long start;
 
 	/**
@@ -110,9 +105,33 @@ public class JUnitRunListener extends RunListener {
 	@Override
 	public void testFailure(Failure failure) {
 		LoggingUtils.getEvoLogger().info("* Failure: " + failure.getMessage());
+		LoggingUtils.getEvoLogger().info("* Failure exception: " + failure.getException());
+		if (failure.getException() != null) {
+			LoggingUtils.getEvoLogger().info("* Failure exception message: " + failure.getException().getMessage());
+		}
 		for (StackTraceElement s : failure.getException().getStackTrace()) {
 			LoggingUtils.getEvoLogger().info("   " + s.toString());
 		}
+		
+		
+		if (failure.getException().getCause() != null) {
+			
+			Throwable cause = failure.getException();
+			cause = cause.getCause();
+			int i = 0;
+			while (cause != null) {
+				
+				LoggingUtils.getEvoLogger().info("   ====inner exceptions " + i + "====" );
+				LoggingUtils.getEvoLogger().info("           message: " + cause.getMessage());
+				
+				for (StackTraceElement s : cause.getStackTrace()) {
+					LoggingUtils.getEvoLogger().info("      " +s );
+				}
+				LoggingUtils.getEvoLogger().info("      ========          =============" );
+				cause = cause.getCause();
+			}
+		}
+		
 
 		this.testResult.setSuccessful(false);
 		this.testResult.setTrace(failure.getTrace());

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -25,12 +25,14 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import static java.util.stream.Collectors.*;
+
 public class MutationHistory<T extends MutationHistoryEntry> implements Iterable<T>,
         Serializable {
 
 	private static final long serialVersionUID = -8543180637106924913L;
 
-	private final List<T> mutations = new ArrayList<T>();
+	private final List<T> mutations = new ArrayList<>();
 
 	public void clear() {
 		mutations.clear();
@@ -66,10 +68,8 @@ public class MutationHistory<T extends MutationHistoryEntry> implements Iterable
 	 */
 	@Override
 	public String toString() {
-		String result = "";
-		for (T t : mutations)
-			result += t.toString() + "\n";
-
-		return result;
+		return mutations.stream()
+				.map(T::toString)
+				.collect(joining("\n"));
 	}
 }

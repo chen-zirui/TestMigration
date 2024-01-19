@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -25,14 +25,16 @@ import java.rmi.registry.Registry;
 import org.evosuite.ga.Chromosome;
 import org.evosuite.statistics.RuntimeVariable;
 
-public class DummyClientNodeImpl extends ClientNodeImpl {
+public class DummyClientNodeImpl<T extends Chromosome<T>> extends ClientNodeImpl<T> {
 
-	public DummyClientNodeImpl(){
+    private static final long serialVersionUID = -354329589467033654L;
+
+    public DummyClientNodeImpl(){
 		
 	}
 	
-	public DummyClientNodeImpl(Registry registry) {
-		super(registry);
+	public DummyClientNodeImpl(Registry registry, String identifier) {
+		super(registry, identifier);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -56,7 +58,7 @@ public class DummyClientNodeImpl extends ClientNodeImpl {
 	}
 
 	@Override
-	public void updateStatistics(Chromosome individual) {
+	public void updateStatistics(T individual) {
 		// TODO Auto-generated method stub
 		
 	}

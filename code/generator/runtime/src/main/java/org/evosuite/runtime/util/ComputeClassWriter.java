@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,12 +19,14 @@
  */
 package org.evosuite.runtime.util;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * A ClassWriter that computes the common super class of two classes without
@@ -33,6 +35,8 @@ import org.objectweb.asm.Opcodes;
  * @author Eric Bruneton
  */
 public class ComputeClassWriter extends ClassWriter {
+
+    private final Logger logger = LoggerFactory.getLogger(ComputeClassWriter.class);
 
 	private ClassLoader l = getClass().getClassLoader();
 	
@@ -152,13 +156,13 @@ public class ComputeClassWriter extends ClassWriter {
             throws IOException {
         while (!"java/lang/Object".equals(type)) {
             String[] itfs = info.getInterfaces();
-            for (int i = 0; i < itfs.length; ++i) {
-                if (itfs[i].equals(itf)) {
+            for (final String s : itfs) {
+                if (s.equals(itf)) {
                     return true;
                 }
             }
-            for (int i = 0; i < itfs.length; ++i) {
-                if (typeImplements(itfs[i], typeInfo(itfs[i]), itf)) {
+            for (final String s : itfs) {
+                if (typeImplements(s, typeInfo(s), itf)) {
                     return true;
                 }
             }
@@ -180,14 +184,10 @@ public class ComputeClassWriter extends ClassWriter {
      *             if the bytecode of 'type' cannot be found.
      */
     private ClassReader typeInfo(final String type) throws IOException, NullPointerException {
-        InputStream is = l.getResourceAsStream(type + ".class");
-        try {
-        	if(is == null)
-        		throw new NullPointerException("Class not found "+type);
+        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(type + ".class")) {
+            if (is == null)
+                throw new NullPointerException("Class not found " + type);
             return new ClassReader(is);
-        } finally {
-        	if(is != null)
-        		is.close();
         }
     }
 }

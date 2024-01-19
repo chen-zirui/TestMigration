@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -22,10 +22,13 @@ package org.evosuite.coverage.branch;
 import org.evosuite.Properties;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.coverage.MethodNameMatcher;
+import org.evosuite.coverage.line.LineCoverageTestFitness;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.graphs.cfg.BytecodeInstruction;
 import org.evosuite.graphs.cfg.ControlDependency;
 import org.evosuite.setup.DependencyAnalysis;
 import org.evosuite.testsuite.AbstractFitnessFactory;
+import org.evosuite.testsuite.TransferTestSuiteAnalyser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,13 +49,14 @@ public class BranchCoverageFactory extends
 	
 	
 	/**
-	 * return coverage goals of the target class or of all the contextual branches, depending on the limitToCUT paramether
-	 * @param limitToCUT
+	 * return coverage goals of the target class or of all the contextual branches, depending on the limitToCUT parameter
+	 * @param limitToCUT whether to consider the class under test only ({@code true}) or all known
+	 *                   classes ({@code false})
 	 * @return
 	 */
 	private List<BranchCoverageTestFitness> computeCoverageGoals(boolean limitToCUT){
 		long start = System.currentTimeMillis();
-		List<BranchCoverageTestFitness> goals = new ArrayList<BranchCoverageTestFitness>();
+		List<BranchCoverageTestFitness> goals = new ArrayList<>();
 
 		// logger.info("Getting branches");
 		for (String className : BranchPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).knownClasses()) {
@@ -74,6 +78,11 @@ public class BranchCoverageFactory extends
 					logger.info("Method " + methodName + " does not match criteria. ");
 					continue;
 				}
+				if (!ReachabilityCoverageFactory.classToFunctionAlongCallGraph.isEmpty() && ReachabilityCoverageFactory.classToFunctionAlongCallGraph.containsKey(className) && !ReachabilityCoverageFactory.classToFunctionAlongCallGraph.get(className).contains(methodName)) {
+//					logger.warn("Method " + methodName + " not contained on call graph. ");
+//					logger.warn("call graph contains " + ReachabilityCoverageFactory.classToFunctionAlongCallGraph.get(className).iterator().next());
+					continue;
+				}
 
 				for (Branch b : BranchPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).retrieveBranchesInMethod(className,
 						methodName)) {
@@ -84,6 +93,21 @@ public class BranchCoverageFactory extends
 				}
 			}
 		}
+		
+		if (!TransferTestSuiteAnalyser.goalsOfJunit.isEmpty()) {
+			// filter the goals we know are not covered
+			goals.removeIf(goal -> 
+				!TransferTestSuiteAnalyser.goalsOfJunit.contains(goal) 
+				&& goal.getClassName().equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName));
+		}
+		// otherwise, we still do not know what is covered by the vuln-test, just return all goals for analysis. 
+		
+		logger.warn("The following branch goals are constructed:");
+		for (BranchCoverageTestFitness goal : goals) {
+			logger.warn(goal.toString());
+		}
+		logger.warn("END branch goals");
+		
 		goalComputationTime = System.currentTimeMillis() - start;
 		return goals;
 	}

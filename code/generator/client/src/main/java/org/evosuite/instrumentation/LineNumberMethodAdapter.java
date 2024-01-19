@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -20,7 +20,7 @@
 package org.evosuite.instrumentation;
 
 import org.evosuite.PackageInfo;
-import org.evosuite.testcase.execution.ExecutionTrace;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.testcase.execution.ExecutionTracer;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -40,7 +40,7 @@ import java.util.List;
 public class LineNumberMethodAdapter extends MethodVisitor {
 
 	@SuppressWarnings("unused")
-	private static Logger logger = LoggerFactory.getLogger(LineNumberMethodAdapter.class);
+	private static final Logger logger = LoggerFactory.getLogger(LineNumberMethodAdapter.class);
 
 	private final String fullMethodName;
 
@@ -64,7 +64,7 @@ public class LineNumberMethodAdapter extends MethodVisitor {
 	 */
 	public LineNumberMethodAdapter(MethodVisitor mv, String className, String methodName,
 	        String desc) {
-		super(Opcodes.ASM5, mv);
+		super(Opcodes.ASM9, mv);
 		fullMethodName = methodName + desc;
 		this.className = className;
 		this.methodName = methodName;
@@ -73,7 +73,16 @@ public class LineNumberMethodAdapter extends MethodVisitor {
 	}
 
 	private void addLineNumberInstrumentation(int line) {
-		LinePool.addLine(className, fullMethodName, line);
+		if (ReachabilityCoverageFactory.classToFunctionAlongCallGraph.containsKey(className)) {
+			if (ReachabilityCoverageFactory.classToFunctionAlongCallGraph.get(className).contains(fullMethodName)
+					|| fullMethodName.contains("init>")) {
+				LinePool.addLine(className, fullMethodName, line);
+//				logger.warn("added passedLine for " + className + " : " + fullMethodName + "  line is " + line);
+			} else {
+//				logger.warn("not adding passedLine for " + className + " : " + fullMethodName + "  line is " + line);
+			}
+			
+		}
 		this.visitLdcInsn(className);
 		this.visitLdcInsn(fullMethodName);
 		this.visitLdcInsn(line);
@@ -85,6 +94,7 @@ public class LineNumberMethodAdapter extends MethodVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visitLineNumber(int line, Label start) {
+		
 		super.visitLineNumber(line, start);
 		currentLine = line;
 

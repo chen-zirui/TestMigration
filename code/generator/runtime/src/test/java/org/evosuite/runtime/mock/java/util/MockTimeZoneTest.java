@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -23,7 +23,6 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Test;
 
-import java.sql.Time;
 import java.util.TimeZone;
 
 /**

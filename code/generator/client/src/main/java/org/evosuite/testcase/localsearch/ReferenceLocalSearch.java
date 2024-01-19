@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- *
- */
+
 package org.evosuite.testcase.localsearch;
 
 import java.util.ArrayList;
@@ -81,7 +79,7 @@ public class ReferenceLocalSearch extends StatementLocalSearch {
 		        && !LocalSearchBudget.getInstance().isFinished()) {
 			logger.info("Current probe on statement " + statement + ": " + currentProbe);
 
-			List<Mutations> mutations = new ArrayList<Mutations>();
+			List<Mutations> mutations = new ArrayList<>();
 			mutations.add(Mutations.REPLACE);
 			Statement st = test.getTestCase().getStatement(statement);
 			if (!st.getReturnValue().isPrimitive() && !(st instanceof NullStatement)) {
@@ -145,7 +143,6 @@ public class ReferenceLocalSearch extends StatementLocalSearch {
 	 *
 	 * @param test
 	 * @param statement
-	 * @param objective
 	 */
 	private boolean addCall(TestChromosome test, int statement) {
 
@@ -167,7 +164,6 @@ public class ReferenceLocalSearch extends StatementLocalSearch {
 	 *
 	 * @param test
 	 * @param statement
-	 * @param objective
 	 * @return
 	 */
 	private boolean replace(TestChromosome test, int statement) {
@@ -213,7 +209,6 @@ public class ReferenceLocalSearch extends StatementLocalSearch {
 	 *
 	 * @param test
 	 * @param statement
-	 * @param objective
 	 * @return
 	 */
 	private boolean changeParameters(TestChromosome test, int statement) {
@@ -236,7 +231,6 @@ public class ReferenceLocalSearch extends StatementLocalSearch {
 	 *
 	 * @param test
 	 * @param statement
-	 * @param objective
 	 */
 	private boolean replaceMethodParameter(TestChromosome test, MethodStatement statement) {
 
@@ -293,7 +287,6 @@ public class ReferenceLocalSearch extends StatementLocalSearch {
 	 *
 	 * @param test
 	 * @param statement
-	 * @param objective
 	 */
 	private boolean replaceConstructorParameter(TestChromosome test,
 	        ConstructorStatement statement) {
@@ -334,7 +327,6 @@ public class ReferenceLocalSearch extends StatementLocalSearch {
 	 *
 	 * @param test
 	 * @param statement
-	 * @param objective
 	 */
 	private boolean replaceFieldSource(TestChromosome test, FieldStatement statement) {
 		if (!statement.isStatic()) {

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -20,13 +20,12 @@
 package org.evosuite.coverage.io.output;
 
 
-import org.evosuite.Properties;
-import org.evosuite.TestGenerationContext;
+import org.apache.commons.lang3.ClassUtils;
 import org.evosuite.assertion.Inspector;
 import org.evosuite.assertion.InspectorManager;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.runtime.util.AtMostOnceLogger;
 import org.evosuite.setup.DependencyAnalysis;
-import org.evosuite.testcase.TestFitnessFunction;
-import org.evosuite.testcase.statements.MethodStatement;
 import org.objectweb.asm.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -202,12 +201,20 @@ public class OutputCoverageGoal implements Serializable, Comparable<OutputCovera
 
         if (! DependencyAnalysis.isTargetClassName(className))
             return goals;
+        
         if (methodName.equals("hashCode"))
             return goals;
-
+        
         String methodNameWithDesc = methodName + methodDesc;
         Type returnType = Type.getReturnType(methodDesc);
-        switch (returnType.getSort()) {
+
+        int typeSort = returnType.getSort();
+        if(typeSort == Type.OBJECT && returnValue != null) {
+            if(ClassUtils.isPrimitiveWrapper(returnValue.getClass())) {
+                typeSort = Type.getType(ClassUtils.wrapperToPrimitive(returnValue.getClass())).getSort();
+            }
+        }
+        switch (typeSort) {
             case Type.BOOLEAN:
                 String desc = ((boolean) returnValue) ? BOOL_TRUE : BOOL_FALSE;
                 goals.add(new OutputCoverageGoal(className, methodNameWithDesc, returnType, desc));

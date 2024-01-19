@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -22,10 +22,14 @@ package org.evosuite.setup;
 import org.apache.commons.lang3.ClassUtils;
 import org.evosuite.Properties;
 import org.evosuite.annotations.EvoSuiteTest;
+import org.evosuite.coverage.MethodNameMatcher;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.graphs.GraphPool;
 import org.evosuite.runtime.annotation.EvoSuiteExclude;
 import org.evosuite.runtime.classhandling.ClassResetter;
 import org.evosuite.runtime.mock.MockList;
+import org.evosuite.runtime.util.AtMostOnceLogger;
+import org.evosuite.utils.Java9InvisiblePackage;
 import org.evosuite.utils.LoggingUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -43,18 +47,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Created by Andrea Arcuri on 30/06/15.
  */
 public class TestUsageChecker {
 
-	private static Logger logger = LoggerFactory.getLogger(TestUsageChecker.class);
+	private static final Logger logger = LoggerFactory.getLogger(TestUsageChecker.class);
 
 	public static boolean canUse(Constructor<?> c) {
 
@@ -81,6 +81,7 @@ public class TestUsageChecker {
 			return false;
 		}
 
+		
 		if (c.getDeclaringClass().isMemberClass() && !TestUsageChecker.canUse(c.getDeclaringClass()))
 			return false;
 
@@ -96,6 +97,7 @@ public class TestUsageChecker {
 			return false;
 		}
 
+		
 		if (Modifier.isPublic(c.getModifiers())) {
 			TestClusterUtils.makeAccessible(c);
 			return true;
@@ -105,17 +107,31 @@ public class TestUsageChecker {
             if(!canUse(paramType))
                 return false;
         }
+        
+    	if (ReachabilityCoverageFactory.classToFunctionAlongCallGraph.containsKey(c.getDeclaringClass().getName())
+				&& !ReachabilityCoverageFactory.targetCallerClazz.equals(c.getDeclaringClass().getName())) {
+			logger.warn("reject usage of ctor because name is along callgraph : " + c);
+			return false;
+		}
+
 
         // If default access rights, then check if this class is in the same package as the target class
 		if (!Modifier.isPrivate(c.getModifiers())) {
 			//		        && !Modifier.isProtected(c.getModifiers())) {
 			String packageName = ClassUtils.getPackageName(c.getDeclaringClass());
+		
 			if (packageName.equals(Properties.CLASS_PREFIX)) {
 				TestClusterUtils.makeAccessible(c);
 				return true;
 			}
+			
+//			if (packageName.equals(ReachabilityCoverageFactory.targetCalledClassPrefix)) {
+//				TestClusterUtils.makeAccessible(c);
+//				return true;
+//			}
 		}
-
+		
+	
 		return false;
 	}
 
@@ -140,15 +156,25 @@ public class TestUsageChecker {
     public static boolean canUse(Class<?> c) {
         //if (Throwable.class.isAssignableFrom(c))
         //	return false;
+    	
         if (Modifier.isPrivate(c.getModifiers()))
             return false;
 
-        if (!Properties.USE_DEPRECATED && c.isAnnotationPresent(Deprecated.class)) {
-    		final Class<?> targetClass = Properties.getTargetClassAndDontInitialise();
+        if (!Properties.USE_DEPRECATED) {
+	        try {
+                if(c.isAnnotationPresent(Deprecated.class)) {
+                    final Class<?> targetClass = Properties.getTargetClassAndDontInitialise();
 
-            if(Properties.hasTargetClassBeenLoaded() && !c.equals(targetClass)) {
-                logger.debug("Skipping deprecated class " + c.getName());
-                return false;
+                    if(Properties.hasTargetClassBeenLoaded() && !c.equals(targetClass)) {
+                        logger.debug("Skipping deprecated class " + c.getName());
+                        return false;
+                    }
+                }
+            } catch(java.lang.ArrayStoreException e) {
+	            // https://bugs.java.com/view_bug.do?bug_id=JDK-7183985
+	            AtMostOnceLogger.warn(LoggingUtils.getEvoLogger(), "ArrayStoreException caught while handling class "+c.getName());
+                AtMostOnceLogger.warn(LoggingUtils.getEvoLogger(), "This is likely due to a missing dependency used as annotation: https://bugs.java.com/view_bug.do?bug_id=JDK-7183985");
+	            return false;
             }
         }
 
@@ -156,8 +182,13 @@ public class TestUsageChecker {
             return false;
         }
 
-        if (c.getName().startsWith("junit"))
+        if(isClassIncludedInPackage(c.getName(), Java9InvisiblePackage.instance.getClassesToBeIgnored())){
             return false;
+        }
+
+        if (c.getName().startsWith("junit")) {
+            return false;
+        }
 
         if (TestClusterUtils.isEvoSuiteClass(c) && !MockList.isAMockClass(c.getCanonicalName())) {
             return false;
@@ -172,6 +203,7 @@ public class TestUsageChecker {
             if (!canUse(c.getDeclaringClass()))
                 return false;
         }
+        
 
         // If the SUT is not in the default package, then
         // we cannot import classes that are in the default
@@ -181,21 +213,33 @@ public class TestUsageChecker {
             return false;
         }
 
-        if(c.getName().contains("EnhancerByMockito")){
+        
+        if(c.getName().contains("EnhancerByMockito")) {
+            return false;
+        }
+
+        if(c.getName().contains("$MockitoMock")) {
+            return false;
+        }
+
+        // Don't use Lambdas...for now
+        if(c.getName().contains("$$Lambda")) {
             return false;
         }
 
         // TODO: This should be unnecessary if Java reflection works...
         // This is inefficient
-        if(TestClusterUtils.isAnonymousClass(c.getName())) {
-            String message = c + " looks like an anonymous class, ignoring it (although reflection says "+c.isAnonymousClass()+") "+c.getSimpleName();
-            LoggingUtils.logWarnAtMostOnce(logger, message);
-            return false;
-        }
+//        if(TestClusterUtils.isAnonymousClass(c.getName())) {
+//            String message = c + " looks like an anonymous class, ignoring it (although reflection says "+c.isAnonymousClass()+") "+c.getSimpleName();
+//            LoggingUtils.logWarnAtMostOnce(logger, message);
+//            return false;
+//        }
 
+        
         if (Modifier.isPublic(c.getModifiers())) {
             return true;
         }
+      
 
         // If default access rights, then check if this class is in the same package as the target class
         if (!Modifier.isPrivate(c.getModifiers())) {
@@ -251,6 +295,10 @@ public class TestUsageChecker {
             return false;
         }
 
+        if(f.getName().equals("serialVersionUID")) {
+            return false;
+        }
+
         if (Modifier.isPublic(f.getModifiers())) {
             // It may still be the case that the field is defined in a non-visible superclass of the class
             // we already know we can use. In that case, the compiler would be fine with accessing the
@@ -282,6 +330,18 @@ public class TestUsageChecker {
     }
 
     public static boolean canUse(Method m, Class<?> ownerClass) {
+    	
+    	boolean debug = false;// ownerClass.getName().contains(ReachabilityCoverageFactory.targetCallerClazz);
+    	if (debug) {
+    		logger.warn("canUse: has target caller 0. " + m);
+    	}
+
+        final MethodNameMatcher matcher = new MethodNameMatcher();
+        String methodSignature = m.getName() + Type.getMethodDescriptor(m);
+        if (!matcher.methodMatches(methodSignature)) {
+            logger.debug("Excluding method '" + methodSignature + "' that does not match criteria");
+            return false;
+        }
 
         if (m.isBridge()) {
             logger.debug("Excluding bridge method: " + m.toString());
@@ -322,6 +382,16 @@ public class TestUsageChecker {
             return false;
         }
 
+        // FIXME: EvoSuite currently can't deal properly with the Map.of(...) methods introduced in Java 9
+        if(m.getDeclaringClass().equals(java.util.Map.class) && Modifier.isStatic(m.getModifiers())) {
+            return false;
+        }
+
+        // FIXME: EvoSuite currently can't deal properly with the Set.of(...) methods introduced in Java 9
+        if(m.getDeclaringClass().equals(java.util.Set.class) && Modifier.isStatic(m.getModifiers())) {
+            return false;
+        }
+
         if (!m.getReturnType().equals(String.class) && (!canUse(m.getReturnType()) || !canUse(m.getGenericReturnType()))) {
             return false;
         }
@@ -349,6 +419,20 @@ public class TestUsageChecker {
         if (m.getDeclaringClass().equals(java.lang.Thread.class))
             return false;
 
+        if (debug) {
+        	logger.warn("canUse: has target caller 0. " + m);
+    	}
+        if (ReachabilityCoverageFactory.classToFunctionAlongCallGraph.containsKey(m.getDeclaringClass().getName())
+    				&& !ReachabilityCoverageFactory.targetCallerClazz.equals(m.getDeclaringClass().getName())
+    				&& !ReachabilityCoverageFactory.additionalClasses.contains(m.getDeclaringClass().getName())) {
+    			logger.warn("reject usage of class because name is along callgraph : " + m.getDeclaringClass().getName() + " target caller is " + ReachabilityCoverageFactory.targetCallerClazz);
+    			return false;
+    	}
+        
+        if (debug) {
+        	logger.warn("canUse: has target caller 1. " + m);
+    	}
+        
         // Hashcode only if we need to cover it
         if (m.getName().equals("hashCode")) {
 			final Class<?> targetClass = Properties.getTargetClassAndDontInitialise();
@@ -363,7 +447,10 @@ public class TestUsageChecker {
                 }
             }
         }
-
+        if (debug) {
+        	logger.warn("canUse: has target caller 2. " + m);
+    	}
+        
         // Randoop special case: just clumps together a bunch of hashCodes, so skip it
         if (m.getName().equals("deepHashCode")
                 && m.getDeclaringClass().equals(Arrays.class))
@@ -377,6 +464,10 @@ public class TestUsageChecker {
             logger.debug("Ignoring static reset method");
             return false;
         }
+        
+        if (debug) {
+        	logger.warn("canUse: has target caller 3. " + m);
+    	}
 
         if (isForbiddenNonDeterministicCall(m)) {
             return false;
@@ -399,9 +490,13 @@ public class TestUsageChecker {
 		}
 		*/
 
+        
         // If default or
         if (Modifier.isPublic(m.getModifiers())) {
         		TestClusterUtils.makeAccessible(m);
+    		if (debug) {
+            	logger.warn("canUse: has target caller end. " + m);
+        	}
             return true;
         }
 
@@ -411,7 +506,8 @@ public class TestUsageChecker {
             String packageName = ClassUtils.getPackageName(ownerClass);
             String declaredPackageName = ClassUtils.getPackageName(m.getDeclaringClass());
             if (packageName.equals(Properties.CLASS_PREFIX)
-                    && packageName.equals(declaredPackageName)) {
+                    && packageName.equals(declaredPackageName)
+                    && !Modifier.isAbstract(m.getModifiers())) {
             		TestClusterUtils.makeAccessible(m);
                 return true;
             }
@@ -494,5 +590,13 @@ public class TestUsageChecker {
 
 		return false;
 	}
+
+    private static boolean isClassIncludedInPackage(String className, List<String> classList) {
+        String result = classList.stream()
+                .filter(class1 -> className.startsWith(class1))
+                .findAny()
+                .orElse(null);
+        return result != null ? true : false;
+    }
 
 }

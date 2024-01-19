@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -36,9 +36,7 @@ import org.objectweb.asm.tree.TypeInsnNode;
  * Replace signatures of all calls/field accesses on Booleans
  */
 public class BooleanCallsTransformer extends MethodNodeTransformer {
-	/**
-	 * 
-	 */
+
 	private final BooleanTestabilityTransformation booleanTestabilityTransformation;
 
 	/**

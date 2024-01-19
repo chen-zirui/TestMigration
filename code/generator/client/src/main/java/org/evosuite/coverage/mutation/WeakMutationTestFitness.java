@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,11 +17,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package org.evosuite.coverage.mutation;
 
+import org.evosuite.Properties;
+import org.evosuite.ga.archive.Archive;
 import org.evosuite.testcase.TestChromosome;
 import org.evosuite.testcase.execution.ExecutionResult;
 
@@ -86,10 +85,16 @@ public class WeakMutationTestFitness extends MutationTestFitness {
 		logger.debug("Individual fitness: " + " + " + infectionDistance + " + "
 		        + executionDistance + " = " + fitness);
 
-		updateIndividual(this, individual, fitness);
+		updateIndividual(individual, fitness);
+
 		if (fitness == 0.0) {
 			individual.getTestCase().addCoveredGoal(this);
 		}
+
+		if (Properties.TEST_ARCHIVE) {
+			Archive.getArchiveInstance().updateArchive(this, individual, fitness);
+		}
+
 		return fitness;
 	}
 

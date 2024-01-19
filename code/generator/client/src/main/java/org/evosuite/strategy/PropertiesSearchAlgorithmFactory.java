@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -32,7 +32,6 @@ import org.evosuite.ga.stoppingconditions.MaxTestsStoppingCondition;
 import org.evosuite.ga.stoppingconditions.MaxTimeStoppingCondition;
 import org.evosuite.ga.stoppingconditions.StoppingCondition;
 import org.evosuite.ga.stoppingconditions.TimeDeltaStoppingCondition;
-import org.evosuite.testsuite.StatementsPopulationLimit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,61 +40,43 @@ import org.slf4j.LoggerFactory;
  * 
  * @author gordon
  *
- * @param <T>
+ * @param <T> the {@code Chromosome} type used by the genetic algorithm
  */
-public abstract class PropertiesSearchAlgorithmFactory<T extends Chromosome>  {
+public abstract class PropertiesSearchAlgorithmFactory<T extends Chromosome<T>>  {
 
 	protected static final Logger logger = LoggerFactory.getLogger(PropertiesSearchAlgorithmFactory.class);
 
-
-	protected PopulationLimit getPopulationLimit() {
+	protected PopulationLimit<T> getPopulationLimit() {
 		switch (Properties.POPULATION_LIMIT) {
 		case INDIVIDUALS:
-			return new IndividualPopulationLimit();
+			return new IndividualPopulationLimit<>();
 		case TESTS:
-			return new SizePopulationLimit();
-		case STATEMENTS:
-			return (PopulationLimit) new StatementsPopulationLimit();
+			return new SizePopulationLimit<>();
 		default:
 			throw new RuntimeException("Unsupported population limit");
 		}
 	}
 	
-	protected StoppingCondition getStoppingCondition() {
+	protected StoppingCondition<T> getStoppingCondition() {
 		logger.info("Setting stopping condition: " + Properties.STOPPING_CONDITION);
 		switch (Properties.STOPPING_CONDITION) {
 		case MAXGENERATIONS:
-			return new MaxGenerationStoppingCondition();
+			return new MaxGenerationStoppingCondition<>();
 		case MAXFITNESSEVALUATIONS:
-			return new MaxFitnessEvaluationsStoppingCondition();
+			return new MaxFitnessEvaluationsStoppingCondition<>();
 		case MAXTIME:
-			return new MaxTimeStoppingCondition();
+			return new MaxTimeStoppingCondition<>();
 		case MAXTESTS:
-			return new MaxTestsStoppingCondition();
+			return new MaxTestsStoppingCondition<>();
 		case MAXSTATEMENTS:
-			return new MaxStatementsStoppingCondition();
+			return new MaxStatementsStoppingCondition<>();
 		case TIMEDELTA:
-			return new TimeDeltaStoppingCondition();
+			return new TimeDeltaStoppingCondition<>();
 		default:
 			logger.warn("Unknown stopping condition: " + Properties.STOPPING_CONDITION);
-			return new MaxGenerationStoppingCondition();
+			return new MaxGenerationStoppingCondition<>();
 		}
 	}
 	
-	public static GeneticAlgorithm<?> createSearchAlgorithm() {
-		switch(Properties.ALGORITHM) {
-		case MONOTONICGA:
-		case NSGAII:
-		case SPEA2:
-		case ONEPLUSONEEA:
-		case RANDOM:
-		case STANDARDGA:
-		case STEADYSTATEGA:
-			return new PropertiesSuiteGAFactory().getSearchAlgorithm();
-		default:
-			throw new RuntimeException("Unsupported algorithm: "+Properties.ALGORITHM);
-		}
-	}
-	
-	public abstract GeneticAlgorithm<?> getSearchAlgorithm();
+	public abstract GeneticAlgorithm<T> getSearchAlgorithm();
 }

@@ -2,9 +2,11 @@ apple.
 ch.qos.logback.
 com.apple.
 com_cenqua_clover.
+com.atlassian.clover.
+com_atlassian_clover.
+org.openclover.
 com.cenqua.
 com.gzoltar.
-com.sun.
 com.vladium.emma.
 com.yourkit.
 corina.cross.Single
@@ -15,6 +17,8 @@ de.unisl.cs.st.bugex.
 de.unisb.cs.st.specmate.
 dk.brics.automaton.
 lombok.
+com.sun.
+org.relaxng.datatype.
 java.
 javax.
 javafx.
@@ -22,7 +26,6 @@ jdk.
 junit.framework.
 major.mutation.
 net.sourceforge.cobertura.
-org.apache.log4j.
 org.apache.commons.discovery.tools.DiscoverSingleton
 org.apache.commons.discovery.resource.ClassLoaders
 org.apache.commons.discovery.resource.classes.DiscoverClasses
@@ -33,7 +36,7 @@ org.apache.lucene.analysis.util.CharFilterFactory
 org.apache.maven.
 org.apache.struts.util.MessageResources
 org.apache.tools.ant.
-org.apache.xerces.dom3.
+org.apache.xerces.
 org.exsyst.
 org.jacoco.
 org.jcp.xml.dsig.internal.dom.
@@ -49,3 +52,5 @@ org.uispec4j.
 mockit.
 sun.
 testing.generation.evosuite.
+org.codehaus.groovy.
+groovy.

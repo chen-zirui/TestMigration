@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -451,7 +451,7 @@ public final class SymbolicFunctionVM extends AbstractVM {
 		return op.getReference();
 	}
 
-	private final Map<FunctionKey, SymbolicFunction> functionsTable = new HashMap<FunctionKey, SymbolicFunction>();
+	private final Map<FunctionKey, SymbolicFunction> functionsTable = new HashMap<>();
 
 	private SymbolicFunction getFunction(String owner, String name, String desc) {
 		FunctionKey k = new FunctionKey(owner, name, desc);
@@ -641,7 +641,7 @@ public final class SymbolicFunctionVM extends AbstractVM {
 		IntegerConstraint constraint = myFunctionUnderExecution
 				.beforeExecuteFunction();
 		if (constraint != null) {
-			pc.addSupportingConstraint(constraint);
+			pc.appendSupportingConstraint(constraint);
 		}
 	}
 

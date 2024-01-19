@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -20,6 +20,7 @@
 package org.evosuite.strategy;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.evosuite.ProgressMonitor;
@@ -29,8 +30,8 @@ import org.evosuite.TestGenerationContext;
 import org.evosuite.coverage.FitnessFunctions;
 import org.evosuite.coverage.TestFitnessFactory;
 import org.evosuite.graphs.cfg.CFGMethodAdapter;
+import org.evosuite.instrumentation.InstrumentingClassLoader;
 import org.evosuite.rmi.ClientServices;
-import org.evosuite.ga.FitnessFunction;
 import org.evosuite.ga.stoppingconditions.GlobalTimeStoppingCondition;
 import org.evosuite.ga.stoppingconditions.MaxFitnessEvaluationsStoppingCondition;
 import org.evosuite.ga.stoppingconditions.MaxGenerationStoppingCondition;
@@ -46,9 +47,11 @@ import org.evosuite.testsuite.TestSuiteChromosome;
 import org.evosuite.testsuite.TestSuiteFitnessFunction;
 import org.evosuite.utils.LoggingUtils;
 
+import static java.util.stream.Collectors.toCollection;
+
 /**
  * This is the abstract superclass of all techniques to generate a set of tests
- * for a target class, which does not neccessarily require the use of a GA.
+ * for a target class, which does not necessarily require the use of a GA.
  * 
  * Postprocessing is not done as part of the test generation strategy.
  * 
@@ -64,13 +67,15 @@ public abstract class TestGenerationStrategy {
 	public abstract TestSuiteChromosome generateTests();
 	
 	/** There should only be one */
-	protected final ProgressMonitor progressMonitor = new ProgressMonitor();
+	protected final ProgressMonitor<TestSuiteChromosome> progressMonitor = new ProgressMonitor<>();
 
 	/** There should only be one */
-	protected ZeroFitnessStoppingCondition zeroFitness = new ZeroFitnessStoppingCondition();
+	protected ZeroFitnessStoppingCondition<TestSuiteChromosome> zeroFitness =
+			new ZeroFitnessStoppingCondition<>();
 	
 	/** There should only be one */
-	protected StoppingCondition globalTime = new GlobalTimeStoppingCondition();
+	protected StoppingCondition<TestSuiteChromosome> globalTime =
+			new GlobalTimeStoppingCondition<>();
 
     protected void sendExecutionStatistics() {
         ClientServices.getInstance().getClientNode().trackOutputVariable(RuntimeVariable.Statements_Executed, MaxStatementsStoppingCondition.getNumExecutedStatements());
@@ -82,7 +87,7 @@ public abstract class TestGenerationStrategy {
      * @return
      */
 	protected List<TestSuiteFitnessFunction> getFitnessFunctions() {
-	    List<TestSuiteFitnessFunction> ffs = new ArrayList<TestSuiteFitnessFunction>();
+	    List<TestSuiteFitnessFunction> ffs = new ArrayList<>();
 	    for (int i = 0; i < Properties.CRITERION.length; i++) {
 	    	TestSuiteFitnessFunction newFunction = FitnessFunctions.getFitnessFunction(Properties.CRITERION[i]);
 	    	
@@ -122,12 +127,9 @@ public abstract class TestGenerationStrategy {
 	 * @return
 	 */
 	public static List<TestFitnessFactory<? extends TestFitnessFunction>> getFitnessFactories() {
-	    List<TestFitnessFactory<? extends TestFitnessFunction>> goalsFactory = new ArrayList<TestFitnessFactory<? extends TestFitnessFunction>>();
-	    for (int i = 0; i < Properties.CRITERION.length; i++) {
-	        goalsFactory.add(FitnessFunctions.getFitnessFactory(Properties.CRITERION[i]));
-	    }
-
-		return goalsFactory;
+		return Arrays.stream(Properties.CRITERION)
+				.map(FitnessFunctions::getFitnessFactory)
+				.collect(toCollection(ArrayList::new));
 	}
 	
 	/**
@@ -138,7 +140,8 @@ public abstract class TestGenerationStrategy {
 	 * @param stoppingCondition
 	 * @return
 	 */
-	protected boolean isFinished(TestSuiteChromosome chromosome, StoppingCondition stoppingCondition) {
+	protected boolean isFinished(TestSuiteChromosome chromosome,
+								 StoppingCondition<TestSuiteChromosome> stoppingCondition) {
 		if (stoppingCondition.isFinished())
 			return true;
 
@@ -148,8 +151,7 @@ public abstract class TestGenerationStrategy {
 		}
 
 		if (!(stoppingCondition instanceof MaxTimeStoppingCondition)) {
-			if (globalTime.isFinished())
-				return true;
+			return globalTime.isFinished();
 		}
 
 		return false;
@@ -159,28 +161,28 @@ public abstract class TestGenerationStrategy {
 	 * Convert property to actual stopping condition
 	 * @return
 	 */
-	protected StoppingCondition getStoppingCondition() {
+	protected StoppingCondition<TestSuiteChromosome> getStoppingCondition() {
 		switch (Properties.STOPPING_CONDITION) {
 		case MAXGENERATIONS:
-			return new MaxGenerationStoppingCondition();
+			return new MaxGenerationStoppingCondition<>();
 		case MAXFITNESSEVALUATIONS:
-			return new MaxFitnessEvaluationsStoppingCondition();
+			return new MaxFitnessEvaluationsStoppingCondition<>();
 		case MAXTIME:
-			return new MaxTimeStoppingCondition();
+			return new MaxTimeStoppingCondition<>();
 		case MAXTESTS:
-			return new MaxTestsStoppingCondition();
+			return new MaxTestsStoppingCondition<>();
 		case MAXSTATEMENTS:
-			return new MaxStatementsStoppingCondition();
+			return new MaxStatementsStoppingCondition<>();
 		default:
-			return new MaxGenerationStoppingCondition();
+			return new MaxGenerationStoppingCondition<>();
 		}
 	}
 
 	protected boolean canGenerateTestsForSUT() {
 		if (TestCluster.getInstance().getNumTestCalls() == 0) {
-			if(Properties.P_REFLECTION_ON_PRIVATE <= 0.0 || CFGMethodAdapter.getNumMethods(TestGenerationContext.getInstance().getClassLoaderForSUT()) == 0) {
-				return false;
-			}
+			final InstrumentingClassLoader cl = TestGenerationContext.getInstance().getClassLoaderForSUT();
+			final int numMethods = CFGMethodAdapter.getNumMethods(cl);
+			return !(Properties.P_REFLECTION_ON_PRIVATE <= 0.0) && numMethods != 0;
 		}
 		return true;
 	}

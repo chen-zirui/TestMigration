@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,20 +17,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.setup.callgraph;
 
 import java.util.*;
 
 import org.evosuite.Properties;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.instrumentation.BytecodeInstrumentation;
-import org.evosuite.instrumentation.ExceptionTransformationClassAdapter;
 import org.evosuite.setup.DependencyAnalysis;
 import org.evosuite.setup.InheritanceTree;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnList;
@@ -48,9 +45,10 @@ import org.slf4j.LoggerFactory;
  */
 public class CallGraphGenerator {
 	
-	private static Logger logger = LoggerFactory.getLogger(CallGraphGenerator.class);
+	private static final Logger logger = LoggerFactory.getLogger(CallGraphGenerator.class);
 
 	public static CallGraph analyze(String className) {
+		logger.info("analyse classname=" + className);
 		ClassNode targetClass = DependencyAnalysis.getClassNode(className);
 		CallGraph callgraph = new CallGraph(className);
 		if (targetClass != null)
@@ -118,7 +116,20 @@ public class CallGraphGenerator {
 	@SuppressWarnings("unchecked")
 	private static void handle(CallGraph callGraph, ClassNode targetClass, int depth) {
 		List<MethodNode> methods = targetClass.methods;
+		boolean isTransferCallerClass = targetClass.name.equals(ReachabilityCoverageFactory.targetCallerClazz);
+		if (isTransferCallerClass) {
+			logger.warn("found caller class when handling call graph");
+		}
+		logger.debug("handle classname=" + targetClass + "  at depth=" + depth);
 		for (MethodNode mn : methods) {
+			if (isTransferCallerClass) {
+				if (mn.name.equals(ReachabilityCoverageFactory.targetCallerMethod)) {
+					logger.warn("found caller class method: " + mn.name);
+					handleMethodNode(callGraph, targetClass, mn, depth);		
+				}
+				
+				continue;
+			} 
 			logger.debug("Method: " + mn.name);
 			handleMethodNode(callGraph, targetClass, mn, depth);
 		}
@@ -152,19 +163,6 @@ public class CallGraphGenerator {
 	private static void handleMethodNode(CallGraph callGraph, ClassNode cn, MethodNode mn, int depth) {
 		handlePublicMethodNode(callGraph, cn, mn);
 
-		// TODO: Integrate this properly - it is currently an unexpected side-effect
-		if(!ExceptionTransformationClassAdapter.methodExceptionMap.containsKey(cn.name))
-			ExceptionTransformationClassAdapter.methodExceptionMap.put(cn.name, new LinkedHashMap<>());
-
-		String methodNameDesc = mn.name + mn.desc;
-		Set<Type> exceptionTypes = new LinkedHashSet<>();
-		if(mn.exceptions != null) {
-			for (String exceptionName : ((List<String>)mn.exceptions)) {
-				exceptionTypes.add(Type.getType(exceptionName));
-			}
-		}
-		ExceptionTransformationClassAdapter.methodExceptionMap.get(cn.name).put(methodNameDesc, exceptionTypes);
-
 		InsnList instructions = mn.instructions;
 		Iterator<AbstractInsnNode> iterator = instructions.iterator();
 
@@ -193,9 +191,10 @@ public class CallGraphGenerator {
 	private static void handleMethodInsnNode(CallGraph callGraph, ClassNode cn, MethodNode mn,
 			MethodInsnNode methodCall, int depth) {
 
+		// logger.warn("To handle method: " + methodCall.name);
 		// Only build calltree for instrumentable classes
 		if (BytecodeInstrumentation.checkIfCanInstrument(methodCall.owner.replaceAll("/", "."))) {
-			logger.debug("Handling method: " + methodCall.name);
+			// logger.warn("Handling method: " + methodCall.name);
 			if (!callGraph.hasCall(cn.name, mn.name + mn.desc, methodCall.owner, methodCall.name
 					+ methodCall.desc)) {
 

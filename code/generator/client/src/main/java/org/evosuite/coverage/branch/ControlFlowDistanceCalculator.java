@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -69,7 +69,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ControlFlowDistanceCalculator {
 
-	private static Logger logger = LoggerFactory.getLogger(ControlFlowDistanceCalculator.class);
+	private static final Logger logger = LoggerFactory.getLogger(ControlFlowDistanceCalculator.class);
 
 	// DONE hold intermediately calculated ControlFlowDistances in
 	// ExecutionResult during computation in order to speed up things -
@@ -178,9 +178,7 @@ public class ControlFlowDistanceCalculator {
 			String constructorClassName = c.getConstructor().getName();
 			String constructorMethodName = "<init>"
 					+ Type.getConstructorDescriptor(c.getConstructor().getConstructor());
-			if(constructorClassName.equals(className) && constructorMethodName.equals(methodName)) {
-				return true;
-			}
+			return constructorClassName.equals(className) && constructorMethodName.equals(methodName);
 	
 		}
 		return false;
@@ -216,10 +214,11 @@ public class ControlFlowDistanceCalculator {
 		r.setApproachLevel(branch.getInstruction().getActualCFG().getDiameter() + 1);
 
 		// Minimal distance between target node and path
-		for (MethodCall call : result.getTrace().getMethodCalls()) {
+		List<MethodCall> methodCalls = new ArrayList<>(result.getTrace().getMethodCalls());
+		for (MethodCall call : methodCalls) {
 			if (call.className.equals(className) && call.methodName.equals(methodName)) {
 				ControlFlowDistance d2;
-				Set<Branch> handled = new HashSet<Branch>();
+				Set<Branch> handled = new HashSet<>();
 				//				result.intermediateDistances = new HashMap<Branch,ControlFlowDistance>();
 				d2 = getNonRootDistance(result, call, branch, value, className,
 				                        methodName, handled);
@@ -326,7 +325,7 @@ public class ControlFlowDistanceCalculator {
 	        ExecutionResult result, MethodCall call, BytecodeInstruction instruction,
 	        String className, String methodName, Set<Branch> handled) {
 
-		Set<ControlFlowDistance> r = new HashSet<ControlFlowDistance>();
+		Set<ControlFlowDistance> r = new HashSet<>();
 		Set<ControlDependency> nextToLookAt = instruction.getControlDependencies();
 
 		for (ControlDependency next : nextToLookAt) {
@@ -358,7 +357,7 @@ public class ControlFlowDistanceCalculator {
 	private static Set<Integer> determineBranchTracePositions(MethodCall call,
 	        Branch branch) {
 
-		Set<Integer> r = new HashSet<Integer>();
+		Set<Integer> r = new HashSet<>();
 		List<Integer> path = call.branchTrace;
 		for (int pos = 0; pos < path.size(); pos++) {
 			if (path.get(pos) == branch.getActualBranchId()) { //.getActualBranchId()); {

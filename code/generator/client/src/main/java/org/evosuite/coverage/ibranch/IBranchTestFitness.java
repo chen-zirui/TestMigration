@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,17 +17,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package org.evosuite.coverage.ibranch;
 
 import java.util.Map;
 import java.util.Map.Entry;
-
+import org.evosuite.Properties;
 import org.evosuite.coverage.branch.Branch;
 import org.evosuite.coverage.branch.BranchCoverageGoal;
 import org.evosuite.coverage.branch.BranchCoverageTestFitness;
+import org.evosuite.ga.archive.Archive;
 import org.evosuite.setup.CallContext;
 import org.evosuite.testcase.TestChromosome;
 import org.evosuite.testcase.TestFitnessFunction;
@@ -123,7 +121,16 @@ public class IBranchTestFitness extends TestFitnessFunction {
 			fitness = getPredicateDistance(result.getTrace().getFalseDistancesContext());
 		}
 
-		updateIndividual(this, individual, fitness);
+		updateIndividual(individual, fitness);
+
+		if (fitness == 0.0) {
+			individual.getTestCase().addCoveredGoal(this);
+		}
+
+		if (Properties.TEST_ARCHIVE) {
+			Archive.getArchiveInstance().updateArchive(this, individual, fitness);
+		}
+
 		return fitness;
 	}
 
@@ -202,11 +209,8 @@ public class IBranchTestFitness extends TestFitnessFunction {
 		} else if (!branchGoal.equals(other.branchGoal))
 			return false;
 		if (context == null) {
-			if (other.context != null)
-				return false;
-		} else if (!context.equals(other.context))
-			return false;
-		return true;
+			return other.context == null;
+		} else return context.equals(other.context);
 	}
 
 }

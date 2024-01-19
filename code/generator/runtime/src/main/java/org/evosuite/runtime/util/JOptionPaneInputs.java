@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
+ * contributors
+ *
+ * This file is part of EvoSuite.
+ *
+ * EvoSuite is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3.0 of the License, or
+ * (at your option) any later version.
+ *
+ * EvoSuite is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.evosuite.runtime.util;
 
 import java.util.LinkedList;
@@ -117,7 +136,7 @@ public class JOptionPaneInputs {
 		return stringInputs.poll();
 	}
 
-	private final LinkedList<String> stringInputs = new LinkedList<String>();
+	private final LinkedList<String> stringInputs = new LinkedList<>();
 
 	private void enqueueInputString0(String str) {
 		stringInputs.add(str);
@@ -209,7 +228,7 @@ public class JOptionPaneInputs {
 		return !stringInputs.isEmpty();
 	}
 
-	private final LinkedList<Integer> yesNoCancelSelections = new LinkedList<Integer>();
+	private final LinkedList<Integer> yesNoCancelSelections = new LinkedList<>();
 
 	public boolean containsYesNoCancelSelection() {
 		return !yesNoCancelSelections.isEmpty();
@@ -223,9 +242,9 @@ public class JOptionPaneInputs {
 		return yesNoCancelSelections.poll();
 	}
 
-	private final LinkedList<Integer> yesNoSelections = new LinkedList<Integer>();
+	private final LinkedList<Integer> yesNoSelections = new LinkedList<>();
 
-	private final LinkedList<Integer> optionSelections = new LinkedList<Integer>();
+	private final LinkedList<Integer> optionSelections = new LinkedList<>();
 
 	public boolean containsYesNoSelection() {
 		return !yesNoSelections.isEmpty();
@@ -240,7 +259,7 @@ public class JOptionPaneInputs {
 		return yesNoSelections.poll();
 	}
 
-	private final LinkedList<Integer> okCancelSelections = new LinkedList<Integer>();
+	private final LinkedList<Integer> okCancelSelections = new LinkedList<>();
 
 	public boolean containsOkCancelSelection() {
 		return !okCancelSelections.isEmpty();

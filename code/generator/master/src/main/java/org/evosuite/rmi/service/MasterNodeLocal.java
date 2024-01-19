@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -20,11 +20,8 @@
 package org.evosuite.rmi.service;
 
 import java.util.Collection;
-import java.util.Set;
+import java.util.Map;
 
-import org.evosuite.rmi.service.ClientNodeRemote;
-import org.evosuite.rmi.service.ClientState;
-import org.evosuite.rmi.service.ClientStateInformation;
 import org.evosuite.utils.Listenable;
 
 /**
@@ -34,13 +31,15 @@ import org.evosuite.utils.Listenable;
  */
 public interface MasterNodeLocal extends Listenable<ClientStateInformation>{
 	
-	public String getSummaryOfClientStatuses();
+	String getSummaryOfClientStatuses();
 	
-	public Collection<ClientState> getCurrentState();
-
-	public Collection<ClientStateInformation> getCurrentStateInformation();
-
-	public Set<ClientNodeRemote> getClientsOnceAllConnected(long timeoutInMs) throws InterruptedException;
+	Collection<ClientState> getCurrentState();
 	
-	public void cancelAllClients();
+	ClientState getCurrentState(String clientId);
+
+	Collection<ClientStateInformation> getCurrentStateInformation();
+
+	Map<String, ClientNodeRemote> getClientsOnceAllConnected(long timeoutInMs) throws InterruptedException;
+	
+	void cancelAllClients();
 }

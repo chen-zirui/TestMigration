@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -48,7 +48,7 @@ public class AccessibleClassAdapter extends ClassVisitor {
 	 * @param className a {@link java.lang.String} object.
 	 */
 	public AccessibleClassAdapter(ClassVisitor cv, String className) {
-		super(Opcodes.ASM5, cv);
+		super(Opcodes.ASM9, cv);
 		className = ResourceList.getClassNameFromResourcePath(className); 
 		String packageName = "";
 		if (className.contains("."))

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -42,7 +42,7 @@ public final class Matcher_Matches extends SymbolicFunction {
 	@Override
 	public Object executeFunction() {
 		Matcher conc_matcher = (Matcher) this.getConcReceiver();
-		ReferenceConstant symb_matcher = (ReferenceConstant) this
+		ReferenceConstant symb_matcher = this
 				.getSymbReceiver();
 		boolean res = this.getConcBooleanRetVal();
 

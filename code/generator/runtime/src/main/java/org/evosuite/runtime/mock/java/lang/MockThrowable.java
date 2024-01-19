@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -25,9 +25,13 @@ import java.io.PrintWriter;
 import org.evosuite.runtime.mock.EvoSuiteMock;
 import org.evosuite.runtime.mock.MockFramework;
 import org.evosuite.runtime.mock.OverrideMock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MockThrowable extends Throwable  implements OverrideMock {
 
+	private static final Logger logger = LoggerFactory.getLogger(MockThrowable.class);
+	
 	private static final long serialVersionUID = 4078375023919805371L;
 
 	private StackTraceElement[]  stackTraceElements;
@@ -39,6 +43,11 @@ public class MockThrowable extends Throwable  implements OverrideMock {
 	public MockThrowable() {
 		super();
 		init();
+		try {
+			throw new RuntimeException("in MockThrowable");
+		} catch (Exception e) {
+			logger.error("error",e);
+		}
 	}
 
 	public MockThrowable(String message) {

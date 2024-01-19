@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -24,7 +24,6 @@ import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -121,7 +120,7 @@ public class MockFileOutputStream extends FileOutputStream implements LeakingRes
 
 
 
-	private void writeBytes(byte b[], int off, int len)
+	private void writeBytes(byte[] b, int off, int len)
 			throws IOException{
 
 		throwExceptionIfClosed();
@@ -141,7 +140,7 @@ public class MockFileOutputStream extends FileOutputStream implements LeakingRes
 	}
 
 	@Override
-	public void write(byte b[]) throws IOException {
+	public void write(byte[] b) throws IOException {
 		if(!MockFramework.isEnabled()){
 			super.write(b);
 			return;
@@ -150,7 +149,7 @@ public class MockFileOutputStream extends FileOutputStream implements LeakingRes
 	}
 
 	@Override
-	public void write(byte b[], int off, int len) throws IOException {
+	public void write(byte[] b, int off, int len) throws IOException {
 		if(!MockFramework.isEnabled()){
 			super.write(b, off, len);
 			return;

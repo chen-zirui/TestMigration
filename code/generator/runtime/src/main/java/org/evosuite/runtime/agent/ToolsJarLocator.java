@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,6 +19,10 @@
  */
 package org.evosuite.runtime.agent;
 
+import org.apache.commons.lang3.SystemUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,9 +30,6 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ToolsJarLocator {
 
@@ -54,6 +55,16 @@ public class ToolsJarLocator {
 	 * @throws RuntimeException  if it was not possible to locate/load tools.jar
 	 */
 	public ClassLoader getLoaderForToolsJar() throws RuntimeException{
+		Integer javaVersion = Integer.valueOf(SystemUtils.JAVA_VERSION.split("\\.")[0]);
+		if(javaVersion >= 9){
+			try {
+				Class<?> clazz  = Class.forName(EXAMPLE_CLASS);
+				return clazz.getClassLoader();
+			} catch (ClassNotFoundException e) {
+				throw new RuntimeException("Did not manage to automatically find tools.jar. Use -Dtools_jar_location=<path> property");
+			}
+
+		}
 
 		/*
 			This was a problem, as PowerMock and JMockit ship with their own version of tools.jar taken from OpenJDK
@@ -106,7 +117,7 @@ public class ToolsJarLocator {
 	}
 
 	private  ClassLoader considerPathInProperties() {
-		if(! manuallySpecifiedToolLocation.endsWith(".jar")){
+		if(!manuallySpecifiedToolLocation.endsWith(".jar")){
 			throw new RuntimeException("Property tools_jar_location does not point to a jar file: "+manuallySpecifiedToolLocation);
 		}
 

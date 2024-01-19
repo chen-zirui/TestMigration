@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -35,13 +35,12 @@ import org.evosuite.seeding.ConstantPoolManager;
 import org.evosuite.testcase.TestCase;
 import org.evosuite.utils.generic.GenericClass;
 import org.evosuite.utils.Randomness;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 public class ClassPrimitiveStatement extends PrimitiveStatement<Class<?>> {
 
 	private static final long serialVersionUID = -2728777640255424791L;
 
-	private transient Set<Class<?>> assignableClasses = new LinkedHashSet<Class<?>>();
+	private transient Set<Class<?>> assignableClasses = new LinkedHashSet<>();
 
 	public ClassPrimitiveStatement(TestCase tc, GenericClass type,
 	        Set<Class<?>> assignableClasses) {
@@ -119,16 +118,15 @@ public class ClassPrimitiveStatement extends PrimitiveStatement<Class<?>> {
 		if (!assignableClasses.isEmpty()) {
 			value = Randomness.choice(assignableClasses);
 		} else {
+			
 			org.objectweb.asm.Type type = ConstantPoolManager.getInstance().getConstantPool().getRandomType();
+			logger.warn("going to pick random type = " + type);
 			try {
 				value = getType(type);
-			} catch (ClassNotFoundException e) {
-				logger.warn("Error loading class " + type.getClassName() + ": " + e);
-			} catch (NoClassDefFoundError e) {
-				logger.warn("Error loading class " + type.getClassName() + ": " + e);
-			} catch (ExceptionInInitializerError e) {
+			} catch (ClassNotFoundException | NoClassDefFoundError | ExceptionInInitializerError e) {
 				logger.warn("Error loading class " + type.getClassName() + ": " + e);
 			}
+			logger.warn("pick random type succeeded = " + type);
 		}
 	}
 
@@ -142,7 +140,8 @@ public class ClassPrimitiveStatement extends PrimitiveStatement<Class<?>> {
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		oos.defaultWriteObject();
-		List<GenericClass> currentAssignableClasses = new ArrayList<GenericClass>();
+		oos.writeObject(new GenericClass(value));
+		List<GenericClass> currentAssignableClasses = new ArrayList<>();
 		for (Class<?> assignableClass : assignableClasses)
 			currentAssignableClasses.add(new GenericClass(assignableClass));
 		oos.writeObject(currentAssignableClasses);
@@ -152,9 +151,9 @@ public class ClassPrimitiveStatement extends PrimitiveStatement<Class<?>> {
 	private void readObject(ObjectInputStream ois) throws ClassNotFoundException,
 	        IOException {
 		ois.defaultReadObject();
-		this.value = retval.getGenericClass().getRawClass();
+		this.value = ((GenericClass) ois.readObject()).getRawClass();
 		List<GenericClass> newAssignableClasses = (List<GenericClass>) ois.readObject();
-		assignableClasses = new LinkedHashSet<Class<?>>();
+		assignableClasses = new LinkedHashSet<>();
 		for (GenericClass assignableClass : newAssignableClasses) {
 			assignableClasses.add(assignableClass.getRawClass());
 		}

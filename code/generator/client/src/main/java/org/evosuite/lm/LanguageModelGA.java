@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
+ * contributors
+ *
+ * This file is part of EvoSuite.
+ *
+ * EvoSuite is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3.0 of the License, or
+ * (at your option) any later version.
+ *
+ * EvoSuite is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.evosuite.lm;
 
 import org.evosuite.testcase.ValueMinimizer;
@@ -23,7 +42,7 @@ public class LanguageModelGA extends LanguageModelSearch {
 
     private static int POPULATION_SIZE = 20;
 
-    private static Logger logger = LoggerFactory.getLogger(LanguageModelGA.class);
+    private static final Logger logger = LoggerFactory.getLogger(LanguageModelGA.class);
 
 
     public LanguageModelGA(ConstantValue constantValue, ValueMinimizer.Minimization objective){
@@ -65,10 +84,10 @@ public class LanguageModelGA extends LanguageModelSearch {
         assert !sample.isEmpty();
 
         if(best) {
-            Collections.sort(sample, Collections.reverseOrder(this));
+            sample.sort(Collections.reverseOrder(this));
             return sample.get(0);
         }else{
-            Collections.sort(sample,this);
+            sample.sort(this);
             return sample.get(0);
         }
 
@@ -97,9 +116,9 @@ public class LanguageModelGA extends LanguageModelSearch {
         int numElitesToSelect = (int)Math.round(ELITIST_RATE * population.size());
         //copy some elites over:
 
-        ArrayList<Chromosome> rankedPopulation = new ArrayList<Chromosome>(population.size());
+        ArrayList<Chromosome> rankedPopulation = new ArrayList<>(population.size());
         rankedPopulation.addAll(population);
-        Collections.sort(rankedPopulation,Collections.reverseOrder(this));
+        rankedPopulation.sort(Collections.reverseOrder(this));
 
 
 
@@ -202,7 +221,7 @@ public class LanguageModelGA extends LanguageModelSearch {
         Chromosome best = getBest(population, null);
 
         for(int generation = 0; generation < GENERATIONS && !isBudgetExpended(); generation++){
-            HashSet<Chromosome> newPopulation = new HashSet<Chromosome>();
+            HashSet<Chromosome> newPopulation = new HashSet<>();
 
             try{
                 generation(newPopulation);

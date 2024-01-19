@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -114,7 +114,7 @@ public final class RealComparison extends AbstractExpression<Long> implements
 
 	@Override
 	public Set<Variable<?>> getVariables() {
-		Set<Variable<?>> variables = new HashSet<Variable<?>>();
+		Set<Variable<?>> variables = new HashSet<>();
 		variables.addAll(this.left.getVariables());
 		variables.addAll(this.right.getVariables());
 		return variables;
@@ -122,7 +122,7 @@ public final class RealComparison extends AbstractExpression<Long> implements
 
 	@Override
 	public Set<Object> getConstants() {
-		Set<Object> result = new HashSet<Object>();
+		Set<Object> result = new HashSet<>();
 		result.addAll(left.getConstants());
 		result.addAll(right.getConstants());
 		return result;

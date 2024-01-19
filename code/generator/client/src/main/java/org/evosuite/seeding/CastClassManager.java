@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -51,24 +51,19 @@ public class CastClassManager {
 
 	private static final Logger logger = LoggerFactory.getLogger(CastClassManager.class);
 
-	private final Map<GenericClass, Integer> classMap = new LinkedHashMap<GenericClass, Integer>();
+	private final Map<GenericClass, Integer> classMap = new LinkedHashMap<>();
 
 	public static List<GenericClass> sortByValue(Map<GenericClass, Integer> map) {
-		List<Map.Entry<GenericClass, Integer>> list = new LinkedList<Map.Entry<GenericClass, Integer>>(
-		        map.entrySet());
-		Collections.sort(list, new Comparator<Map.Entry<GenericClass, Integer>>() {
-			@Override
-			public int compare(Map.Entry<GenericClass, Integer> o1,
-			        Map.Entry<GenericClass, Integer> o2) {
-				if (o1.getKey().getNumParameters() == o2.getKey().getNumParameters())
-					return (o1.getValue()).compareTo(o2.getValue());
-				else
-					return o1.getKey().getNumParameters()
-					        - o2.getKey().getNumParameters();
-			}
+		List<Map.Entry<GenericClass, Integer>> list = new LinkedList<>(
+				map.entrySet());
+		list.sort((o1, o2) -> {
+			if (o1.getKey().getNumParameters() == o2.getKey().getNumParameters())
+				return (o1.getValue()).compareTo(o2.getValue());
+			else
+				return o1.getKey().getNumParameters() - o2.getKey().getNumParameters();
 		});
 
-		List<GenericClass> result = new LinkedList<GenericClass>();
+		List<GenericClass> result = new LinkedList<>();
 		for (Map.Entry<GenericClass, Integer> entry : list) {
 			result.add(entry.getKey());
 		}
@@ -120,7 +115,7 @@ public class CastClassManager {
 
 	public void addCastClass(GenericClass clazz, int depth) {
 		if (clazz.getRawClass() == null) {
-			logger.warn("ADDING NULL!");
+//			logger.warn("ADDING NULL!");
 			assert (false);
 		}
 		if (clazz.isAbstract()) {
@@ -189,7 +184,7 @@ public class CastClassManager {
 	private boolean addAssignableClass(WildcardType wildcardType,
 	        Map<TypeVariable<?>, Type> typeMap) {
 		Set<Class<?>> classes = TestCluster.getInstance().getAnalyzedClasses();
-		Set<Class<?>> assignableClasses = new LinkedHashSet<Class<?>>();
+		Set<Class<?>> assignableClasses = new LinkedHashSet<>();
 
 		for (Class<?> clazz : classes) {
 			if (!TestUsageChecker.canUse(clazz))
@@ -261,7 +256,7 @@ public class CastClassManager {
 	private boolean addAssignableClass(TypeVariable<?> typeVariable,
 	        Map<TypeVariable<?>, Type> typeMap) {
 		Set<Class<?>> classes = TestCluster.getInstance().getAnalyzedClasses();
-		Set<Class<?>> assignableClasses = new LinkedHashSet<Class<?>>();
+		Set<Class<?>> assignableClasses = new LinkedHashSet<>();
 
 		for (Class<?> clazz : classes) {
 			if (!TestUsageChecker.canUse(clazz))
@@ -331,7 +326,7 @@ public class CastClassManager {
 			return true;
 		} else {
 			InheritanceTree inheritanceTree = DependencyAnalysis.getInheritanceTree();
-			Set<Class<?>> boundCandidates = new LinkedHashSet<Class<?>>();
+			Set<Class<?>> boundCandidates = new LinkedHashSet<>();
 			for (Type bound : typeVariable.getBounds()) {
 				Class<?> rawBound = GenericTypeReflector.erase(bound);
 				boundCandidates.add(rawBound);
@@ -389,7 +384,7 @@ public class CastClassManager {
 
 	private List<GenericClass> getAssignableClasses(WildcardType wildcardType,
 	        boolean allowRecursion, Map<TypeVariable<?>, Type> ownerVariableMap) {
-		Map<GenericClass, Integer> assignableClasses = new LinkedHashMap<GenericClass, Integer>();
+		Map<GenericClass, Integer> assignableClasses = new LinkedHashMap<>();
 
 		logger.debug("Getting assignable classes for wildcard type " + wildcardType);
 		for (Entry<GenericClass, Integer> entry : classMap.entrySet()) {
@@ -415,7 +410,7 @@ public class CastClassManager {
 
 	private List<GenericClass> getAssignableClasses(TypeVariable<?> typeVariable,
 	        boolean allowRecursion, Map<TypeVariable<?>, Type> ownerVariableMap) {
-		Map<GenericClass, Integer> assignableClasses = new LinkedHashMap<GenericClass, Integer>();
+		Map<GenericClass, Integer> assignableClasses = new LinkedHashMap<>();
 
 		logger.debug("Getting assignable classes for type variable " + typeVariable);
 		for (Entry<GenericClass, Integer> entry : classMap.entrySet()) {
@@ -427,7 +422,7 @@ public class CastClassManager {
 				continue;
 			}
 			if (!allowRecursion && key.hasWildcardOrTypeVariables()) {
-				logger.debug("Recursion not allowed but type has wilcard or type variables");
+				logger.debug("Recursion not allowed but type has wildcard or type variables");
 				continue;
 			}
 
@@ -448,18 +443,22 @@ public class CastClassManager {
 	        boolean allowRecursion, Map<TypeVariable<?>, Type> ownerVariableMap) {
 
 		List<GenericClass> assignableClasses = getAssignableClasses(typeVariable,
-		                                                            false,
+		                                                            allowRecursion,
 		                                                            ownerVariableMap);
 
 		logger.debug("Assignable classes to " + typeVariable + ": " + assignableClasses);
 
+		// FIXME: If we disallow recursion immediately, then we will never actually
+		// do recursion since we always have Object, Integer, and String as candidates.
+		// Including recursion may influence performance negatively.
+		//
 		// If we were not able to find an assignable class without recursive types
 		// we try again but allowing recursion
-		if(assignableClasses.isEmpty()) {
-			assignableClasses = getAssignableClasses(typeVariable,
-                    allowRecursion,
-                    ownerVariableMap);
-		}
+//		if(assignableClasses.isEmpty()) {
+//			assignableClasses = getAssignableClasses(typeVariable,
+//                    allowRecursion,
+//                    ownerVariableMap);
+//		}
 
 		//special case
 		if (assignableClasses.isEmpty()) {

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -34,7 +34,7 @@ import java.util.Map;
  */
 public class JDKClassResetter {
 
-    private static Logger logger = LoggerFactory.getLogger(JDKClassResetter.class);
+    private static final Logger logger = LoggerFactory.getLogger(JDKClassResetter.class);
 
     private static Map renderingHintsKeyIdentityMap;
     private static Map renderingHintsKeyIdentityMapCopy;

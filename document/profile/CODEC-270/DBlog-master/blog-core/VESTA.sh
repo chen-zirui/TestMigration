@@ -1,2 +1,0 @@
-export NOW_DIR=/****/TestMigration/resource/CODEC-270/DBlog-master/blog-core
-$PYTHON $PROJECT_DIR/main/VESTA.py CODEC-270 DBlog-master blog-core "org.apache.commons.codec.binary.Base64:decodeBase64(java.lang.String)" blog-core.jar -vaild

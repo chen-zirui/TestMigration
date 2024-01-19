@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -22,23 +22,21 @@ package org.evosuite.coverage.mutation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.evosuite.TestGenerationContext;
 import org.evosuite.rmi.ClientServices;
 import org.evosuite.statistics.RuntimeVariable;
-import org.evosuite.testsuite.AbstractFitnessFactory;
 
-public class OnlyMutationFactory extends AbstractFitnessFactory<OnlyMutationTestFitness> {
-
-	private List<OnlyMutationTestFitness> goals = null;
+public class OnlyMutationFactory extends MutationFactory {
 
 	@Override
-	public List<OnlyMutationTestFitness> getCoverageGoals() {
+	public List<MutationTestFitness> getCoverageGoals() {
 		if (this.goals != null) {
 			return this.goals;
 		}
 
-		this.goals = new ArrayList<OnlyMutationTestFitness>();
+		this.goals = new ArrayList<>();
 
-		for (Mutation m : MutationPool.getMutants()) {
+		for (Mutation m : MutationPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).getMutants()) {
 			//if (MutationTimeoutStoppingCondition.isDisabled(m))
 			//	continue;
 			this.goals.add(new OnlyMutationTestFitness(m));

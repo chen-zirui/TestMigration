@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -21,15 +21,11 @@ package org.evosuite.testcase.statements;
 
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.evosuite.Properties;
-import org.evosuite.runtime.annotation.Constraints;
 import org.evosuite.testcase.variable.ArrayIndex;
 import org.evosuite.testcase.variable.ArrayReference;
 import org.evosuite.testcase.TestCase;
@@ -43,27 +39,35 @@ import org.evosuite.utils.generic.GenericMethod;
 import org.evosuite.utils.Randomness;
 import org.objectweb.asm.Type;
 
+/**
+ * Method statements invoke methods on objects or call static methods. Value and type of a
+ * method statement is defined by its return value.
+ */
 public class MethodStatement extends EntityWithParametersStatement {
 
 	private static final long serialVersionUID = 6134126797102983073L;
 
+	/**
+	 * The method that is being called.
+	 */
 	protected GenericMethod method;
 
+	/**
+	 * The object the method is invoked on. Set to {@code null} if the method to call is static.
+	 */
 	protected VariableReference callee;
 
 	/**
-	 * <p>
-	 * Constructor for MethodStatement.
-	 * </p>
-	 * 
-	 * @param tc
-	 *            a {@link org.evosuite.testcase.TestCase} object.
-	 * @param method
-	 *            a {@link java.lang.reflect.Method} object.
-	 * @param callee
-	 *            a {@link org.evosuite.testcase.variable.VariableReference} object.
-	 * @param parameters
-	 *            a {@link java.util.List} object.
+	 * Creates a new method statement for the given test case {@code tc}, calling the supplied
+	 * {@code method} on the object represented by {@code callee} with the parameter list given by
+	 * {@code parameters}. Setting {@code callee} to {@code null} is only allowed if {@code method}
+	 * represents a static method.
+	 *
+	 * @param tc the tes case for which to create the method statement
+	 * @param method the method to call
+	 * @param callee the object on which to call the method
+	 * @param parameters a list of references to the parameters to be used for the method call
+	 * @throws IllegalArgumentException
 	 */
 	public MethodStatement(TestCase tc, GenericMethod method, VariableReference callee,
 	        List<VariableReference> parameters) throws IllegalArgumentException {
@@ -85,7 +89,7 @@ public class MethodStatement extends EntityWithParametersStatement {
 	 * as retvar. This should only be done, iff an old statement is replaced
 	 * with this statement. And already existing objects should in the future
 	 * reference this object.
-	 * 
+	 *
 	 * @param tc
 	 *            a {@link org.evosuite.testcase.TestCase} object.
 	 * @param method
@@ -149,7 +153,7 @@ public class MethodStatement extends EntityWithParametersStatement {
 	 * <p>
 	 * Getter for the field <code>method</code>.
 	 * </p>
-	 * 
+	 *
 	 * @return a {@link java.lang.reflect.Method} object.
 	 */
 	public GenericMethod getMethod() {
@@ -160,7 +164,7 @@ public class MethodStatement extends EntityWithParametersStatement {
 	 * <p>
 	 * Setter for the field <code>method</code>.
 	 * </p>
-	 * 
+	 *
 	 * @param method
 	 *            a {@link java.lang.reflect.Method} object.
 	 */
@@ -172,7 +176,7 @@ public class MethodStatement extends EntityWithParametersStatement {
 	 * <p>
 	 * Getter for the field <code>callee</code>.
 	 * </p>
-	 * 
+	 *
 	 * @return a {@link org.evosuite.testcase.variable.VariableReference} object.
 	 */
 	public VariableReference getCallee() {
@@ -183,7 +187,7 @@ public class MethodStatement extends EntityWithParametersStatement {
 	 * <p>
 	 * Setter for the field <code>callee</code>.
 	 * </p>
-	 * 
+	 *
 	 * @param callee
 	 *            a {@link org.evosuite.testcase.variable.VariableReference} object.
 	 */
@@ -196,7 +200,7 @@ public class MethodStatement extends EntityWithParametersStatement {
 	 * <p>
 	 * isStatic
 	 * </p>
-	 * 
+	 *
 	 * @return a boolean.
 	 */
 	public boolean isStatic() {
@@ -244,7 +248,7 @@ public class MethodStatement extends EntityWithParametersStatement {
 						callee_object = method.isStatic() ? null
 						        : callee.getObject(scope);
 						if (!method.isStatic() && callee_object == null) {
-							throw new CodeUnderTestException(new NullPointerException());
+							throw new CodeUnderTestException(new NullPointerException("object is not supposed to be null for method call=" + method.getName() ));
 						}
 					} catch (CodeUnderTestException e) {
 						throw e;
@@ -258,19 +262,19 @@ public class MethodStatement extends EntityWithParametersStatement {
 					// Try exact return type
 					/*
 					 * TODO: Sometimes we do want to cast an Object to String etc...
-					 */ 
+					 */
 					if (method.getReturnType() instanceof Class<?>) {
 						Class<?> returnClass = (Class<?>)method.getReturnType();
-						
-						if (!returnClass.isPrimitive() 
-								&& ret != null 
+
+						if (!returnClass.isPrimitive()
+								&& ret != null
 								&& !returnClass.isAssignableFrom(ret.getClass())) {
 							throw new CodeUnderTestException(new ClassCastException(
 							        "Cannot assign " + method.getReturnType()
 							                + " to variable of type " + retval.getType()));
 						}
 					}
-					
+
 
 					try {
 						retval.setObject(scope, ret);
@@ -284,7 +288,7 @@ public class MethodStatement extends EntityWithParametersStatement {
 
 				@Override
 				public Set<Class<? extends Throwable>> throwableExceptions() {
-					Set<Class<? extends Throwable>> t = new LinkedHashSet<Class<? extends Throwable>>();
+					Set<Class<? extends Throwable>> t = new LinkedHashSet<>();
 					t.add(InvocationTargetException.class);
 					return t;
 				}
@@ -301,6 +305,9 @@ public class MethodStatement extends EntityWithParametersStatement {
 	/** {@inheritDoc} */
 	@Override
 	public boolean isDeclaredException(Throwable t) {
+		if(t == null)
+			return false;
+
 		for (Class<?> declaredException : method.getMethod().getExceptionTypes()) {
 			if (declaredException.isAssignableFrom(t.getClass()))
 				return true;
@@ -311,7 +318,7 @@ public class MethodStatement extends EntityWithParametersStatement {
 	/** {@inheritDoc} */
 	@Override
 	public Statement copy(TestCase newTestCase, int offset) {
-		ArrayList<VariableReference> newParams = new ArrayList<VariableReference>();
+		ArrayList<VariableReference> newParams = new ArrayList<>();
 		for (VariableReference r : parameters) {
 			newParams.add(r.copy(newTestCase, offset));
 		}
@@ -362,14 +369,14 @@ public class MethodStatement extends EntityWithParametersStatement {
 	 */
 	/** {@inheritDoc} */
 	@Override
-	public void replace(VariableReference var1, VariableReference var2) {
-		super.replace(var1, var2);
+	public void replace(VariableReference oldVar, VariableReference newVar) {
+		super.replace(oldVar, newVar);
 
 		if (isInstanceMethod()) {
-			if (callee.equals(var1))
-				callee = var2;
+			if (callee.equals(oldVar))
+				callee = newVar;
 			else
-				callee.replaceAdditionalVariableReference(var1, var2);
+				callee.replaceAdditionalVariableReference(oldVar, newVar);
 		}
 	}
 
@@ -439,21 +446,20 @@ public class MethodStatement extends EntityWithParametersStatement {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.evosuite.testcase.Statement#getDeclaredExceptions()
 	 */
 	/** {@inheritDoc} */
 	@Override
 	public Set<Class<?>> getDeclaredExceptions() {
 		Set<Class<?>> ex = super.getDeclaredExceptions();
-		for (Class<?> t : method.getMethod().getExceptionTypes())
-			ex.add(t);
+		ex.addAll(Arrays.asList(method.getMethod().getExceptionTypes()));
 		return ex;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.evosuite.testcase.Statement#getUniqueVariableReferences()
 	 */
@@ -473,12 +479,12 @@ public class MethodStatement extends EntityWithParametersStatement {
 
 	@Override
 	public boolean isAccessible() {
-		if(!method.isAccessible()) 
+		if(!method.isAccessible())
 			return false;
-		
+
 		return super.isAccessible();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.evosuite.testcase.StatementInterface#isValid()
 	 */
@@ -533,7 +539,7 @@ public class MethodStatement extends EntityWithParametersStatement {
 
 	/**
 	 * Go through parameters of method call and apply local search
-	 * 
+	 *
 	 * @param test
 	 * @param factory
 	 */
@@ -543,11 +549,6 @@ public class MethodStatement extends EntityWithParametersStatement {
 		if (Randomness.nextDouble() >= Properties.P_CHANGE_PARAMETER)
 			return false;
 
-		Constraints constraint = method.getMethod().getAnnotation(Constraints.class);
-		if(constraint!=null && constraint.notMutable()){
-			return false;
-		}
-
 		List<VariableReference> parameters = getParameterReferences();
 
 		boolean changed = false;
@@ -555,10 +556,10 @@ public class MethodStatement extends EntityWithParametersStatement {
 		if (!isStatic()) {
 			max++;
 		}
-		
+
 		if(max == 0)
 			return false; // Static method with no parameters...
-		
+
 		double pParam = 1.0/max;
 		if(!isStatic() && Randomness.nextDouble() < pParam) {
 			// replace callee
@@ -584,7 +585,7 @@ public class MethodStatement extends EntityWithParametersStatement {
 		}
 		return changed;
 	}
-	
+
 
 
 	/** {@inheritDoc} */

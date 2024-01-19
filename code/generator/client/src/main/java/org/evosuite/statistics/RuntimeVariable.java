@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -162,11 +162,18 @@ public enum RuntimeVariable {
     MethodNoExceptionFitnessTimeline,
     MethodNoExceptionCoverageTimeline,
     MethodNoExceptionCoverageBitString,
+    
+    /**/
+    Reachability,
 	/** The obtained line coverage */
 	LineCoverage,
     LineFitnessTimeline,
     LineCoverageTimeline,
     LineCoverageBitString,
+    
+    /**/
+    ReachabilityCoverageBitString,
+    
 	/** The obtained output value coverage */
 	OutputCoverage,
     OutputFitnessTimeline,
@@ -219,9 +226,7 @@ public enum RuntimeVariable {
 	/** Was any test unstable in the generated JUnit files? */
 	HadUnstableTests, 
 	/** Number of unstable tests in the generated JUnit files */
-	NumUnstableTests, 
-	/** Number of regression test cases */
-	NumRegressionTestCases,
+	NumUnstableTests,
 	/** An estimate (ie not precise) of the maximum number of threads running at the same time in the CUT */
 	Threads,
 	/** Number of top-level methods throwing an undeclared exception explicitly with a 'throw new' */
@@ -234,6 +239,15 @@ public enum RuntimeVariable {
 	Implicit_TypeExceptions,
     /** Total number of exceptions covered */
     TotalExceptionsTimeline,
+    
+    /**
+     * Map Elites
+     */
+    DensityTimeline,
+    FeaturePartitionCount,
+    FeatureCount,
+    FeaturesFound,
+    
 	/* ----- number of unique permissions that were denied for each kind --- */
 	AllPermission,
 	SecurityPermission,
@@ -253,14 +267,6 @@ public enum RuntimeVariable {
 	AudioPermission,
 	OtherPermission,
 	/* -------------------------------------------------------------------- */
-	/** Regression-related Variables */
-	Generated_Assertions,
-	Coverage_Old,
-	Coverage_New,
-	Exception_Difference,
-	State_Distance,
-	Testsuite_Diversity,
-	Regression_ID,
 	/** Timings */
 	Time_Assertion,
 	Time_Coverage,
@@ -377,13 +383,18 @@ public enum RuntimeVariable {
 	/** How many SAT queries led to Useful (i.e. better fitness) new tests*/ 
 	NumberOfUsefulNewTests,
 	/** How many SAT queries led to Unuseful (i.e. no better fitness) new tests*/ 
-	NumberOfUnusefulNewTests
+	NumberOfUnusefulNewTests,
+	
+	/* -------------------------------------------------------------------- */
+	/** Search budget needed to reach the maximum coverage */ 
+	/** Used in the comparison between LISP and MOSA */
+	Time2MaxCoverage
 	
 	;
 	/* -------------------------------------------------- */
 
 	
-	private static Logger logger = LoggerFactory.getLogger(RuntimeVariable.class);
+	private static final Logger logger = LoggerFactory.getLogger(RuntimeVariable.class);
 	
 	/**
 	 * check if the variables do satisfy a set of predefined constraints: eg, the

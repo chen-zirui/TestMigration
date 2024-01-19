@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -22,8 +22,10 @@ package org.evosuite.utils;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import org.evosuite.Properties;
 import org.slf4j.Logger;
@@ -84,13 +86,12 @@ public class Randomness implements Serializable {
 	}
 
 	/**
-	 * <p>
-	 * nextInt
-	 * </p>
-	 * 
-	 * @param max
-	 *            a int.
-	 * @return a int.
+	 * Returns a pseudorandom, uniformly distributed int value between 0 (inclusive) and the
+	 * specified value {@code max} (exclusive).
+	 *
+	 * @param max the upper bound
+	 * @return a random number between 0 and {@code max - 1}
+	 * @see Random#nextInt(int)
 	 */
 	public static int nextInt(int max) {
 		return random.nextInt(max);
@@ -101,15 +102,12 @@ public class Randomness implements Serializable {
 	}
 	
 	/**
-	 * <p>
-	 * nextInt
-	 * </p>
-	 * 
-	 * @param min
-	 *            a int.
-	 * @param max
-	 *            a int.
-	 * @return a int.
+	 * Returns a pseudorandom, uniformly distributed int value between the lower bound {@code min}
+	 * (inclusive) and the upper bound {@code max} (exclusive).
+	 *
+	 * @param min the lower bound
+	 * @param max the upper bound
+	 * @return a random number between {@code min} and {@code max}
 	 */
 	public static int nextInt(int min, int max) {
 		return random.nextInt(max - min) + min;
@@ -184,6 +182,21 @@ public class Randomness implements Serializable {
 
 	/**
 	 * <p>
+	 * nextDouble
+	 * </p>
+	 * 
+	 * @param min
+	 *            a double.
+	 * @param max
+	 *            a double.
+	 * @return a double.
+	 */
+	public static double nextDouble(double min, double max) {
+		return min + (random.nextDouble() * (max - min));
+	}
+
+	/**
+	 * <p>
 	 * nextFloat
 	 * </p>
 	 * 
@@ -249,11 +262,12 @@ public class Randomness implements Serializable {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> T choice(Collection<T> set) {
-		if (set.isEmpty())
+		Set<T> copy = new HashSet<>(set);
+		if (copy.isEmpty())
 			return null;
 
-		int position = random.nextInt(set.size());
-		return (T) set.toArray()[position];
+		int position = random.nextInt(copy.size());
+		return (T) copy.toArray()[position];
 	}
 
 	/**

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -39,7 +39,7 @@ public class VFile extends FSObject{
 		super(path, parent);
 
 		//TODO might need a better type of data structure supporting multi-threading
-		data = new ArrayList<Byte>(1024);
+		data = new ArrayList<>(1024);
 	}
 
 	public void eraseData(){
@@ -89,12 +89,12 @@ public class VFile extends FSObject{
 		return data.get(position) & 0xFF;
 	}
 
-	public synchronized int writeBytes(byte b[], int off, int len){
+	public synchronized int writeBytes(byte[] b, int off, int len){
 		return writeBytes(data.size(),b,off,len);
 	}
 
 	
-	public synchronized int writeBytes(int position, byte b[], int off, int len) throws IllegalArgumentException{
+	public synchronized int writeBytes(int position, byte[] b, int off, int len) throws IllegalArgumentException{
 
 		if(position<0){
 			throw new IllegalArgumentException("Position in the file cannot be negative");

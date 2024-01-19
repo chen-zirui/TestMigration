@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -22,7 +22,6 @@ package org.evosuite.runtime.mock.java.net;
 import org.evosuite.runtime.mock.MockFramework;
 import org.evosuite.runtime.mock.OverrideMock;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -63,7 +62,7 @@ public class MockSocket extends Socket implements OverrideMock {
 
 	public MockSocket() {
 		super();
-        if(!MockFramework.isEnabled()){
+        if(!MockFramework.isEnabled()) {
             return;
         }
 		setImpl();
@@ -100,7 +99,7 @@ public class MockSocket extends Socket implements OverrideMock {
 
 	protected MockSocket(MockSocketImpl impl) throws SocketException {
 		super(impl);
-        if(!MockFramework.isEnabled()){
+        if(!MockFramework.isEnabled()) {
             return;
         }
         this.impl = impl;
@@ -113,13 +112,13 @@ public class MockSocket extends Socket implements OverrideMock {
 	public MockSocket(String host, int port)throws UnknownHostException, IOException {
 		this(host != null ? new MockInetSocketAddress(host, port) :
 			new MockInetSocketAddress(MockInetAddress.getByName(null), port),
-			(SocketAddress) null, true);
+				null, true);
 	}
 
 
 	public MockSocket(InetAddress address, int port) throws IOException {
 		this(address != null ? new MockInetSocketAddress(address, port) : null,
-				(SocketAddress) null, true);
+				null, true);
 	}
 
 
@@ -142,7 +141,7 @@ public class MockSocket extends Socket implements OverrideMock {
 	public MockSocket(String host, int port, boolean stream) throws IOException {
 		this(host != null ? new MockInetSocketAddress(host, port) :
 			new MockInetSocketAddress(MockInetAddress.getByName(null), port),
-			(SocketAddress) null, stream);
+				null, stream);
 	}
 
 
@@ -317,11 +316,11 @@ public class MockSocket extends Socket implements OverrideMock {
 	@Override
 	public InetAddress getLocalAddress() {
 
-		if(! MockFramework.isEnabled()){
+		if(!MockFramework.isEnabled()) {
 			return super.getLocalAddress();
 		}
 		
-		if (!isBound()){
+		if (!isBound()) {
 			return MockInetAddress.anyLocalAddress();
 		}
 		
@@ -414,7 +413,7 @@ public class MockSocket extends Socket implements OverrideMock {
 	public void setTcpNoDelay(boolean on) throws SocketException {
 		if (isClosed())
 			throw new SocketException("Socket is closed");
-		getImpl().setOption(SocketOptions.TCP_NODELAY, Boolean.valueOf(on));
+		getImpl().setOption(SocketOptions.TCP_NODELAY, on);
 	}
 
 
@@ -422,7 +421,7 @@ public class MockSocket extends Socket implements OverrideMock {
 	public boolean getTcpNoDelay() throws SocketException {
 		if (isClosed())
 			throw new SocketException("Socket is closed");
-		return ((Boolean) getImpl().getOption(SocketOptions.TCP_NODELAY)).booleanValue();
+		return (Boolean) getImpl().getOption(SocketOptions.TCP_NODELAY);
 	}
 
 
@@ -431,14 +430,14 @@ public class MockSocket extends Socket implements OverrideMock {
 		if (isClosed())
 			throw new SocketException("Socket is closed");
 		if (!on) {
-			getImpl().setOption(SocketOptions.SO_LINGER, new Boolean(on));
+			getImpl().setOption(SocketOptions.SO_LINGER, on);
 		} else {
 			if (linger < 0) {
 				throw new IllegalArgumentException("invalid value for SO_LINGER");
 			}
 			if (linger > 65535)
 				linger = 65535;
-			getImpl().setOption(SocketOptions.SO_LINGER, new Integer(linger));
+			getImpl().setOption(SocketOptions.SO_LINGER, linger);
 		}
 	}
 
@@ -449,7 +448,7 @@ public class MockSocket extends Socket implements OverrideMock {
 			throw new SocketException("Socket is closed");
 		Object o = getImpl().getOption(SocketOptions.SO_LINGER);
 		if (o instanceof Integer) {
-			return ((Integer) o).intValue();
+			return (Integer) o;
 		} else {
 			return -1;
 		}
@@ -469,7 +468,7 @@ public class MockSocket extends Socket implements OverrideMock {
 	public void setOOBInline(boolean on) throws SocketException {
 		if (isClosed())
 			throw new SocketException("Socket is closed");
-		getImpl().setOption(SocketOptions.SO_OOBINLINE, Boolean.valueOf(on));
+		getImpl().setOption(SocketOptions.SO_OOBINLINE, on);
 	}
 
 
@@ -477,7 +476,7 @@ public class MockSocket extends Socket implements OverrideMock {
 	public boolean getOOBInline() throws SocketException {
 		if (isClosed())
 			throw new SocketException("Socket is closed");
-		return ((Boolean) getImpl().getOption(SocketOptions.SO_OOBINLINE)).booleanValue();
+		return (Boolean) getImpl().getOption(SocketOptions.SO_OOBINLINE);
 	}
 
 
@@ -488,7 +487,7 @@ public class MockSocket extends Socket implements OverrideMock {
 		if (timeout < 0)
 			throw new IllegalArgumentException("timeout can't be negative");
 
-		getImpl().setOption(SocketOptions.SO_TIMEOUT, new Integer(timeout));
+		getImpl().setOption(SocketOptions.SO_TIMEOUT, timeout);
 	}
 
 
@@ -498,7 +497,7 @@ public class MockSocket extends Socket implements OverrideMock {
 			throw new SocketException("Socket is closed");
 		Object o = getImpl().getOption(SocketOptions.SO_TIMEOUT);
 		if (o instanceof Integer) {
-			return ((Integer) o).intValue();
+			return (Integer) o;
 		} else {
 			return 0;
 		}
@@ -511,7 +510,7 @@ public class MockSocket extends Socket implements OverrideMock {
 		}
 		if (isClosed())
 			throw new SocketException("Socket is closed");
-		getImpl().setOption(SocketOptions.SO_SNDBUF, new Integer(size));
+		getImpl().setOption(SocketOptions.SO_SNDBUF, size);
 	}
 
 	@Override
@@ -521,7 +520,7 @@ public class MockSocket extends Socket implements OverrideMock {
 		int result = 0;
 		Object o = getImpl().getOption(SocketOptions.SO_SNDBUF);
 		if (o instanceof Integer) {
-			result = ((Integer)o).intValue();
+			result = (Integer) o;
 		}
 		return result;
 	}
@@ -534,7 +533,7 @@ public class MockSocket extends Socket implements OverrideMock {
 		}
 		if (isClosed())
 			throw new SocketException("Socket is closed");
-		getImpl().setOption(SocketOptions.SO_RCVBUF, new Integer(size));
+		getImpl().setOption(SocketOptions.SO_RCVBUF, size);
 	}
 
 
@@ -545,7 +544,7 @@ public class MockSocket extends Socket implements OverrideMock {
 		int result = 0;
 		Object o = getImpl().getOption(SocketOptions.SO_RCVBUF);
 		if (o instanceof Integer) {
-			result = ((Integer)o).intValue();
+			result = (Integer) o;
 		}
 		return result;
 	}
@@ -555,7 +554,7 @@ public class MockSocket extends Socket implements OverrideMock {
 	public void setKeepAlive(boolean on) throws SocketException {
 		if (isClosed())
 			throw new SocketException("Socket is closed");
-		getImpl().setOption(SocketOptions.SO_KEEPALIVE, Boolean.valueOf(on));
+		getImpl().setOption(SocketOptions.SO_KEEPALIVE, on);
 	}
 
 
@@ -563,7 +562,7 @@ public class MockSocket extends Socket implements OverrideMock {
 	public boolean getKeepAlive() throws SocketException {
 		if (isClosed())
 			throw new SocketException("Socket is closed");
-		return ((Boolean) getImpl().getOption(SocketOptions.SO_KEEPALIVE)).booleanValue();
+		return (Boolean) getImpl().getOption(SocketOptions.SO_KEEPALIVE);
 	}
 
 
@@ -574,26 +573,26 @@ public class MockSocket extends Socket implements OverrideMock {
 
 		if (isClosed())
 			throw new SocketException("Socket is closed");
-		getImpl().setOption(SocketOptions.IP_TOS, new Integer(tc));
+		getImpl().setOption(SocketOptions.IP_TOS, tc);
 	}
 
 	@Override
 	public int getTrafficClass() throws SocketException {
-		return ((Integer) (getImpl().getOption(SocketOptions.IP_TOS))).intValue();
+		return (Integer) (getImpl().getOption(SocketOptions.IP_TOS));
 	}
 
 	@Override
 	public void setReuseAddress(boolean on) throws SocketException {
 		if (isClosed())
 			throw new SocketException("Socket is closed");
-		getImpl().setOption(SocketOptions.SO_REUSEADDR, Boolean.valueOf(on));
+		getImpl().setOption(SocketOptions.SO_REUSEADDR, on);
 	}
 
 	@Override
 	public boolean getReuseAddress() throws SocketException {
 		if (isClosed())
 			throw new SocketException("Socket is closed");
-		return ((Boolean) (getImpl().getOption(SocketOptions.SO_REUSEADDR))).booleanValue();
+		return (Boolean) (getImpl().getOption(SocketOptions.SO_REUSEADDR));
 	}
 
 	
@@ -705,7 +704,7 @@ public class MockSocket extends Socket implements OverrideMock {
 	@Override
 	public void setPerformancePreferences(int connectionTime,
 			int latency,
-			int bandwidth){
+			int bandwidth) {
 		super.setPerformancePreferences(connectionTime, latency, bandwidth);
 	}
 

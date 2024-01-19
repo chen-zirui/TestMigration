@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,10 +19,13 @@
  */
 package org.evosuite.seeding;
 
+import org.evosuite.Properties;
 import org.evosuite.setup.DependencyAnalysis;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -32,6 +35,7 @@ import org.objectweb.asm.Opcodes;
  * @author Gordon Fraser
  */
 public class PrimitivePoolMethodAdapter extends MethodVisitor {
+	private static final Logger logger = LoggerFactory.getLogger(PrimitivePoolMethodAdapter.class);
 
 	// private final PrimitivePool constantPool = PrimitivePool.getInstance();
 
@@ -48,7 +52,7 @@ public class PrimitivePoolMethodAdapter extends MethodVisitor {
 	 *            a {@link org.objectweb.asm.MethodVisitor} object.
 	 */
 	public PrimitivePoolMethodAdapter(MethodVisitor mv, String className) {
-		super(Opcodes.ASM5, mv);
+		super(Opcodes.ASM9, mv);
 		this.className = className;
 	}
 
@@ -94,7 +98,13 @@ public class PrimitivePoolMethodAdapter extends MethodVisitor {
 			if (DependencyAnalysis.isTargetClassName(className)) {
 				poolManager.addSUTConstant(operand);
 			} else {
-				poolManager.addNonSUTConstant(operand);
+				// TRANSFER: well, if we are extracting stuff from a test, might as well extract its constants too
+				if (Properties.JUNIT.contains(className) || (Properties.SELECTED_JUNIT != null && Properties.SELECTED_JUNIT.contains(className))) {
+					poolManager.addSUTConstant(operand);
+				} else {
+				
+					poolManager.addNonSUTConstant(operand);
+				}
 			}
 		}
 		super.visitIntInsn(opcode, operand);
@@ -107,7 +117,13 @@ public class PrimitivePoolMethodAdapter extends MethodVisitor {
 		if (DependencyAnalysis.isTargetClassName(className)) {
 			poolManager.addSUTConstant(cst);
 		} else {
-			poolManager.addNonSUTConstant(cst);
+			
+			if (Properties.JUNIT.equals(className) || (Properties.SELECTED_JUNIT != null && Properties.SELECTED_JUNIT.equals(className))) {
+//				logger.warn("adding ldcinst constant for " + className);
+				poolManager.addSUTConstant(cst);
+			} else {
+				poolManager.addNonSUTConstant(cst);
+			}
 		}
 		super.visitLdcInsn(cst);
 	}
@@ -163,7 +179,11 @@ public class PrimitivePoolMethodAdapter extends MethodVisitor {
 			if (DependencyAnalysis.isTargetClassName(className)) {
 				poolManager.addSUTConstant(constant);
 			} else {
-				poolManager.addNonSUTConstant(constant);
+				if (className.contains("Test")) {
+					poolManager.addSUTConstant(constant);
+				} else {
+					poolManager.addNonSUTConstant(constant);
+				}
 			}
 		}
 		super.visitInsn(opcode);

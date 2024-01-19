@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JUnitAnalyzer {
 
-	private static Logger logger = LoggerFactory.getLogger(JUnitAnalyzer.class);
+	private static final Logger logger = LoggerFactory.getLogger(JUnitAnalyzer.class);
 
 	private static int dirCounter = 0;
 
@@ -67,7 +67,7 @@ public class JUnitAnalyzer {
 	private static final String CLASS = ".class";
 
 	
-	private static final NonInstrumentingClassLoader loader = new NonInstrumentingClassLoader();
+	private static NonInstrumentingClassLoader loader = new NonInstrumentingClassLoader();
 	
 	/**
 	 * Try to compile each test separately, and remove the ones that cannot be
@@ -100,7 +100,7 @@ public class JUnitAnalyzer {
 			logger.debug("Created tmp folder: " + dir.getAbsolutePath());
 
 			try {
-				List<TestCase> singleList = new ArrayList<TestCase>();
+				List<TestCase> singleList = new ArrayList<>();
 				singleList.add(test);
 				List<File> generated = compileTests(singleList, dir);
 				if (generated == null) {
@@ -166,6 +166,8 @@ public class JUnitAnalyzer {
                 return numUnstable;
             }
 
+            // Create a new classloader so that each test gets freshly loaded classes
+			loader = new NonInstrumentingClassLoader();
             Class<?>[] testClasses = loadTests(generated);
 
 			if (testClasses == null) {
@@ -179,8 +181,7 @@ public class JUnitAnalyzer {
 				return numUnstable; //everything is OK
 			}
 
-			logger.error("" + result.getFailureCount() + " test cases failed");
-			
+
 			failure_loop: for (JUnitFailure failure : result.getFailures()) {
 				String testName = failure.getDescriptionMethodName();//TODO check if correct
 				for (int i = 0; i < tests.size(); i++) {
@@ -191,24 +192,32 @@ public class JUnitAnalyzer {
 						}
 					}
 				}
-				
+
 				if(testName == null){
 					/*
 					 * this can happen if there is a failure in the scaffolding (eg @AfterClass/@BeforeClass).
 					 * in such case, everything need to be deleted
 					 */
                     StringBuilder sb = new StringBuilder();
-                    sb.append("Issue in scaffolding of the test suite: "+failure.getMessage()+"\n");
+                    sb.append("Issue in scaffolding of the test suite: ").append(failure.getMessage()).append("\n");
                     sb.append("Stack trace:\n");
 					for (String elem : failure.getExceptionStackTrace()) {
-                        sb.append(elem+"\n");
+                        sb.append(elem).append("\n");
 					}
                     logger.error(sb.toString());
 					numUnstable = tests.size();
 					tests.clear();
 					return numUnstable;
 				}
-				
+
+				// On the Sheffield cluster, the "well-known fle is not secure" issue is impossible to understand,
+				// so it might be best to ignore it for now.
+				if(testName.equals("initializationError") && failure.getMessage().contains("Failed to attach Java Agent")) {
+					logger.warn("Likely error with EvoSuite instrumentation, ignoring failure in test execution");
+					continue failure_loop;
+				}
+
+
 				logger.warn("Found unstable test named " + testName + " -> "
 				        + failure.getExceptionClassName() + ": " + failure.getMessage());
 				
@@ -236,7 +245,8 @@ public class JUnitAnalyzer {
 							tests.get(i).setUnstable(true);
 						} else {
 							logger.debug("Going to remove unstable test: " + testName);
-							tests.remove(i);
+							tests.get(i).setUnstable(true);
+							// tests.remove(i);
 						}
 						break;
 					}
@@ -293,7 +303,6 @@ public class JUnitAnalyzer {
 		try {
 			TestGenerationContext.getInstance().goingToExecuteSUTCode();
 			Thread.currentThread().setContextClassLoader(testClasses[0].getClassLoader());
-
 			JDKClassResetter.reset(); //be sure we reset it here, otherwise "init" in the test case would take current changed state
 			result = runner.run(testClasses);
 		} finally {
@@ -305,7 +314,8 @@ public class JUnitAnalyzer {
 
 		if(wasSandboxOn){
 			//only activate Sandbox if it was already active before
-			Sandbox.initializeSecurityManagerForSUT(privileged);
+			if(!Sandbox.isSecurityManagerInitialized())
+				Sandbox.initializeSecurityManagerForSUT(privileged);
 		} else {
 			if(Sandbox.isSecurityManagerInitialized()){
 				logger.warn("EvoSuite problem: tests set up a security manager, but they do not remove it after execution");
@@ -314,8 +324,7 @@ public class JUnitAnalyzer {
 		}
 		
 		JUnitResultBuilder builder = new JUnitResultBuilder();
-		JUnitResult junitResult = builder.build(result);
-		return junitResult;
+		return builder.build(result);
 	}
 
 	/**
@@ -360,7 +369,7 @@ public class JUnitAnalyzer {
 				return null;
 			}
 
-			DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
+			DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 			Locale locale = Locale.getDefault();
 			Charset charset = Charset.forName("UTF-8");
 			StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics,
@@ -369,7 +378,6 @@ public class JUnitAnalyzer {
 
 			Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(generated);
 
-			List<String> optionList = new ArrayList<>();
 			String evosuiteCP = ClassPathHandler.getInstance().getEvoSuiteClassPath();
 			if(JarPathing.containsAPathingJar(evosuiteCP)){
 				evosuiteCP = JarPathing.expandPathingJars(evosuiteCP);
@@ -382,7 +390,7 @@ public class JUnitAnalyzer {
 
 			String classpath = targetProjectCP + File.pathSeparator + evosuiteCP;
 
-			optionList.addAll(Arrays.asList("-classpath", classpath));
+			List<String> optionList = new ArrayList<>(Arrays.asList("-classpath", classpath));
 
 			CompilationTask task = compiler.getTask(null, fileManager, diagnostics,
 			                                        optionList, null, compilationUnits);
@@ -416,7 +424,8 @@ public class JUnitAnalyzer {
 					}
 				}
 				logger.error(buffer.toString());
-				return null;
+//				return null;
+				// TRANSFER notes: still write to file even if it does not compile, we need it for debugging
 			}
 
 			return generated;

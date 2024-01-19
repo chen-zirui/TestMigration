@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -27,9 +27,17 @@ import org.evosuite.ga.Chromosome;
  *
  * @author Gordon Fraser
  */
-public class MaxSizeBloatControl implements BloatControlFunction {
+public class MaxSizeBloatControl<T extends Chromosome<T>> implements BloatControlFunction<T> {
 
 	private static final long serialVersionUID = -8241127914702360972L;
+
+	public MaxSizeBloatControl() {
+		// empty constructor
+	}
+
+	public MaxSizeBloatControl(final MaxSizeBloatControl<?> that) {
+		// empty copy constructor
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -37,7 +45,7 @@ public class MaxSizeBloatControl implements BloatControlFunction {
 	 * Check whether the chromosome is bigger than the max length constant
 	 */
 	@Override
-	public boolean isTooLong(Chromosome chromosome) {
+	public boolean isTooLong(T chromosome) {
 		return chromosome.size() > Properties.MAX_SIZE;
 	}
 

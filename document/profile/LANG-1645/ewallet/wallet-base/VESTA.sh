@@ -1,2 +1,0 @@
-export NOW_DIR=/****/TestMigration/resource/LANG-1645/ewallet/wallet-base
-$PYTHON $PROJECT_DIR/main/VESTA.py LANG-1645 ewallet wallet-base "org.apache.commons.lang3.math.NumberUtils:createNumber(java.lang.String)" wallet-base-0.0.1-SNAPSHOT.jar NumberFormatException

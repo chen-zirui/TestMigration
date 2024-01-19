@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -58,15 +58,14 @@ public class StatisticsSender {
 	 * 
 	 * @param individual
 	 */
-	public static void sendIndividualToMaster(Chromosome individual) throws IllegalArgumentException{
+	public static <T extends Chromosome<T>> void sendIndividualToMaster(T individual) throws IllegalArgumentException{
 		if(individual == null){
 			throw new IllegalArgumentException("No defined individual to send");
 		}
 		if(!Properties.NEW_STATISTICS)
 			return;
 
-		ClientServices.getInstance().getClientNode().updateStatistics(individual);
-
+		ClientServices.<T>getInstance().getClientNode().updateStatistics(individual);
 	}
 
 
@@ -136,13 +135,11 @@ public class StatisticsSender {
 
 	private static void sendCoveredInfo(TestSuiteChromosome testSuite){
 
-		Set<String> coveredMethods = new HashSet<String>();
-		Set<Integer> coveredTrueBranches = new HashSet<Integer>();
-		Set<Integer> coveredFalseBranches = new HashSet<Integer>();
-		Set<String> coveredBranchlessMethods = new HashSet<String>();
-		Set<Integer> coveredLines = new HashSet<Integer>();
-		Set<Integer> coveredRealBranches = new HashSet<Integer>();
-		Set<Integer> coveredInstrumentedBranches = new HashSet<Integer>();
+		Set<String> coveredMethods = new HashSet<>();
+		Set<Integer> coveredTrueBranches = new HashSet<>();
+		Set<Integer> coveredFalseBranches = new HashSet<>();
+		Set<String> coveredBranchlessMethods = new HashSet<>();
+		Set<Integer> coveredLines = new HashSet<>();
 
 		for (TestChromosome test : testSuite.getTestChromosomes()) {
 			ExecutionTrace trace = test.getLastExecutionResult().getTrace();
@@ -153,20 +150,28 @@ public class StatisticsSender {
 			coveredLines.addAll(trace.getCoveredLines());
 		}
 
+		int coveredBranchesInstrumented = 0;
+		int coveredBranchesReal = 0;
 		if(Properties.ERROR_BRANCHES || Properties.EXCEPTION_BRANCHES) {
 			BranchPool branchPool = BranchPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT());
-			Set<Integer> union = new HashSet<>(coveredTrueBranches);
-			union.addAll(coveredFalseBranches);
-			for (Integer branchId : union) {
+			for (Integer branchId : coveredTrueBranches) {
 				Branch b = branchPool.getBranch(branchId);
 				if (b.isInstrumented())
-					coveredInstrumentedBranches.add(branchId);
-				else
-					coveredRealBranches.add(branchId);
+					coveredBranchesInstrumented++;
+				else {
+					coveredBranchesReal++;
+				}
 			}
+            for (Integer branchId : coveredFalseBranches) {
+                Branch b = branchPool.getBranch(branchId);
+                if (b.isInstrumented())
+                    coveredBranchesInstrumented++;
+                else {
+                    coveredBranchesReal++;
+                }
+            }
 		} else {
-			coveredRealBranches.addAll(coveredTrueBranches);
-			coveredRealBranches.addAll(coveredFalseBranches);
+		    coveredBranchesReal = coveredTrueBranches.size() + coveredFalseBranches.size();
 		}
 
 		ClientServices.getInstance().getClientNode().trackOutputVariable(
@@ -178,9 +183,9 @@ public class StatisticsSender {
 		ClientServices.getInstance().getClientNode().trackOutputVariable(
 				RuntimeVariable.Covered_Branchless_Methods, coveredBranchlessMethods.size());
 		ClientServices.getInstance().getClientNode().trackOutputVariable(
-				RuntimeVariable.Covered_Branches_Real, coveredRealBranches.size());
+				RuntimeVariable.Covered_Branches_Real, coveredBranchesReal);
 		ClientServices.getInstance().getClientNode().trackOutputVariable(
-				RuntimeVariable.Covered_Branches_Instrumented, coveredInstrumentedBranches.size());
+				RuntimeVariable.Covered_Branches_Instrumented, coveredBranchesInstrumented);
 		ClientServices.getInstance().getClientNode().trackOutputVariable(
 				RuntimeVariable.Covered_Lines, coveredLines.size());
 	}

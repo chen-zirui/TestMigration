@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -39,8 +39,15 @@ import org.evosuite.utils.generic.GenericField;
 import org.evosuite.utils.Randomness;
 
 /**
- * Statement that accesses an instance/class field
- * 
+ * A statement that can access public member variables of objects. For example, the Java statement
+ * <pre><code>
+ * int var2 = var1.size;
+ * </code></pre>
+ * fits into this category, since the statement accesses the public member {@code size} of the
+ * object referenced by {@code var1}. Value and type of a field statement are defined by the
+ * member variable. In the given example, the type of the member variable {@code size} is {@code
+ * int}, hence {@code var2} must also be an {@code int}.
+ *
  * @author Gordon Fraser
  */
 public class FieldStatement extends AbstractStatement {
@@ -247,7 +254,7 @@ public class FieldStatement extends AbstractStatement {
 
 				@Override
 				public Set<Class<? extends Throwable>> throwableExceptions() {
-					Set<Class<? extends Throwable>> t = new LinkedHashSet<Class<? extends Throwable>>();
+					Set<Class<? extends Throwable>> t = new LinkedHashSet<>();
 					t.add(InvocationTargetException.class);
 					return t;
 				}
@@ -262,7 +269,7 @@ public class FieldStatement extends AbstractStatement {
 	/** {@inheritDoc} */
 	@Override
 	public Set<VariableReference> getVariableReferences() {
-		Set<VariableReference> references = new LinkedHashSet<VariableReference>();
+		Set<VariableReference> references = new LinkedHashSet<>();
 		references.add(retval);
 		if (!isStatic()) {
 			references.add(source);
@@ -348,7 +355,7 @@ public class FieldStatement extends AbstractStatement {
 	/** {@inheritDoc} */
 	@Override
 	public List<VariableReference> getUniqueVariableReferences() {
-		return new ArrayList<VariableReference>(getVariableReferences());
+		return new ArrayList<>(getVariableReferences());
 	}
 
 	/** {@inheritDoc} */

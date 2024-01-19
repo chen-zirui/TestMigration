@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -70,7 +70,7 @@ public class NativeMockedIO {
 	}	
 	
 	
-	public static void writeBytes(String path, AtomicInteger position, byte b[], int off, int len)
+	public static void writeBytes(String path, AtomicInteger position, byte[] b, int off, int len)
 			throws IOException{
 		
 		VFile vf = NativeMockedIO.getFileForWriting(path);

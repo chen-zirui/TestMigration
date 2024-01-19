@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -25,6 +25,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
@@ -37,14 +38,15 @@ import org.evosuite.classpath.ClassPathHandler;
 import org.evosuite.instrumentation.BytecodeInstrumentation;
 import org.evosuite.rmi.MasterServices;
 import org.evosuite.rmi.service.ClientNodeRemote;
-import org.evosuite.utils.ExternalProcessHandler;
+import org.evosuite.runtime.util.JavaExecCmdUtil;
+import org.evosuite.utils.ExternalProcessGroupHandler;
 import org.evosuite.utils.LoggingUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PrintStats {
 
-	private static Logger logger = LoggerFactory.getLogger(PrintStats.class);
+	private static final Logger logger = LoggerFactory.getLogger(PrintStats.class);
 	
 	public static final String NAME = "printStats";
 	
@@ -74,10 +76,10 @@ public class PrintStats {
 		String cp = ClassPathHandler.getInstance().getTargetProjectClasspath();
 		classPath += File.pathSeparator + cp;
 
-		ExternalProcessHandler handler = new ExternalProcessHandler();
+		ExternalProcessGroupHandler handler = new ExternalProcessGroupHandler();
 		int port = handler.openServer();
-		List<String> cmdLine = new ArrayList<String>();
-		cmdLine.add(EvoSuite.JAVA_CMD);
+		List<String> cmdLine = new ArrayList<>();
+		cmdLine.add(JavaExecCmdUtil.getJavaBinExecutablePath(true)/*EvoSuite.JAVA_CMD*/);
 		cmdLine.add("-cp");
 		cmdLine.add(classPath);
 		cmdLine.add("-Dprocess_communication_port=" + port);
@@ -139,7 +141,8 @@ public class PrintStats {
 		if (handler.startProcess(newArgs)) {
 			Set<ClientNodeRemote> clients = null;
 			try {
-				clients = MasterServices.getInstance().getMasterNode().getClientsOnceAllConnected(10000);
+				clients = new CopyOnWriteArraySet<>(MasterServices.getInstance().getMasterNode()
+						.getClientsOnceAllConnected(10000).values());
 			} catch (InterruptedException e) {
 			}
 			if (clients == null) {

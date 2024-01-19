@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -21,29 +21,38 @@ package org.evosuite.rmi.service;
 
 import org.evosuite.ga.Chromosome;
 import org.evosuite.statistics.RuntimeVariable;
+import org.evosuite.utils.Listenable;
+
+import java.util.Set;
 
 /**
  * Client Node view in the client process.
  * @author arcuri
  *
  */
-public interface ClientNodeLocal {
+public interface ClientNodeLocal<T extends Chromosome<T>> extends Listenable<Set<T>> {
 
-	public boolean init();
+	boolean init();
 
-	public void trackOutputVariable(RuntimeVariable variable, Object value);
+	void trackOutputVariable(RuntimeVariable variable, Object value);
 	
-    public void publishPermissionStatistics();
+    void publishPermissionStatistics();
 
-	public void changeState(ClientState state);
+	void changeState(ClientState state);
 
-	public void changeState(ClientState state, ClientStateInformation information);
+	void changeState(ClientState state, ClientStateInformation information);
 
-	public void updateStatistics(Chromosome individual);
+	void updateStatistics(T individual);
 
-	public void flushStatisticsForClassChange();
+	void flushStatisticsForClassChange();
 
-	public void updateProperty(String propertyName, Object value);
+	void updateProperty(String propertyName, Object value);
 
-	public void waitUntilDone();
+	void waitUntilDone();
+	
+	void emigrate(Set<T> immigrants);
+	
+	void sendBestSolution(Set<T> solutions);
+
+    Set<Set<T>> getBestSolutions();
 }

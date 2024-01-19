@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -20,7 +20,6 @@
 package org.evosuite.ga;
 
 import java.io.Serializable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Gordon Fraser
  */
-public abstract class SecondaryObjective<T extends Chromosome> implements Serializable {
+public abstract class SecondaryObjective<T extends Chromosome<T>> implements Serializable {
 
 	private static final long serialVersionUID = -4117187516650844086L;
 

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -20,6 +20,7 @@
 package org.evosuite.runtime.classhandling;
 
 import java.lang.instrument.UnmodifiableClassException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +45,8 @@ public class ClassStateSupport {
 
 	private static final Logger logger = LoggerFactory.getLogger(ClassStateSupport.class);
 
+	private static final String[] externalInitMethods = new String[] {"$jacocoInit", "$gzoltarInit"};
+
     /**
      * Load all the classes with given name with the provided input classloader.
      * Those classes are all supposed to be instrumented.
@@ -55,20 +58,22 @@ public class ClassStateSupport {
      * @param classLoader
      * @param classNames
      */
-	public static boolean initializeClasses(ClassLoader classLoader, String... classNames){
+	public static boolean initializeClasses(ClassLoader classLoader, String... classNames) {
 
 		boolean problem = false;
 
 		List<Class<?>> classes = loadClasses(classLoader, classNames);
-		if(classes.size() != classNames.length){
+		if(classes.size() != classNames.length) {
 			problem = true;
 		}
+
+		initialiseExternalTools(classLoader, classes);
 
 		if(RuntimeSettings.isUsingAnyMocking()) {
 
 			for (Class<?> clazz : classes) {
 
-                if(clazz.isInterface()){
+                if(clazz.isInterface()) {
                     /*
                         FIXME: once we ll start to support Java 8, in which interfaces can have code,
                         we ll need to instrument them as well
@@ -93,6 +98,32 @@ public class ClassStateSupport {
 		//retransformIfNeeded(classes); // cannot do it, as retransformation does not really work :(
 	}
 
+	/*
+	 * If a class is instrumented by Jacoco, GZoltar, or any other similar coverage-based
+	 * tool, we need to make sure it is initialised so that the shutdownhook is added before
+	 * the first test is executed.
+	 */
+	private static void initialiseExternalTools(ClassLoader classLoader, List<Class<?>> classes) {
+
+		for (String externalInitMethod : externalInitMethods) {
+			for(Class<?> clazz : classes) {
+				try {
+					Method initMethod = clazz.getDeclaredMethod(externalInitMethod);
+					logger.error("Found {} in class {}", externalInitMethod, clazz.getName());
+					initMethod.setAccessible(true);
+					initMethod.invoke(null);
+					// Once it has been invoked the agent should be loaded and we're done
+					break;
+				} catch (NoSuchMethodException e) {
+					// No instrumentation, no need to do anything
+				} catch (Throwable e) {
+					logger.info("Error while checking for {} in class {}: {}", externalInitMethod, clazz.getName(), e.getMessage());
+
+				}
+			}
+		}
+	}
+
 	/**
 	 * Reset the static state of all the given classes.
 	 *
@@ -103,9 +134,8 @@ public class ClassStateSupport {
 	 * @param classNames
 	 */
 	public static void resetClasses(String... classNames) {
-		for (int i=0; i< classNames.length;i++) {
-			String classNameToReset = classNames[i];
-			ClassResetter.getInstance().reset(classNameToReset); 
+		for (String classNameToReset : classNames) {
+			ClassResetter.getInstance().reset(classNameToReset);
 		}
 	}
 
@@ -119,27 +149,25 @@ public class ClassStateSupport {
 
 		//assert !Sandbox.isSecurityManagerInitialized() || Sandbox.isOnAndExecutingSUTCode();
 
-		for (int i=0; i< classNames.length;i++) {
+		for (final String className : classNames) {
 
 			org.evosuite.runtime.Runtime.getInstance().resetRuntime();
-
-			String classNameToLoad = classNames[i];
 
 			Sandbox.goingToExecuteSUTCode();
 			boolean wasLoopCheckOn = LoopCounter.getInstance().isActivated();
 
 			try {
-				if(!safe){
+				if (!safe) {
 					Sandbox.goingToExecuteUnsafeCodeOnSameThread();
 				}
 				LoopCounter.getInstance().setActive(false);
-				Class<?> aClass = Class.forName(classNameToLoad, true, classLoader);
+				Class<?> aClass = Class.forName(className, true, classLoader);
 				classes.add(aClass);
 
 			} catch (Exception | Error ex) {
-				AtMostOnceLogger.error(logger,"Could not initialize " + classNameToLoad + ": " + ex.getMessage());
+				AtMostOnceLogger.error(logger, "Could not initialize " + className + ": " + ex.getMessage());
 			} finally {
-				if(!safe){
+				if (!safe) {
 					Sandbox.doneWithExecutingUnsafeCodeOnSameThread();
 				}
 				Sandbox.doneWithExecutingSUTCode();
@@ -159,9 +187,9 @@ public class ClassStateSupport {
 	 * Note: re-instrumentation is more limited, as cannot change class signature
 	 */
 	@Deprecated
-	public static void retransformIfNeeded(ClassLoader classLoader, String... classNames){
+	public static void retransformIfNeeded(ClassLoader classLoader, String... classNames) {
 		List<Class<?>> classes = new ArrayList<>();
-		for(String name : classNames){
+		for(String name : classNames) {
 			try {
 				classes.add(classLoader.loadClass(name));
 			} catch (ClassNotFoundException e) {
@@ -205,28 +233,28 @@ public class ClassStateSupport {
 		}
 		*/
 
-		for(Class<?> cl : classes){
-			if(! InstrumentingAgent.getTransformer().isClassAlreadyTransformed(cl.getName())){
+		for(Class<?> cl : classes) {
+			if(!InstrumentingAgent.getTransformer().isClassAlreadyTransformed(cl.getName())) {
 				classToReInstrument.add(cl);
 			}
 		}
 
-		if(classToReInstrument.isEmpty()){
+		if(classToReInstrument.isEmpty()) {
 			return;
 		}
 
 		InstrumentingAgent.setRetransformingMode(true);
 		try {
-			if(!classToReInstrument.isEmpty()){
+			if(!classToReInstrument.isEmpty()) {
 				InstrumentingAgent.getInstrumentation().retransformClasses(classToReInstrument.toArray(new Class<?>[0]));
 			}
 		} catch (UnmodifiableClassException e) {
 			//this shouldn't really happen, as already checked in previous loop
 			java.lang.System.err.println("Could not re-instrument classes");
-		} catch(UnsupportedOperationException e){
+		} catch(UnsupportedOperationException e) {
 			//if this happens, then it is a bug in EvoSuite :(
 			logger.error("EvoSuite wrong re-instrumentation: "+e.getMessage());
-		}finally{
+		} finally {
 			InstrumentingAgent.setRetransformingMode(false);
 		}
 

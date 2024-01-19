@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package org.evosuite.setup;
 
 import java.io.*;
@@ -30,10 +27,12 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.evosuite.ClientProcess;
 import org.evosuite.PackageInfo;
 import org.evosuite.Properties;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.classpath.ResourceList;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.rmi.ClientServices;
 import org.evosuite.statistics.RuntimeVariable;
 import org.evosuite.utils.LoggingUtils;
@@ -53,7 +52,7 @@ import com.thoughtworks.xstream.XStream;
  */
 public class InheritanceTreeGenerator {
 
-	private static Logger logger = LoggerFactory.getLogger(InheritanceTreeGenerator.class);
+	private static final Logger logger = LoggerFactory.getLogger(InheritanceTreeGenerator.class);
 
 	private static final String resourceFolder = "client/src/main/resources/";
 	private static final String jdkFile =  "JDK_inheritance.xml";
@@ -66,15 +65,16 @@ public class InheritanceTreeGenerator {
 	 * @return
 	 */
 	public static InheritanceTree createFromClassPath(List<String> classPath) {
-		if (!Properties.INSTRUMENT_CONTEXT && !Properties.INHERITANCE_FILE.isEmpty()) {
+		if (!Properties.INSTRUMENT_CONTEXT && !Properties.INHERITANCE_FILE.isEmpty() && ReachabilityCoverageFactory.targetCalleeClazz == null) {
 			try {
 				InheritanceTree tree = readInheritanceTree(Properties.INHERITANCE_FILE);
-				LoggingUtils.getEvoLogger().info("* Inheritance tree loaded from {}",
-				                                 Properties.INHERITANCE_FILE);
+				LoggingUtils.getEvoLogger().info("* " + ClientProcess.getPrettyPrintIdentifier() +
+				                                 "Inheritance tree loaded from {}", Properties.INHERITANCE_FILE);
 				return tree;
 
 			} catch (IOException e) {
-				LoggingUtils.getEvoLogger().warn("* Error loading inheritance tree: {}", e);
+				LoggingUtils.getEvoLogger().warn("* " + ClientProcess.getPrettyPrintIdentifier() +
+				                                 "Error loading inheritance tree: {}", e);
 			}
 		}
 		
@@ -148,11 +148,7 @@ public class InheritanceTreeGenerator {
 				inheritanceTree.getNumClasses());
 	}
 
-	/**
-	 * 
-	 * @param inheritanceTree
-	 * @param entry
-	 */
+
 	private static void analyze(InheritanceTree inheritanceTree, File file) {
 		if (!file.canRead()) {
 			return;
@@ -361,11 +357,10 @@ public class InheritanceTreeGenerator {
 		return true;
 	}
 
-	private static List<String> classExceptions = Arrays.asList(new String[] {
-	        "java/lang/Class", "java/lang/Object", "java/lang/String",
-	        "java/lang/Comparable", "java/io/Serializable", "com/apple", "apple/",
-	        "sun/", "com/sun", "com/oracle", "sun/awt", "jdk/internal",
-	        "java/util/prefs/MacOSXPreferences" });
+	private static List<String> classExceptions = Arrays.asList("java/lang/Class", "java/lang/Object", "java/lang/String",
+			"java/lang/Comparable", "java/io/Serializable", "com/apple", "apple/",
+			"sun/", "com/sun", "com/oracle", "sun/awt", "jdk/internal",
+			"java/util/prefs/MacOSXPreferences");
 
 	/**
 	 * During runtime, we do not want to consider standard classes to safe some
@@ -433,6 +428,8 @@ public class InheritanceTreeGenerator {
 		try {
 			FileOutputStream stream = new FileOutputStream(new File(resourceFolder+jdkFile));
 			XStream xstream = new XStream();
+			XStream.setupDefaultSecurity(xstream);
+			xstream.allowTypesByWildcard(new String[] {"org.evosuite.**", "org.jgrapht.**"});
 			xstream.toXML(inheritanceTree, stream);
 		} catch (FileNotFoundException e) {
 			logger.error("", e);
@@ -441,6 +438,8 @@ public class InheritanceTreeGenerator {
 
 	public static InheritanceTree readJDKData() {
 		XStream xstream = new XStream();
+		XStream.setupDefaultSecurity(xstream);
+		xstream.allowTypesByWildcard(new String[] {"org.evosuite.**", "org.jgrapht.**"});
 
 		String fileName;
 		if(! PackageInfo.isCurrentlyShaded()) {
@@ -461,6 +460,8 @@ public class InheritanceTreeGenerator {
 
 	public static InheritanceTree readInheritanceTree(String fileName) throws IOException {
 		XStream xstream = new XStream();
+		XStream.setupDefaultSecurity(xstream);
+		xstream.allowTypesByWildcard(new String[] {"org.evosuite.**", "org.jgrapht.**"});
 		GZIPInputStream inheritance = new GZIPInputStream(new FileInputStream(new File(fileName)));
 		return (InheritanceTree) xstream.fromXML(inheritance);
 	}
@@ -468,15 +469,19 @@ public class InheritanceTreeGenerator {
 	public static InheritanceTree readUncompressedInheritanceTree(String fileName)
 	        throws IOException {
 		XStream xstream = new XStream();
+		XStream.setupDefaultSecurity(xstream);
+		xstream.allowTypesByWildcard(new String[] {"org.evosuite.**", "org.jgrapht.**"});
 		InputStream inheritance = new FileInputStream(new File(fileName));
 		return (InheritanceTree) xstream.fromXML(inheritance);
 	}
 
 	public static void writeInheritanceTree(InheritanceTree tree, File file) throws IOException {
 		XStream xstream = new XStream();
-		GZIPOutputStream output = new GZIPOutputStream(new FileOutputStream(file));
-		xstream.toXML(tree, output);
-		output.close();
+		XStream.setupDefaultSecurity(xstream);
+		xstream.allowTypesByWildcard(new String[] {"org.evosuite.**", "org.jgrapht.**"});
+		try (GZIPOutputStream output = new GZIPOutputStream(new FileOutputStream(file))) {
+			xstream.toXML(tree, output);
+		}
 	}
 
 

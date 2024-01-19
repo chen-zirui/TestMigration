@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -41,7 +41,7 @@ public final class StringTokenizer_Init extends SymbolicFunction {
 	public Object executeFunction() {
 
 		// symbolic receiver (new object)
-		ReferenceConstant symb_str_tokenizer = (ReferenceConstant) this
+		ReferenceConstant symb_str_tokenizer = this
 				.getSymbReceiver();
 
 		// string argument

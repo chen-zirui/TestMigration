@@ -1,84 +1,122 @@
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
+ * contributors
+ *
+ * This file is part of EvoSuite.
+ *
+ * EvoSuite is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3.0 of the License, or
+ * (at your option) any later version.
+ *
+ * EvoSuite is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.evosuite.ga.metaheuristics.mosa;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.evosuite.ga.Chromosome;
+import org.evosuite.ClientProcess;
+import org.evosuite.Properties;
 import org.evosuite.ga.ChromosomeFactory;
-import org.evosuite.ga.FitnessFunction;
-import org.evosuite.ga.metaheuristics.GeneticAlgorithm;
-import org.evosuite.ga.metaheuristics.mosa.comparators.OnlyCrowdingComparator;
+import org.evosuite.ga.comparators.OnlyCrowdingComparator;
+import org.evosuite.ga.operators.ranking.CrowdingDistance;
+import org.evosuite.ga.operators.selection.BestKSelection;
+import org.evosuite.ga.operators.selection.RandomKSelection;
+import org.evosuite.ga.operators.selection.RankSelection;
+import org.evosuite.ga.operators.selection.SelectionFunction;
+import org.evosuite.rmi.ClientServices;
+import org.evosuite.rmi.service.ClientNodeLocal;
+import org.evosuite.statistics.RuntimeVariable;
 import org.evosuite.testcase.TestChromosome;
 import org.evosuite.testcase.TestFitnessFunction;
-import org.evosuite.testsuite.TestSuiteChromosome;
+import org.evosuite.utils.Listener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 /**
- * Implementation of the MOSA (Many-Objective Sorting Algorithm) described in the ICST'15 paper ...
- * 
- * @author Annibale Panichella, Fitsum M. Kifetew
+ * Implementation of the Many-Objective Sorting Algorithm (MOSA) described in the
+ * paper "Reformulating branch coverage as a many-objective optimization problem".
  *
- * @param <T>
+ * @author Annibale Panichella, Fitsum M. Kifetew
  */
-public class MOSA<T extends Chromosome> extends AbstractMOSA<T> {
+public class MOSA extends AbstractMOSA {
 
 	private static final long serialVersionUID = 146182080947267628L;
 
 	private static final Logger logger = LoggerFactory.getLogger(MOSA.class);
 
-	/** Map used to store the covered test goals (keys of the map) and the corresponding covering test cases (values of the map) **/
-	protected Map<FitnessFunction<T>, T> archive = new  HashMap<FitnessFunction<T>, T>();
+	/** immigrant groups from neighbouring client */
+	private final ConcurrentLinkedQueue<List<TestChromosome>> immigrants =
+			new ConcurrentLinkedQueue<>();
 
-	/** Boolean vector to indicate whether each test goal is covered or not. **/
-	protected Set<FitnessFunction<T>> uncoveredGoals = new HashSet<FitnessFunction<T>>();
+	private final SelectionFunction<TestChromosome> emigrantsSelection;
 
-	protected CrowdingDistance<T> distance = new CrowdingDistance<T>();
+	/** Crowding distance measure to use */
+	protected CrowdingDistance<TestChromosome> distance = new CrowdingDistance<>();
 
 	/**
 	 * Constructor based on the abstract class {@link AbstractMOSA}
 	 * @param factory
 	 */
-	public MOSA(ChromosomeFactory<T> factory) {
+	public MOSA(ChromosomeFactory<TestChromosome> factory) {
 		super(factory);
+
+		switch (Properties.EMIGRANT_SELECTION_FUNCTION) {
+			case RANK:
+				this.emigrantsSelection = new RankSelection<>();
+				break;
+			case RANDOMK:
+				this.emigrantsSelection = new RandomKSelection<>();
+				break;
+			default:
+				this.emigrantsSelection = new BestKSelection<>();
+		}
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected void evolve() {
-		List<T> offspringPopulation = breedNextGeneration();
+		List<TestChromosome> offspringPopulation = this.breedNextGeneration();
 
 		// Create the union of parents and offSpring
-		List<T> union = new ArrayList<T>();
-		union.addAll(population);
+		List<TestChromosome> union = new ArrayList<>();
+		union.addAll(this.population);
 		union.addAll(offspringPopulation);
+
+		// for parallel runs: integrate possible immigrants
+		if (Properties.NUM_PARALLEL_CLIENTS > 1 && !immigrants.isEmpty()) {
+			union.addAll(immigrants.poll());
+		}
+
+		Set<TestFitnessFunction> uncoveredGoals = this.getUncoveredGoals();
 
 		// Ranking the union
 		logger.debug("Union Size =" + union.size());
-		// Ranking the union using the best rank algorithm (modified version of the non dominated sorting algorithm
-		ranking.computeRankingAssignment(union, uncoveredGoals);
+		// Ranking the union using the best rank algorithm (modified version of the non dominated sorting algorithm)
+		this.rankingFunction.computeRankingAssignment(union, uncoveredGoals);
 
-		// add to the archive the new covered goals (and the corresponding test cases)
-		//this.archive.putAll(ranking.getNewCoveredGoals());
-
-		int remain = population.size();
+		int remain = this.population.size();
 		int index = 0;
-		List<T> front = null;
-		population.clear();
+		List<TestChromosome> front = null;
+		this.population.clear();
 
 		// Obtain the next front
-		front = ranking.getSubfront(index);
+		front = this.rankingFunction.getSubfront(index);
 
-		while ((remain > 0) && (remain >= front.size())) {
+		while ((remain > 0) && (remain >= front.size()) && !front.isEmpty()) {
 			// Assign crowding distance to individuals
-			distance.fastEpsilonDominanceAssignment(front, uncoveredGoals);
+			this.distance.fastEpsilonDominanceAssignment(front, uncoveredGoals);
 			// Add the individuals of this front
-			population.addAll(front);
+			this.population.addAll(front);
 
 			// Decrement remain
 			remain = remain - front.size();
@@ -86,162 +124,94 @@ public class MOSA<T extends Chromosome> extends AbstractMOSA<T> {
 			// Obtain the next front
 			index++;
 			if (remain > 0) {
-				front = ranking.getSubfront(index);
-			} // if
-		} // while
-
-		// Remain is less than front(index).size, insert only the best one
-		if (remain > 0) { // front contains individuals to insert
-			distance.fastEpsilonDominanceAssignment(front, uncoveredGoals);
-			Collections.sort(front, new OnlyCrowdingComparator());
-			for (int k = 0; k < remain; k++) {
-				population.add(front.get(k));
-			} // for
-
-			remain = 0;
-		} // if
-		currentIteration++;
-		//logger.error("");
-		//logger.error("N. fronts = "+ranking.getNumberOfSubfronts());
-		//logger.debug("1* front size = "+ranking.getSubfront(0).size());
-		//logger.debug("2* front size = "+ranking.getSubfront(1).size());
-		//logger.error("Covered goals = "+this.archive.size());
-		//logger.error("Uncovered goals = "+uncoveredGoals.size());
-		//logger.debug("Generation=" + currentIteration + " Population Size=" + population.size() + " Archive size=" + archive.size());
-	}
-
-
-
-	/** {@inheritDoc} */
-	@Override
-	protected void calculateFitness(T c) {
-		for (FitnessFunction<T> fitnessFunction : this.fitnessFunctions) {
-			double value = fitnessFunction.getFitness(c);
-			if (value == 0.0) {
-				//((TestChromosome)c).addCoveredGoals(fitnessFunction);
-				updateArchive(c, fitnessFunction);
+				front = this.rankingFunction.getSubfront(index);
 			}
 		}
-		notifyEvaluation(c);
+
+		// Remain is less than front(index).size, insert only the best one
+		if (remain > 0 && !front.isEmpty()) { // front contains individuals to insert
+			this.distance.fastEpsilonDominanceAssignment(front, uncoveredGoals);
+			front.sort(new OnlyCrowdingComparator<>());
+			for (int k = 0; k < remain; k++) {
+				this.population.add(front.get(k));
+			}
+
+			remain = 0;
+		}
+
+		// for parallel runs: collect best k individuals for migration
+		if (Properties.NUM_PARALLEL_CLIENTS > 1 && Properties.MIGRANTS_ITERATION_FREQUENCY > 0) {
+			if ((currentIteration + 1) % Properties.MIGRANTS_ITERATION_FREQUENCY == 0 && !this.population.isEmpty()) {
+				HashSet<TestChromosome> emigrants = new HashSet<>(emigrantsSelection.select(this.population,
+						Properties.MIGRANTS_COMMUNICATION_RATE));
+				ClientServices.<TestChromosome>getInstance().getClientNode().emigrate(emigrants);
+			}
+		}
+
+		this.currentIteration++;
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void generateSolution() {
 		logger.info("executing generateSolution function");
 
 		// keep track of covered goals
-		for (FitnessFunction<T> goal : fitnessFunctions) {
-			uncoveredGoals.add(goal);
+		this.fitnessFunctions.forEach(this::addUncoveredGoal);
+
+		// initialize population
+		if (this.population.isEmpty()) {
+			this.initializePopulation();
 		}
 
-		//initialize population
-		if (population.isEmpty())
-			initializePopulation();
-
 		// Calculate dominance ranks and crowding distance
-		ranking.computeRankingAssignment(population, this.uncoveredGoals);
-		for (int i = 0; i<ranking.getNumberOfSubfronts(); i++){
-			distance.fastEpsilonDominanceAssignment(ranking.getSubfront(i), this.uncoveredGoals);
+		this.rankingFunction.computeRankingAssignment(this.population, this.getUncoveredGoals());
+		for (int i = 0; i < this.rankingFunction.getNumberOfSubfronts(); i++) {
+			this.distance.fastEpsilonDominanceAssignment(this.rankingFunction.getSubfront(i), this.getUncoveredGoals());
+		}
+
+		final ClientNodeLocal<TestChromosome> clientNode =
+				ClientServices.<TestChromosome>getInstance().getClientNode();
+
+		Listener<Set<TestChromosome>> listener = null;
+		if (Properties.NUM_PARALLEL_CLIENTS > 1) {
+			listener = event -> immigrants.add(new LinkedList<>(event));
+			clientNode.addListener(listener);
 		}
 
 		// TODO add here dynamic stopping condition
-
-		while (!isFinished() && this.getNumberOfCoveredGoals()<this.fitnessFunctions.size()) {
-			evolve();
-			notifyIteration();
+		while (!this.isFinished() && this.getNumberOfUncoveredGoals() > 0) {
+			this.evolve();
+			this.notifyIteration();
 		}
 
-		notifySearchFinished();
-	}
+		if (Properties.NUM_PARALLEL_CLIENTS > 1) {
+			clientNode.deleteListener(listener);
 
-	/** This method is used to print the number of test goals covered by the test cases stored in the current archive **/
-	private int getNumberOfCoveredGoals() {
-		int n_covered_goals = this.archive.keySet().size();
-		logger.debug("# Covered Goals = " + n_covered_goals);
-		return n_covered_goals;
-	}
+			if (ClientProcess.DEFAULT_CLIENT_NAME.equals(ClientProcess.getIdentifier())) {
+				//collect all end result test cases
+				Set<Set<TestChromosome>> collectedSolutions = clientNode.getBestSolutions();
 
-	/** This method return the test goals covered by the test cases stored in the current archive **/
-	public Set<FitnessFunction<T>> getCoveredGoals() {
-		return this.archive.keySet();
-	}
-
-	/**
-	 * This method update the archive by adding test cases that cover new test goals, or replacing the
-	 * old tests if the new ones are smaller (at the same level of coverage).
-	 * 
-	 * @param solutionSet is the list of Chromosomes (population)
-	 */
-	private void updateArchive(T solution, FitnessFunction<T> covered) {
-		// the next two lines are needed since that coverage information are used
-		// during EvoSuite post-processing
-		TestChromosome tch = (TestChromosome) solution;
-		tch.getTestCase().getCoveredGoals().add((TestFitnessFunction) covered);
-
-		// store the test cases that are optimal for the test goal in the
-		// archive
-		if (archive.containsKey(covered)){
-			int bestSize = this.archive.get(covered).size();
-			int size = solution.size();
-			if (size < bestSize)
-				this.archive.put(covered, solution);
-		} else {
-			archive.put(covered, solution);
-			this.uncoveredGoals.remove(covered);
+				logger.debug(ClientProcess.DEFAULT_CLIENT_NAME + ": Received " + collectedSolutions.size() + " solution sets");
+				for (Set<TestChromosome> solution : collectedSolutions) {
+					for (TestChromosome t : solution) {
+						this.calculateFitness(t);
+					}
+				}
+			} else {
+				//send end result test cases to Client-0
+				Set<TestChromosome> solutionsSet = new HashSet<>(getSolutions());
+				logger.debug(ClientProcess.getPrettyPrintIdentifier() + "Sending " + solutionsSet.size()
+						+ " solutions to " + ClientProcess.DEFAULT_CLIENT_NAME);
+				clientNode.sendBestSolution(solutionsSet);
+			}
 		}
-	}
 
-	protected List<T> getArchive() {
-		Set<T> set = new HashSet<T>(); 
-		set.addAll(archive.values());
-		List<T> arch = new ArrayList<T>();
-		arch.addAll(set);
-		return arch;
-	}
-
-	protected List<T> getFinalTestSuite() {
-		// trivial case where there are no branches to cover or the archive is empty
-		if (this.getNumberOfCoveredGoals()==0) {
-			return getArchive();
-		}
-		if (archive.size() == 0)
-			if (population.size() > 0) {
-				ArrayList<T> list = new ArrayList<T>();
-				list.add(population.get(population.size() - 1));
-				return list;
-			} else
-				return getArchive();
-		List<T> final_tests = getArchive();
-		List<T> tests = this.getNonDominatedSolutions(final_tests);
-		return tests;
-	}
-
-	/**
-	 * This method is used by the Progress Monitor at the and of each generation to show the totol coverage reached by the algorithm.
-	 * Since the Progress Monitor need a "Suite", this method artificially creates a "SuiteChromosome" (see {@link MOSA#suiteFitness}) 
-	 * as the union of all test cases stored in {@link MOSA#archive}. 
-	 * 
-	 * The coverage score of the "SuiteChromosome" is given by the percentage of test goals covered (goals in {@link MOSA#archive})
-	 * onto the total number of goals <code> this.fitnessFunctions</code> (see {@link GeneticAlgorithm}).
-	 * 
-	 * @return "SuiteChromosome" directly consumable by the Progress Monitor.
-	 */
-	@Override @SuppressWarnings("unchecked")
-	public T getBestIndividual() {
-		TestSuiteChromosome best = new TestSuiteChromosome();
-		for (T test : getArchive()) {
-			best.addTest((TestChromosome) test);
-		}
-		// compute overall fitness and coverage
-		double coverage = ((double) this.getNumberOfCoveredGoals()) / ((double) this.fitnessFunctions.size());
-		best.setCoverage(suiteFitness, coverage);
-		best.setFitness(suiteFitness,  this.fitnessFunctions.size() - this.getNumberOfCoveredGoals());
-		//suiteFitness.getFitness(best);
-		return (T) best;
-	}
-
-	protected double numberOfCoveredTargets(){
-		return this.archive.keySet().size();
+		// storing the time needed to reach the maximum coverage
+		clientNode.trackOutputVariable(RuntimeVariable.Time2MaxCoverage,
+				this.budgetMonitor.getTime2MaxCoverage());
+		this.notifySearchFinished();
 	}
 }

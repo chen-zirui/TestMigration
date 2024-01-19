@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -22,7 +22,6 @@ package org.evosuite.symbolic.vm.string.buffer;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import org.evosuite.symbolic.expr.Expression;
 import org.evosuite.symbolic.expr.IntegerConstraint;
 import org.evosuite.symbolic.expr.Operator;
 import org.evosuite.symbolic.expr.str.StringConstant;
@@ -72,7 +71,7 @@ public final class StringBuffer_SetLength extends SymbolicFunction {
 				// StringBuffer contents equ
 				new_symb_value = new StringMultipleExpression(symb_value,
 						Operator.SUBSTRING, new IntegerConstant(0),
-						new ArrayList<Expression<?>>(Collections
+						new ArrayList<>(Collections
 								.singletonList(newSymbLength)),
 						conc_value);
 			}

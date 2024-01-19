@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -26,6 +26,7 @@ import org.evosuite.PackageInfo;
 import org.evosuite.Properties;
 import org.evosuite.assertion.CheapPurityAnalyzer;
 import org.evosuite.classpath.ResourceList;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.graphs.cfg.CFGClassAdapter;
 import org.evosuite.instrumentation.error.ErrorConditionClassAdapter;
 import org.evosuite.instrumentation.testability.BooleanTestabilityTransformation;
@@ -33,6 +34,7 @@ import org.evosuite.instrumentation.testability.ComparisonTransformation;
 import org.evosuite.instrumentation.testability.ContainerTransformation;
 import org.evosuite.instrumentation.testability.StringTransformation;
 import org.evosuite.junit.writer.TestSuiteWriterUtils;
+import org.evosuite.runtime.RuntimeSettings;
 import org.evosuite.runtime.instrumentation.*;
 import org.evosuite.seeding.PrimitiveClassAdapter;
 import org.evosuite.setup.DependencyAnalysis;
@@ -43,10 +45,13 @@ import org.evosuite.runtime.util.ComputeClassWriter;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.SerialVersionUIDAdder;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.util.TraceClassVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * The bytecode transformer - transforms bytecode depending on package and
@@ -56,7 +61,7 @@ import org.slf4j.LoggerFactory;
  */
 public class BytecodeInstrumentation {
 
-	private static Logger logger = LoggerFactory.getLogger(BytecodeInstrumentation.class);
+	private static final Logger logger = LoggerFactory.getLogger(BytecodeInstrumentation.class);
 
 	private final Instrumenter testCarvingInstrumenter;
 
@@ -197,6 +202,7 @@ public class BytecodeInstrumentation {
 
 			cv = new RemoveFinalClassAdapter(cv);
 
+//			logger.warn("instrumenting class=" + className);
 			cv = new ExecutionPathClassAdapter(cv, className);
 
 			cv = new CFGClassAdapter(classLoader, cv, className);
@@ -209,6 +215,7 @@ public class BytecodeInstrumentation {
 				cv = new ErrorConditionClassAdapter(cv, className);
 			}
 
+//			logger.warn("done instrumenting class=" + className);
 		} else {
 			logger.debug("Not applying target transformation");
 			cv = new NonTargetClassAdapter(cv, className);
@@ -234,14 +241,27 @@ public class BytecodeInstrumentation {
 		// Mock instrumentation (eg File and TCP).
 		if (TestSuiteWriterUtils.needToUseAgent()) {
 			cv = new MethodCallReplacementClassAdapter(cv, className);
+
+			/*
+			 * If the class is serializable, then doing any change (adding hashCode, static reset, etc)
+			 * will change the serialVersionUID if it is not defined in the class.
+			 * Hence, if it is not defined, we have to define it to
+			 * avoid problems in serialising the class, as reading Master will not do instrumentation.
+			 * The serialVersionUID HAS to be the same as the un-instrumented class
+			 */
+			if(RuntimeSettings.applyUIDTransformation)
+				cv = new SerialVersionUIDAdder(cv);
 		}
 
 		// Testability Transformations
-		if (classNameWithDots.startsWith(Properties.PROJECT_PREFIX)
+		if (
+				Properties.TT && (
+				classNameWithDots.startsWith(Properties.PROJECT_PREFIX)
 				|| (!Properties.TARGET_CLASS_PREFIX.isEmpty()
 						&& classNameWithDots.startsWith(Properties.TARGET_CLASS_PREFIX))
-				|| shouldTransform(classNameWithDots)) {
+				|| shouldTransform(classNameWithDots))) {
 
+//			logger.warn("doing testability transformation?");
 			ClassNode cn = new AnnotatedClassNode();
 			reader.accept(cn, readFlags);
 			logger.info("Starting transformation of " + className);
@@ -281,6 +301,7 @@ public class BytecodeInstrumentation {
 		} else {
 			reader.accept(cv, readFlags);
 		}
+
 
 		return writer.toByteArray();
 	}

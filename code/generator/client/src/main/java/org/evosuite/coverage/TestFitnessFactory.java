@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -43,7 +43,7 @@ public interface TestFitnessFactory<T extends TestFitnessFunction> {
 	 * 
 	 * @return a {@link java.util.List} object.
 	 */
-	public List<T> getCoverageGoals();
+    List<T> getCoverageGoals();
 
 	/**
 	 * Gets the fitness for suite if the goals from this TestFitnessFactory are
@@ -54,5 +54,5 @@ public interface TestFitnessFactory<T extends TestFitnessFunction> {
 	 *            a {@link org.evosuite.testsuite.TestSuiteChromosome} object.
 	 * @return a double.
 	 */
-	public double getFitness(TestSuiteChromosome suite);
+    double getFitness(TestSuiteChromosome suite);
 }

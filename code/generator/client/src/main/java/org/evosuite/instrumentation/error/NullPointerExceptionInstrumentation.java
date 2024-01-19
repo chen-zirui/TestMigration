@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -39,7 +39,7 @@ public class NullPointerExceptionInstrumentation extends ErrorBranchInstrumenter
 		// TODO: Do we need to also check INVOKESPECIAL?
 		if (opcode == Opcodes.INVOKEVIRTUAL || opcode == Opcodes.INVOKEINTERFACE) {
 			Type[] args = Type.getArgumentTypes(desc);
-			Map<Integer, Integer> to = new HashMap<Integer, Integer>();
+			Map<Integer, Integer> to = new HashMap<>();
 			for (int i = args.length - 1; i >= 0; i--) {
 				int loc = mv.newLocal(args[i]);
 				mv.storeLocal(loc);
@@ -84,38 +84,5 @@ public class NullPointerExceptionInstrumentation extends ErrorBranchInstrumenter
 			}
 			insertBranch(Opcodes.IFNONNULL, "java/lang/NullPointerException");
 		}
-	}
-
-	@Override
-	public void visitInsn(int opcode) {
-		switch(opcode) {
-			case Opcodes.ARRAYLENGTH:
-				// TODO
-				break;
-			case Opcodes.BALOAD:
-			case Opcodes.CALOAD:
-			case Opcodes.SALOAD:
-			case Opcodes.IALOAD:
-			case Opcodes.LALOAD:
-			case Opcodes.FALOAD:
-			case Opcodes.DALOAD:
-			case Opcodes.AALOAD:
-				// TODO
-				break;
-
-			case Opcodes.BASTORE:
-			case Opcodes.CASTORE:
-			case Opcodes.SASTORE:
-			case Opcodes.IASTORE:
-			case Opcodes.LASTORE:
-			case Opcodes.FASTORE:
-			case Opcodes.DASTORE:
-			case Opcodes.AASTORE:
-				// TODO
-				break;
-			default:
-				// Ignore everything else
-		}
-		super.visitInsn(opcode);
 	}
 }

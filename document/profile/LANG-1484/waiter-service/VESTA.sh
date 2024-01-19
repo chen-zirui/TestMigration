@@ -1,2 +1,0 @@
-export NOW_DIR=/****/TestMigration/resource/LANG-1484/waiter-service
-$PYTHON $PROJECT_DIR/main/VESTA.py LANG-1484 waiter-service waiter-service "org.apache.commons.lang3.math.NumberUtils:isParsable(java.lang.String)" waiter-service-0.0.1-SNAPSHOT.jar manual

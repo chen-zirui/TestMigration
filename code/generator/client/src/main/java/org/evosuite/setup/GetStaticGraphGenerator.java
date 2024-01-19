@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.setup;
 
 import java.util.Iterator;
@@ -39,14 +37,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class creates a StaticUsageGraph by trasversing the INVOKESTATIC/GETSTATIC relation
+ * This class creates a StaticUsageGraph by traversing the INVOKESTATIC/GETSTATIC relation
  * among instrumentable classes. 
  * 
  * @author Juan Galeotti
  */
 public class GetStaticGraphGenerator {
 
-	private static Logger logger = LoggerFactory
+	private static final Logger logger = LoggerFactory
 			.getLogger(GetStaticGraphGenerator.class);
 
 	public static GetStaticGraph generate(String className) {
@@ -213,7 +211,7 @@ public class GetStaticGraphGenerator {
 		// Only collect relations for instrumentable classes
 		String calleeClassName = methodCall.owner.replaceAll("/", ".");
 		if (BytecodeInstrumentation.checkIfCanInstrument(calleeClassName)) {
-			logger.debug("Handling method: " + methodCall.name);
+			// logger.debug("Handling method: " + methodCall.name);
 			handleClassInitializer(staticUsageTree, cn, mn, methodCall.owner,
 					depth);
 

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -40,7 +40,7 @@ public class LoopCounterMethodAdapter extends MethodVisitor {
     private static final String LOOP_COUNTER = Type.getInternalName(LoopCounter.class);
 
     public LoopCounterMethodAdapter(MethodVisitor mv, String methodName, String desc) {
-        super(Opcodes.ASM5, mv);
+        super(Opcodes.ASM9, mv);
     }
 
     @Override

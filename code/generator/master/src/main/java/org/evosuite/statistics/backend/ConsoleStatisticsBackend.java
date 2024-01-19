@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -33,7 +33,7 @@ import org.evosuite.statistics.OutputVariable;
 public class ConsoleStatisticsBackend implements StatisticsBackend {
 
 	@Override
-	public void writeData(Chromosome result, Map<String, OutputVariable<?>> data) {
+	public void writeData(Chromosome<?> result, Map<String, OutputVariable<?>> data) {
 		for(OutputVariable<?> var : data.values()) {
 			if (System.out!=null) {
 				System.out.println(var.getName()+": "+var.getValue());

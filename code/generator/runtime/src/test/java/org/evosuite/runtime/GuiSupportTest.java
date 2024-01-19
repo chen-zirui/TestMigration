@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -49,6 +49,6 @@ public class GuiSupportTest {
 		Assert.assertTrue(GraphicsEnvironment.isHeadless());
 		
 		GuiSupport.restoreHeadlessMode(); //should restore headless
-		Assert.assertTrue(! GraphicsEnvironment.isHeadless());		
+        Assert.assertFalse(GraphicsEnvironment.isHeadless());
 	}
 }

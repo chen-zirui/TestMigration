@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -23,6 +23,8 @@ package org.evosuite.runtime.testdata;
  * Created by arcuri on 12/15/14.
  */
 public class EvoSuiteRemoteAddress extends EvoSuiteAddress {
+
+    private static final long serialVersionUID = -4450692237383407590L;
 
     public EvoSuiteRemoteAddress(String host, int port) throws IllegalArgumentException {
         super(host,port);

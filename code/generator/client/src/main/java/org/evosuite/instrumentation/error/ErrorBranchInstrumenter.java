@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -43,7 +43,7 @@ public class ErrorBranchInstrumenter {
 	
 	public Map<Integer, Integer> getMethodCallee(String desc) {
 		Type[] args = Type.getArgumentTypes(desc);
-		Map<Integer, Integer> to = new HashMap<Integer, Integer>();
+		Map<Integer, Integer> to = new HashMap<>();
 		for (int i = args.length - 1; i >= 0; i--) {
 			int loc = mv.newLocal(args[i]);
 			mv.storeLocal(loc);

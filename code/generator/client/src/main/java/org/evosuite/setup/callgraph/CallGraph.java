@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,6 +19,11 @@
  */
 package org.evosuite.setup.callgraph;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,8 +35,12 @@ import java.util.Set;
 
 import org.evosuite.Properties;
 import org.evosuite.classpath.ResourceList;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.coverage.line.ReachabilitySpecUnderInferenceUtils;
+import org.evosuite.runtime.util.AtMostOnceLogger;
 import org.evosuite.setup.Call;
 import org.evosuite.setup.CallContext;
+import org.evosuite.testcase.TestFitnessFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,17 +71,18 @@ public class CallGraph implements Iterable<CallGraphEntry> {
 
 	private final String className;
 
-	private final Set<CallGraphEntry> cutNodes = Collections.synchronizedSet(new LinkedHashSet<CallGraphEntry>());
+	private final Set<CallGraphEntry> cutNodes = Collections.synchronizedSet(new LinkedHashSet<>());
 
-	private final Set<String> callGraphClasses = Collections.synchronizedSet(new LinkedHashSet<String>());
+	private final Set<String> callGraphClasses = Collections.synchronizedSet(new LinkedHashSet<>());
 
-	private final Set<String> toTestClasses = Collections.synchronizedSet(new LinkedHashSet<String>());
-	private final Set<String> toTestMethods = Collections.synchronizedSet(new LinkedHashSet<String>());
+	private final Set<String> toTestClasses = Collections.synchronizedSet(new LinkedHashSet<>());
+	private final Set<String> toTestMethods = Collections.synchronizedSet(new LinkedHashSet<>());
+	private final Set<String> toTestClassAndMethods = Collections.synchronizedSet(new LinkedHashSet<>());
 
-	private final Set<String> notToTestClasses = Collections.synchronizedSet(new LinkedHashSet<String>());
+	private final Set<String> notToTestClasses = Collections.synchronizedSet(new LinkedHashSet<>());
 
 	
-	private final Set<CallContext> publicMethods = Collections.synchronizedSet(new LinkedHashSet<CallContext>());
+	private final Set<CallContext> publicMethods = Collections.synchronizedSet(new LinkedHashSet<>());
 
 	public CallGraph(String className) {
 		this.className = className;
@@ -115,7 +125,7 @@ public class CallGraph implements Iterable<CallGraphEntry> {
 		CallGraphEntry from = new CallGraphEntry(targetClass, targetMethod);
 		CallGraphEntry to = new CallGraphEntry(sourceClass, sourceMethod);
 
-//		logger.info("Adding new call from: " + to + " -> " + from);
+		// logger.warn("Adding new call from: " + to + " -> " + from);
 
 		if (sourceClass.equals(className))
 			cutNodes.add(to);
@@ -285,32 +295,106 @@ public class CallGraph implements Iterable<CallGraphEntry> {
 	private boolean computeInterestingClasses(Graph<CallGraphEntry> g) {
 		Set<CallGraphEntry> startingVertices = new HashSet<>();
 		for (CallGraphEntry e : graph.getVertexSet()) {
-			if (e.getClassName().equals(className)) {
+			
+			if (e.getClassName().equals(className) 
+					&& e.getMethodName().split("\\(")[0].contains(ReachabilityCoverageFactory.targetCallerMethod.split("\\(")[0])) {
 				startingVertices.add(e);
 			}
 		}
 		Set<String> classes = new HashSet<>();
 		Set<String> methodclasses = new HashSet<>();
+		Set<String> methodPlusClasses = new HashSet<>();
 		for (CallGraphEntry startingVertex : startingVertices) {
-			PathFinderDFSIterator<CallGraphEntry> dfs = new PathFinderDFSIterator<CallGraphEntry>(
+			PathFinderDFSIterator<CallGraphEntry> dfs = new PathFinderDFSIterator<>(
 					g, startingVertex, true);
 			while (dfs.hasNext()) {
 				CallGraphEntry e = dfs.next();
 				classes.add(e.getClassName());
 				methodclasses.add(e.getClassName()+e.getMethodName());
+				methodPlusClasses.add(e.getClassName() + ":" + e.getMethodName());
 			}
 		}
 		toTestMethods.addAll(methodclasses);
 		toTestClasses.addAll(classes);
+		toTestClassAndMethods.addAll(methodPlusClasses);
+		
+		if (ReachabilityCoverageFactory.functionsCovered.isEmpty() && new File("functions_covered.log").exists()) {
+			logger.warn("will read from functions_covered.log");
+			List<String> lines = null;
+			try {
+				lines = Files.readAllLines(new File("functions_covered.log").toPath());
+			
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			for (String line : lines) {
+				ReachabilityCoverageFactory.functionsCovered.add(line.trim());
+			}
+		} 
+		
+		if (!ReachabilityCoverageFactory.functionsCovered.isEmpty()) {
+			computeInterestingClassesReverseFromTheVuln(g);
+		} else {
+			logger.warn("Not computing interesting classes in reverse");
+//			throw new RuntimeException("did not compute interesting classes in reverse somehow?");
+		}
+		
 		return true;
 	}
  	
+	private boolean computeInterestingClassesReverseFromTheVuln(Graph<CallGraphEntry> g) {
+		Set<CallGraphEntry> startingVertices = new HashSet<>();
+		
+		for (CallGraphEntry e : graph.getVertexSet()) {
+			logger.warn("name of vertex", e.getClassName());
+			if (e.getClassName().equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName)) {
+				if (ReachabilityCoverageFactory.functionsCovered.contains(e.getMethodName())) {
+					startingVertices.add(e);
+				}
+			}
+		}
+		if (startingVertices.isEmpty()) {
+//			logger.warn("Graph:");
+//			for (CallGraphEntry e : graph.getVertexSet()) {
+//				logger.warn("class name = " + e.getClassName());
+//				logger.warn("expected class name = " + ReachabilityCoverageFactory.targetCalleeClazzAsNormalName);
+//				if (e.getClassName().equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName)) {
+//					logger.warn("vertex of method: " + e.getMethodName());
+//				}
+//			}
+			throw new RuntimeException("cannot compute paths in call graph (in reverse), starting from the vuln lib. No starting vertex found. You may need to compute the call graph externally and pass it in");
+		}
+		Set<String> classes = new HashSet<>();
+		Set<String> methodclasses = new HashSet<>();
+		Set<String> methodPlusClasses = new HashSet<>();
+		for (CallGraphEntry startingVertex : startingVertices) {
+			PathFinderDFSIterator<CallGraphEntry> dfs = new PathFinderDFSIterator<>(
+					g, startingVertex, false);
+			while (dfs.hasNext()) {
+				CallGraphEntry e = dfs.next();
+				classes.add(e.getClassName());
+				methodclasses.add(e.getClassName()+e.getMethodName());
+				methodPlusClasses.add(e.getClassName()+":"+e.getMethodName());
+				
+			}
+		}
+		
+		toTestMethods.retainAll(methodclasses);
+		toTestClasses.retainAll(classes);
+		toTestClassAndMethods.retainAll(methodPlusClasses);
+		AtMostOnceLogger.warn(logger, "along call graph = " + toTestClassAndMethods);
+//		logger.warn("along call graph = " + toTestMethods);
+		
+		
+		return true;
+	}
+	
 	private boolean checkClassInPaths(String targetClass, Graph<CallGraphEntry> g, CallGraphEntry startingVertex) {
 		if(!g.containsVertex(startingVertex)){
 			return false;
 		}
 		Set<String> classes = new HashSet<>();
-		PathFinderDFSIterator<CallGraphEntry> dfs = new PathFinderDFSIterator<CallGraphEntry>(g, startingVertex);
+		PathFinderDFSIterator<CallGraphEntry> dfs = new PathFinderDFSIterator<>(g, startingVertex);
 		while (dfs.hasNext()) {
 			CallGraphEntry e = dfs.next();
 			classes.add(e.getClassName());
@@ -371,7 +455,7 @@ public class CallGraph implements Iterable<CallGraphEntry> {
 	 * @return a copy of the current vertexset
 	 */
 	public Set<CallGraphEntry> getViewOfCurrentMethods() {
-		return new LinkedHashSet<CallGraphEntry>(graph.getVertexSet());
+		return new LinkedHashSet<>(graph.getVertexSet());
 	}
 
 	/**
@@ -381,4 +465,10 @@ public class CallGraph implements Iterable<CallGraphEntry> {
 		return callGraphClasses;
 	}
 
+	public Set<String> getToTestClassAndMethods() {
+		return toTestClassAndMethods;
+	}
+	public void setToTestClassAndMethods(Set<String> toTestMethods) {
+		this.toTestClassAndMethods.addAll(toTestMethods);
+	}
 }

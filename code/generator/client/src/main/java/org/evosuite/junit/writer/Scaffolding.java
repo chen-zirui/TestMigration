@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -32,7 +32,6 @@ import org.evosuite.runtime.annotation.EvoSuiteClassExclude;
 import org.evosuite.runtime.classhandling.ClassResetter;
 import org.evosuite.runtime.classhandling.ClassStateSupport;
 import org.evosuite.runtime.classhandling.JDKClassResetter;
-import org.evosuite.runtime.javaee.db.DBManager;
 import org.evosuite.runtime.jvm.ShutdownHookHandler;
 import org.evosuite.runtime.sandbox.Sandbox;
 import org.evosuite.runtime.thread.KillSwitchHandler;
@@ -51,7 +50,6 @@ import org.mockito.Mockito;
 import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static org.evosuite.junit.writer.TestSuiteWriterUtils.*;
 
@@ -84,7 +82,12 @@ public class Scaffolding {
 		StringBuilder builder = new StringBuilder();
 
 		builder.append(getHeader(name, results, wasSecurityException));
-		builder.append(new Scaffolding().getBeforeAndAfterMethods(name, wasSecurityException, results));
+		if(results.isEmpty()) {
+			builder.append(METHOD_SPACE);
+			builder.append("// Empty scaffolding for empty test suite\n");
+		} else {
+			builder.append(new Scaffolding().getBeforeAndAfterMethods(name, wasSecurityException, results));
+		}
 		builder.append(getFooter());
 
 		return builder.toString();
@@ -233,7 +236,7 @@ public class Scaffolding {
 
 		generateInitializeClasses(name, bd);
 
-		generateMockInitialization(bd, results);
+		generateMockInitialization(name, bd, results);
 
 		if (Properties.RESET_STATIC_FIELDS) {
 			generateResetClasses(name, bd);
@@ -251,24 +254,26 @@ public class Scaffolding {
 	 * @param bd
 	 * @param results
      */
-	private void generateMockInitialization(StringBuilder bd, List<ExecutionResult> results) {
+	private void generateMockInitialization(String testClassName, StringBuilder bd, List<ExecutionResult> results) {
 		if(! TestSuiteWriterUtils.doesUseMocks(results)){
 			return;
 		}
 
-		bd.append(METHOD_SPACE);
-		bd.append("@BeforeClass \n");
+
+		// In order to make sure this is called *after* initializeClasses this method is now called directly from initEvoSuiteFramework
+		// bd.append(METHOD_SPACE);
+		// bd.append("@BeforeClass \n");
 
 		bd.append(METHOD_SPACE);
-		bd.append("public static void initMocksToAvoidTimeoutsInTheTests() { \n");
+		bd.append("private static void initMocksToAvoidTimeoutsInTheTests() throws ClassNotFoundException { \n");
 
 		Set<String> mockStatements = new LinkedHashSet<>();
 		for(ExecutionResult er : results) {
 			for (Statement st : er.test) {
 				if (st instanceof FunctionalMockStatement) {
 					FunctionalMockStatement fms = (FunctionalMockStatement) st;
-					String name = new GenericClass(fms.getReturnType()).getRawClass().getCanonicalName();
-					mockStatements.add("mock("+name+".class);");
+					String name = new GenericClass(fms.getReturnType()).getRawClass().getTypeName();
+					mockStatements.add("mock(Class.forName(\""+name+"\", false, "+testClassName + ".class.getClassLoader()));");
 				}
 			}
 		}
@@ -406,8 +411,7 @@ public class Scaffolding {
 			bd.append(ClassStateSupport.class.getName() + ".initializeClasses(");
 			bd.append(testClassName + ".class.getClassLoader() ");
 
-			for (int i = 0; i < classesToInit.size(); i++) {
-				String className = classesToInit.get(i);
+			for (String className : classesToInit) {
 				if (!BytecodeInstrumentation.checkIfCanInstrument(className)) {
 					continue;
 				}
@@ -747,7 +751,7 @@ public class Scaffolding {
 			bd.append(EXECUTOR_SERVICE + " = Executors.newCachedThreadPool(); \n");
 		}
 
-		if (Properties.RESET_STATIC_FIELDS) {
+		if (Properties.RESET_STATIC_FIELDS && Properties.REPLACE_CALLS) {
 			bd.append(BLOCK_SPACE);
 			bd.append(JDKClassResetter.class.getName() + ".init();\n");
 			bd.append(BLOCK_SPACE);
@@ -765,13 +769,11 @@ public class Scaffolding {
 			bd.append(BLOCK_SPACE);
 			bd.append(LoopCounter.class.getName() + ".getInstance().reset(); \n");
 		}
-		if (DBManager.getInstance().isWasAccessed()) {
-			// be sure it is called before any test is run, as to avoid timeout
-			// if init during a test case run
-			bd.append(BLOCK_SPACE);
-			bd.append(DBManager.class.getName() + ".getInstance().initDB(); \n");
-		}
 
+		if(TestSuiteWriterUtils.doesUseMocks(results)) {
+			bd.append(BLOCK_SPACE);
+			bd.append("try { initMocksToAvoidTimeoutsInTheTests(); } catch(ClassNotFoundException e) {} \n");
+		}
 		bd.append(METHOD_SPACE);
 		bd.append("} \n");
 
@@ -818,10 +820,9 @@ public class Scaffolding {
 		bd.append(" new " + ThreadStopper.class.getName() + " (");
 		bd.append("" + KillSwitchHandler.class.getName() + ".getInstance(), ");
 		bd.append("" + Properties.TIMEOUT + "");
-		Set<String> threadsToIgnore = new LinkedHashSet<>();
 		// this shouldn't appear among the threads in the generated tests
 		// threadsToIgnore.add(TestCaseExecutor.TEST_EXECUTION_THREAD);
-		threadsToIgnore.addAll(Arrays.asList(Properties.IGNORE_THREADS));
+		Set<String> threadsToIgnore = new LinkedHashSet<>(Arrays.asList(Properties.IGNORE_THREADS));
 		for (String s : threadsToIgnore) {
 			bd.append(", " + s);
 		}

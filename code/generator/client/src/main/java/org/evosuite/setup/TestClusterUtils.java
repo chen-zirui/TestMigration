@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -36,6 +36,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Set of pure static methods
@@ -94,6 +95,8 @@ public class TestClusterUtils {
 		int pos = className.lastIndexOf('$');
 		if(pos < 0)
 			return false;
+		if(pos == className.length() - 1)
+			return false; // Classnames can end in $ - see #179
 		char firstLetter = className.charAt(pos + 1);
 		if(firstLetter >= '0' && firstLetter <= '9')
 			return true;
@@ -187,13 +190,10 @@ public class TestClusterUtils {
 	public static Set<Constructor<?>> getConstructors(Class<?> clazz) {
 		Map<String, Constructor<?>> helper = new TreeMap<>();
 
-		Set<Constructor<?>> constructors = new LinkedHashSet<>();
 		for (Constructor<?> c : Reflection.getDeclaredConstructors(clazz)) {
 			helper.put(org.objectweb.asm.Type.getConstructorDescriptor(c), c);
 		}
-		for (Constructor<?> c : helper.values()) {
-			constructors.add(c);
-		}
+		LinkedHashSet<Constructor<?>> constructors = new LinkedHashSet<>(helper.values().stream().sorted((o1, o2) -> o1.getName().compareTo(o2.getName())).collect(Collectors.toList()));
 		return constructors;
 	}
 
@@ -207,8 +207,7 @@ public class TestClusterUtils {
 		// TODO: Helper not necessary here!
 		Map<String, Field> helper = new TreeMap<>();
 
-		Set<Field> fields = new LinkedHashSet<>();
-		if (clazz.getSuperclass() != null) {
+        if (clazz.getSuperclass() != null) {
 			for (Field f : getFields(clazz.getSuperclass())) {
 				helper.put(f.toGenericString(), f);
 			}
@@ -223,7 +222,7 @@ public class TestClusterUtils {
 		for (Field f : Reflection.getDeclaredFields(clazz)) {
 			helper.put(f.toGenericString(), f);
 		}
-		fields.addAll(helper.values());
+        Set<Field> fields = new LinkedHashSet<>(helper.values());
 
 		return fields;
 	}
@@ -246,6 +245,11 @@ public class TestClusterUtils {
 	 * @return
 	 */
 	public static Set<Field> getAccessibleFields(Class<?> clazz) {
+//		logger.warn(clazz.getName());
+//		if (clazz.getName().contains("JsonPathVariableExtractor")) { // some kind of craziness that causes evosuite to crash...
+//			return new LinkedHashSet<>();
+//		}
+		
 		if(accessibleFieldCache.containsKey(clazz)) {
 			return accessibleFieldCache.get(clazz);
 		}
@@ -256,6 +260,7 @@ public class TestClusterUtils {
 				fields.add(f);
 			}
 		}
+		fields = new LinkedHashSet<>(fields.stream().sorted((o1, o2) -> o1.getName().compareTo(o2.getName())).collect(Collectors.toList()));
 
 		accessibleFieldCache.put(clazz, fields);
 		return fields;
@@ -275,7 +280,7 @@ public class TestClusterUtils {
 		if(methodCache.containsKey(clazz)) {
 			return methodCache.get(clazz);
 		}
-		Map<String, Method> helper = new TreeMap<String, Method>();
+		Map<String, Method> helper = new TreeMap<>();
 
 		if (clazz.getSuperclass() != null) {
 			for (Method m : getMethods(clazz.getSuperclass())) {
@@ -292,8 +297,7 @@ public class TestClusterUtils {
 			helper.put(m.getName() + org.objectweb.asm.Type.getMethodDescriptor(m), m);
 		}
 
-		Set<Method> methods = new LinkedHashSet<>();
-		methods.addAll(helper.values());
+		LinkedHashSet<Method> methods = new LinkedHashSet<>(helper.values().stream().sorted((o1, o2) -> o1.getName().compareTo(o2.getName())).collect(Collectors.toList()));
 		methodCache.put(clazz, methods);
 		return methods;
 	}

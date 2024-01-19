@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- *
- */
+
 package org.evosuite.coverage;
 
 import org.evosuite.Properties;
@@ -66,8 +64,7 @@ public class CoverageCriteriaAnalyzer {
 
     private static void reinstrument(TestSuiteChromosome testSuite, Properties.Criterion criterion) {
 
-        if (Properties.SECONDARY_OBJECTIVE.toLowerCase().contains("ibranch")
-                || Properties.SECONDARY_OBJECTIVE.toLowerCase().contains("archiveibranch")) {
+        if (ArrayUtil.contains(Properties.SECONDARY_OBJECTIVE, Properties.SecondaryObjective.IBRANCH)) {
             ExecutionTracer.enableContext();
         }
         if (!ExecutionTracer.isTraceCallsEnabled()) {
@@ -80,7 +77,7 @@ public class CoverageCriteriaAnalyzer {
             test.clearCachedResults(); // clears last execution result and last mutation result
         }
 
-        Properties.Criterion oldCriterion[] = Arrays.copyOf(Properties.CRITERION, Properties.CRITERION.length);
+        Properties.Criterion[] oldCriterion = Arrays.copyOf(Properties.CRITERION, Properties.CRITERION.length);
         Properties.CRITERION = new Properties.Criterion[]{criterion};
 
         logger.info("Re-instrumenting for criterion: " + criterion);
@@ -112,6 +109,7 @@ public class CoverageCriteriaAnalyzer {
             }
         }
 
+        boolean reinstrumented = false;
         for (String extraCriterion : Arrays.asList(criteria.toUpperCase().split(","))) {
             if (extraCriterion.equals("CBRANCH")) {
                 Properties.INSTRUMENT_METHOD_CALLS = true;
@@ -119,8 +117,16 @@ public class CoverageCriteriaAnalyzer {
             // Analyse coverage for extra criteria
             if (!ArrayUtil.contains(Properties.CRITERION, extraCriterion)) {
                 logger.debug("Measuring additional coverage of target criterion {}", extraCriterion);
+                reinstrumented = true;
                 analyzeCoverage(testSuite, extraCriterion);
             }
+        }
+
+        // If reinstrumentation happened, we might need to restore the original instrumentation
+        // otherwise things like the MutationPool may not be up to date
+        if (reinstrumented) {
+            TestGenerationContext.getInstance().resetContext();
+            Properties.getInitializedTargetClass();
         }
     }
 
@@ -166,6 +172,8 @@ public class CoverageCriteriaAnalyzer {
                 return RuntimeVariable.MethodCoverage;
             case METHODNOEXCEPTION:
                 return RuntimeVariable.MethodNoExceptionCoverage;
+            case REACHABILITY:
+            	return RuntimeVariable.Reachability;
             case ONLYLINE:
             case LINE:
                 return RuntimeVariable.LineCoverage;
@@ -175,8 +183,6 @@ public class CoverageCriteriaAnalyzer {
                 return RuntimeVariable.InputCoverage;
             case IBRANCH:
                 return RuntimeVariable.IBranchCoverage;
-            case REGRESSION:
-                return RuntimeVariable.BranchCoverage;
             case TRYCATCH:
                 return RuntimeVariable.TryCatchCoverage;
             default:
@@ -208,12 +214,11 @@ public class CoverageCriteriaAnalyzer {
         analyzeCoverage(testSuite,criterion,true);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private static void analyzeCoverage(TestSuiteChromosome testSuite, Properties.Criterion criterion, boolean recalculate) {
 
         TestSuiteChromosome testSuiteCopy = testSuite.clone();
 
-        TestFitnessFactory factory = FitnessFunctions.getFitnessFactory(criterion);
+        TestFitnessFactory<? extends TestFitnessFunction> factory = FitnessFunctions.getFitnessFactory(criterion);
 
         if(recalculate) {
             reinstrument(testSuiteCopy, criterion);
@@ -231,7 +236,7 @@ public class CoverageCriteriaAnalyzer {
             }
         }
 
-        List<TestFitnessFunction> goals = factory.getCoverageGoals();
+        List<? extends TestFitnessFunction> goals = factory.getCoverageGoals();
         Collections.sort(goals);
 
         StringBuffer buffer = new StringBuffer(goals.size());
@@ -338,10 +343,10 @@ public class CoverageCriteriaAnalyzer {
             case LINE:
             case ONLYLINE:
                 return RuntimeVariable.LineCoverageBitString;
-            case REGRESSION:
-            case REGRESSIONTESTS:
             case TRYCATCH:
                 return null;
+            case REACHABILITY:
+            	return RuntimeVariable.ReachabilityCoverageBitString;
             default:
                 logger.debug("Criterion not supported: " + criterion);
                 return null;

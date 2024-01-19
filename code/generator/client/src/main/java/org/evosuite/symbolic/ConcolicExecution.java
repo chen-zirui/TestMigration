@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -26,7 +26,7 @@ import java.util.Set;
 import org.evosuite.Properties;
 import org.evosuite.ga.stoppingconditions.MaxStatementsStoppingCondition;
 import org.evosuite.symbolic.expr.Constraint;
-import org.evosuite.symbolic.expr.ExpressionExecutor;
+import org.evosuite.symbolic.expr.ExpressionEvaluator;
 import org.evosuite.symbolic.instrument.ConcolicInstrumentingClassLoader;
 import org.evosuite.symbolic.vm.ArithmeticVM;
 import org.evosuite.symbolic.vm.CallVM;
@@ -57,8 +57,7 @@ import org.evosuite.dse.VM;
  */
 public abstract class ConcolicExecution {
 
-	private static Logger logger = LoggerFactory
-			.getLogger(ConcolicExecution.class);
+	private static final Logger logger = LoggerFactory.getLogger(ConcolicExecution.class);
 
 	/** Instrumenting class loader */
 	private static final ConcolicInstrumentingClassLoader classLoader = new ConcolicInstrumentingClassLoader();
@@ -71,15 +70,14 @@ public abstract class ConcolicExecution {
 	 * @return a {@link java.util.List} object.
 	 */
 	public static List<BranchCondition> getSymbolicPath(TestChromosome test) {
-		TestChromosome dscCopy = (TestChromosome) test.clone();
-		DefaultTestCase defaultTestCase = (DefaultTestCase) dscCopy
-				.getTestCase();
+		TestChromosome dscCopy = test.clone();
+		DefaultTestCase defaultTestCase = (DefaultTestCase) dscCopy.getTestCase();
 
-		return executeConcolic(defaultTestCase);
+		PathCondition pathCondition = executeConcolic(defaultTestCase);
+		return pathCondition.getBranchConditions();
 	}
 
-	public static List<BranchCondition> executeConcolic(
-			DefaultTestCase defaultTestCase) {
+	public static PathCondition executeConcolic(DefaultTestCase defaultTestCase) {
 
 		logger.debug("Preparing concolic execution");
 
@@ -97,7 +95,7 @@ public abstract class ConcolicExecution {
 		/**
 		 * VM listeners
 		 */
-		List<IVM> listeners = new ArrayList<IVM>();
+		List<IVM> listeners = new ArrayList<>();
 		listeners.add(new CallVM(env, classLoader));
 		listeners.add(new JumpVM(env, pc));
 		listeners.add(new HeapVM(env, pc, classLoader));
@@ -108,6 +106,7 @@ public abstract class ConcolicExecution {
 		VM.getInstance().setListeners(listeners);
 		VM.getInstance().prepareConcolicExecution();
 
+		defaultTestCase.getChangedClassLoader();
 		defaultTestCase.changeClassLoader(classLoader);
 		SymbolicObserver symbolicExecObserver = new SymbolicObserver(env);
 
@@ -122,56 +121,51 @@ public abstract class ConcolicExecution {
 			logger.debug("Executing test");
 
 			long startConcolicExecutionTime = System.currentTimeMillis();
-			result = TestCaseExecutor.getInstance().execute(defaultTestCase,
-					Properties.CONCOLIC_TIMEOUT);
-			long estimatedConcolicExecutionTime = System.currentTimeMillis()
-					- startConcolicExecutionTime;
+			result = TestCaseExecutor.getInstance().execute(defaultTestCase, Properties.CONCOLIC_TIMEOUT);
+
+			long estimatedConcolicExecutionTime = System.currentTimeMillis() - startConcolicExecutionTime;
 			DSEStats.getInstance().reportNewConcolicExecutionTime(estimatedConcolicExecutionTime);
 
-			MaxStatementsStoppingCondition.statementsExecuted(result
-					.getExecutedStatements());
+			MaxStatementsStoppingCondition.statementsExecuted(result.getExecutedStatements());
 
 		} catch (Exception e) {
 			logger.error("Exception during concolic execution {}", e);
-			return new ArrayList<BranchCondition>();
+			return new PathCondition(new ArrayList<>());
 		} finally {
 			logger.debug("Cleaning concolic execution");
 			TestCaseExecutor.getInstance().setExecutionObservers(originalExecutionObservers);
 		}
 		VM.disableCallBacks(); // ignore all callbacks from now on
-		
+
 		List<BranchCondition> branches = pc.getPathCondition();
-		logger.info("Concolic execution ended with " + branches.size()
-				+ " branches collected");
+		logger.info("Concolic execution ended with " + branches.size() + " branches collected");
 		if (!result.noThrownExceptions()) {
 			int idx = result.getFirstPositionOfThrownException();
-			logger.info("Exception thrown: "
-					+ result.getExceptionThrownAtPosition(idx));
+			logger.info("Exception thrown: " + result.getExceptionThrownAtPosition(idx));
 		}
 		logNrOfConstraints(branches);
 
 		logger.debug("Cleaning concolic execution");
 		TestCaseExecutor.getInstance().setExecutionObservers(originalExecutionObservers);
 
-		return branches;
+		return new PathCondition(branches);
 	}
 
 	private static void logNrOfConstraints(List<BranchCondition> branches) {
 		int nrOfConstraints = 0;
 
-		ExpressionExecutor exprExecutor = new ExpressionExecutor();
+		ExpressionEvaluator exprExecutor = new ExpressionEvaluator();
 		for (BranchCondition branchCondition : branches) {
 
-			for (Constraint<?> supporting_constraint : branchCondition
-					.getSupportingConstraints()) {
-				supporting_constraint.getLeftOperand().accept(exprExecutor,null);
+			for (Constraint<?> supporting_constraint : branchCondition.getSupportingConstraints()) {
+				supporting_constraint.getLeftOperand().accept(exprExecutor, null);
 				supporting_constraint.getRightOperand().accept(exprExecutor, null);
 				nrOfConstraints++;
 			}
 
 			Constraint<?> constraint = branchCondition.getConstraint();
-			constraint.getLeftOperand().accept(exprExecutor,null);
-			constraint.getRightOperand().accept(exprExecutor,null);
+			constraint.getLeftOperand().accept(exprExecutor, null);
+			constraint.getRightOperand().accept(exprExecutor, null);
 			nrOfConstraints++;
 
 		}

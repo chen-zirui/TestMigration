@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.instrumentation;
 
 import java.io.BufferedWriter;
@@ -40,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TransformationStatistics {
 
-	private static Logger logger = LoggerFactory.getLogger(TransformationStatistics.class);
+	private static final Logger logger = LoggerFactory.getLogger(TransformationStatistics.class);
 
 	/** Constant <code>transformedBooleanComparison=0</code> */
 	public static int transformedBooleanComparison = 0;
@@ -256,37 +254,38 @@ public class TransformationStatistics {
 	 * @param className a {@link java.lang.String} object.
 	 */
 	public static void writeStatistics(String className) {
-		try {
-			String filename = Properties.REPORT_DIR + "/transformation.csv";
-			File logfile = new File(filename);
-			boolean needHeader = !logfile.exists();
-			BufferedWriter out = new BufferedWriter(new FileWriter(logfile, true));
-
-			if (needHeader)
-				out.write("ClassName,BooleanComparison,Get,Push0,Push1,PushRef,PushNull,Comparison,ImplicitElse,InstanceOf,BooleanReturn,BooleanParameter,BooleanField,BackToBooleanParameter,BackToBooleanField,UntransformableMethod,StringComparison,ContainerComparison\n");
-
-			out.write(className);
-			out.write(",");
-			out.write(transformedBooleanComparison + ",");
-			out.write(insertedGet + ",");
-			out.write(insertedPushInt0 + ",");
-			out.write(insertedPushInt1 + ",");
-			out.write(insertedPushIntRef + ",");
-			out.write(insertedPushIntNull + ",");
-			out.write(transformedComparison + ",");
-			out.write(transformedImplicitElse + ",");
-			out.write(transformedInstanceOf + ",");
-			out.write(transformedBooleanReturn + ",");
-			out.write(transformedBooleanParameter + ",");
-			out.write(transformedBooleanField + ",");
-			out.write(transformedBackToBooleanParameter + ",");
-			out.write(transformedBackToBooleanField + ",");
-			out.write(transformedStringComparison + ",");
-			out.write(transformedContainerComparison + ",");
-			out.write("\n");
-			out.close();
-		} catch (IOException e) {
-			logger.info("Exception while writing CSV data: " + e);
-		}
+		return;
+//		try {
+//			String filename = Properties.REPORT_DIR + "/transformation.csv";
+//			File logfile = new File(filename);
+//			boolean needHeader = !logfile.exists();
+//			BufferedWriter out = new BufferedWriter(new FileWriter(logfile, true));
+//
+//			if (needHeader)
+//				out.write("ClassName,BooleanComparison,Get,Push0,Push1,PushRef,PushNull,Comparison,ImplicitElse,InstanceOf,BooleanReturn,BooleanParameter,BooleanField,BackToBooleanParameter,BackToBooleanField,UntransformableMethod,StringComparison,ContainerComparison\n");
+//
+//			out.write(className);
+//			out.write(",");
+//			out.write(transformedBooleanComparison + ",");
+//			out.write(insertedGet + ",");
+//			out.write(insertedPushInt0 + ",");
+//			out.write(insertedPushInt1 + ",");
+//			out.write(insertedPushIntRef + ",");
+//			out.write(insertedPushIntNull + ",");
+//			out.write(transformedComparison + ",");
+//			out.write(transformedImplicitElse + ",");
+//			out.write(transformedInstanceOf + ",");
+//			out.write(transformedBooleanReturn + ",");
+//			out.write(transformedBooleanParameter + ",");
+//			out.write(transformedBooleanField + ",");
+//			out.write(transformedBackToBooleanParameter + ",");
+//			out.write(transformedBackToBooleanField + ",");
+//			out.write(transformedStringComparison + ",");
+//			out.write(transformedContainerComparison + ",");
+//			out.write("\n");
+//			out.close();
+//		} catch (IOException e) {
+//			logger.info("Exception while writing CSV data: " + e);
+//		}
 	}
 }

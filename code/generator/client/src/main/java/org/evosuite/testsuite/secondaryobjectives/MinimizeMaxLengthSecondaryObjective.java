@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -20,7 +20,7 @@
 package org.evosuite.testsuite.secondaryobjectives;
 
 import org.evosuite.ga.SecondaryObjective;
-import org.evosuite.testcase.ExecutableChromosome;
+import org.evosuite.testcase.TestChromosome;
 import org.evosuite.testsuite.TestSuiteChromosome;
 
 
@@ -35,7 +35,7 @@ public class MinimizeMaxLengthSecondaryObjective extends SecondaryObjective<Test
 
 	private int getMaxLength(TestSuiteChromosome chromosome) {
 		int max = 0;
-		for (ExecutableChromosome test : chromosome.getTestChromosomes()) {
+		for (TestChromosome test : chromosome.getTestChromosomes()) {
 			max = Math.max(max, test.size());
 		}
 		return max;
@@ -43,10 +43,10 @@ public class MinimizeMaxLengthSecondaryObjective extends SecondaryObjective<Test
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
-	 * org.evosuite.ga.SecondaryObjective#compareChromosomes(de.unisb
-	 * .cs.st.evosuite.ga.Chromosome, org.evosuite.ga.Chromosome)
+	 * org.evosuite.testcase.secondaryobjectives.SecondaryObjective#compareChromosomes(org.evosuite.ga.Chromosome,
+	 * org.evosuite.ga.Chromosome)
 	 */
 	/** {@inheritDoc} */
 	@Override
@@ -56,12 +56,10 @@ public class MinimizeMaxLengthSecondaryObjective extends SecondaryObjective<Test
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
-	 * org.evosuite.ga.SecondaryObjective#compareGenerations(de.unisb
-	 * .cs.st.evosuite.ga.Chromosome, org.evosuite.ga.Chromosome,
-	 * org.evosuite.ga.Chromosome,
-	 * org.evosuite.ga.Chromosome)
+	 * org.evosuite.testcase.secondaryobjectives.SecondaryObjective#compareGenerations(org.evosuite.ga.Chromosome,
+	 * org.evosuite.ga.Chromosome, org.evosuite.ga.Chromosome, org.evosuite.ga.Chromosome)
 	 */
 	/** {@inheritDoc} */
 	@Override

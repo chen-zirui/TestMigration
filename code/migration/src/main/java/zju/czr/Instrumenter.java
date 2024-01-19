@@ -61,7 +61,10 @@ public class Instrumenter implements ClassFileTransformer {
                
                 bytes = ctClass.toBytecode();
                 
-            } catch (IOException | NotFoundException | CannotCompileException e) {
+            } catch(NotFoundException | CannotCompileException e){
+                return bytes;
+            } 
+            catch (IOException e) {
                 e.printStackTrace();
             }
                 return bytes;

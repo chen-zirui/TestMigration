@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.testcase.variable;
 
 import java.lang.reflect.Type;
@@ -180,9 +178,7 @@ public class FieldReference extends VariableReferenceImpl {
 			logger.error("Error accessing field " + field + " of object " + source + ": "
 			        + e, e);
 			throw new EvosuiteError(e);
-		} catch (NullPointerException e) {
-			throw new CodeUnderTestException(e);
-		} catch (ExceptionInInitializerError e) {
+		} catch (NullPointerException | ExceptionInInitializerError | NoClassDefFoundError e) {
 			throw new CodeUnderTestException(e);
 		}
 	}

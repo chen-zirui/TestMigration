@@ -1,6 +1,0 @@
-100.
-2
-18springbucks/waiter/support/MoneyFormatter
-[org/apache/commons/lang3/math/NumberUtils
-isParsable
-java.lang.String

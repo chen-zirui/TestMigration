@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -119,7 +119,7 @@ public class EvoClassLoader extends ClassLoader {
 			logger.info("Keeping class: " + fullyQualifiedTargetClass);
 			return result;
 		} catch (Throwable t) {
-			logger.info("Error while loading class: "+t);
+			// logger.info("Error while loading class: "+t);
 			throw new ClassNotFoundException(t.getMessage(), t);
 		} finally {
 			if(is != null)

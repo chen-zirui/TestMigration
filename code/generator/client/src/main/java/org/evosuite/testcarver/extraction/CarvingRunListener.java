@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -32,6 +32,7 @@ import java.util.Set;
 import org.evosuite.Properties;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.TimeController;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.instrumentation.BytecodeInstrumentation;
 import org.evosuite.setup.TestUsageChecker;
 import org.evosuite.testcarver.capture.CaptureLog;
@@ -73,30 +74,39 @@ public class CarvingRunListener extends RunListener {
 	public void testFinished(Description description) throws Exception {
 		final CaptureLog log = Capturer.stopCapture();
 		if (TimeController.getInstance().isThereStillTimeInThisPhase()) {
-			LoggingUtils.getEvoLogger().info(" - Carving test {}.{}", description.getClassName(), description.getMethodName());
-			this.processLog(description, log);
+//			LoggingUtils.getEvoLogger().info(" - May carve test {}.{}", description.getClassName(), description.getMethodName());
+			if (ReachabilityCoverageFactory.targetCalledClazzTestMethodNames.contains(description.getMethodName())) {
+				
+				LoggingUtils.getEvoLogger().info(" - Carving test {}.{}", description.getClassName(), description.getMethodName());
+				logger.warn("process log");
+				this.processLog(description, log);
+				logger.warn("processed log");
+			}
 		}
+		logger.warn("clearing capturer");
 		Capturer.clear();
+		logger.warn("cleared capturer");
 	}
 
 	private List<Class<?>> getObservedClasses(final CaptureLog log) {
-		List<Class<?>> targetClasses = new ArrayList<Class<?>>();
+		List<Class<?>> targetClasses = new ArrayList<>();
 		final Class<?> targetClass = Properties.getTargetClassAndDontInitialise();
 		targetClasses.add(targetClass);
 		String prop = Properties.SELECTED_JUNIT;
 		if (prop == null || prop.trim().isEmpty()) {
-			throw new IllegalStateException(
-			        "Trying to use a test carver factory, but empty Properties.SELECTED_JUNIT");
+			return null;
+			// throw new IllegalStateException(
+			//         "Trying to use a test carver factory, but empty Properties.SELECTED_JUNIT");
 		}
 
 		String[] paths = prop.split(":");
-		Collection<String> junitTestNames = new HashSet<String>();
+		Collection<String> junitTestNames = new HashSet<>();
 		for (String s : paths) {
 			junitTestNames.add(s.trim());
 		}
 
 		if(Properties.CARVE_OBJECT_POOL) {
-			Set<String> uniqueClasses = new LinkedHashSet<String>(log.getObservedClasses());
+			Set<String> uniqueClasses = new LinkedHashSet<>(log.getObservedClasses());
 			for(String className : uniqueClasses) {
 				if(junitTestNames.contains(className)) {
 					logger.info("Skipping JUnit test class: "+className);
@@ -138,11 +148,11 @@ public class CarvingRunListener extends RunListener {
 		logger.debug("Current log: "+log);
 		List<Class<?>> observedClasses = getObservedClasses(log);
 		for(Class<?> targetClass : observedClasses) {
-			logger.debug("Current observed class: {}", targetClass.getName());
+			logger.warn("Current observed class: {}", targetClass.getName());
 			Class<?>[] targetClasses = new Class<?>[1];
 			targetClasses[0] = targetClass;
 			if(!carvedTests.containsKey(targetClass))
-				carvedTests.put(targetClass, new ArrayList<TestCase>());
+				carvedTests.put(targetClass, new ArrayList<>());
 
 			analyzer.analyze(log, codeGen, targetClasses);
 
@@ -154,7 +164,7 @@ public class CarvingRunListener extends RunListener {
 				continue;
 			}
 			test.setName(description.getMethodName());
-			logger.info("Carved test of length " + test.size());
+			logger.warn("Carved test of length " + test.size());
 			try {
 				test.changeClassLoader(TestGenerationContext.getInstance().getClassLoaderForSUT());
 				GenericTypeInference inference = new GenericTypeInference();

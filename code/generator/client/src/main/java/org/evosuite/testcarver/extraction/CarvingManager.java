@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.evosuite.Properties;
 import org.evosuite.classpath.ResourceList;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.rmi.ClientServices;
 import org.evosuite.rmi.service.ClientState;
 import org.evosuite.testcarver.capture.FieldRegistry;
@@ -46,7 +47,7 @@ import org.slf4j.LoggerFactory;
 
 public class CarvingManager {
 
-	private static Logger logger = LoggerFactory.getLogger(CarvingManager.class);
+	private static final Logger logger = LoggerFactory.getLogger(CarvingManager.class);
 	
 	private static CarvingManager instance = null;
 	
@@ -65,16 +66,21 @@ public class CarvingManager {
 	
 	private boolean carvingDone = false;
 	
+	public boolean isCarvingDone() {
+		return carvingDone;
+	}
+	
 	private Collection<String> getListOfJUnitClassNames() throws IllegalStateException {
 
 		String prop = Properties.SELECTED_JUNIT;
 		if (prop == null || prop.trim().isEmpty()) {
-			throw new IllegalStateException(
-			        "Trying to use a test carver factory, but empty Properties.SELECTED_JUNIT");
+			return null;
+			// throw new IllegalStateException(
+			//         "Trying to use a test carver factory, but empty Properties.SELECTED_JUNIT");
 		}
 
 		String[] paths = prop.split(":");
-		Collection<String> junitTestNames = new HashSet<String>();
+		Collection<String> junitTestNames = new HashSet<>();
 		for (String s : paths) {
 			junitTestNames.add(s.trim());
 		}
@@ -101,111 +107,117 @@ public class CarvingManager {
 	}
 	
 	private void readTestCases() throws IllegalStateException {
-		ClientServices.getInstance().getClientNode().changeState(ClientState.CARVING);
-		Collection<String> junitTestNames = getListOfJUnitClassNames();
-		LoggingUtils.getEvoLogger().info("* Executing tests from {} test {} for carving",
-				junitTestNames.size(), junitTestNames.size() == 1 ? "class" : "classes");
-		final JUnitCore runner = new JUnitCore();
-		final CarvingRunListener listener = new CarvingRunListener();
-		runner.addListener(listener);
+		return ;
+		// ClientServices.getInstance().getClientNode().changeState(ClientState.CARVING);
+		// Collection<String> junitTestNames = getListOfJUnitClassNames();
+		// LoggingUtils.getEvoLogger().info("* Executing tests from {} test {} for carving",
+		// 		junitTestNames.size(), junitTestNames.size() == 1 ? "class" : "classes");
+		// final JUnitCore runner = new JUnitCore();
+		// final CarvingRunListener listener = new CarvingRunListener();
+		// runner.addListener(listener);
 
 
-		final List<Class<?>> junitTestClasses = new ArrayList<Class<?>>();
-		final org.evosuite.testcarver.extraction.CarvingClassLoader classLoader = new org.evosuite.testcarver.extraction.CarvingClassLoader();
-		// TODO: This really needs to be done in a nicer way!
-		FieldRegistry.carvingClassLoader = classLoader;
-		try {
-			// instrument target class
-			classLoader.loadClass(Properties.TARGET_CLASS);
-		} catch (final ClassNotFoundException e) {
-			throw new RuntimeException(e);
-		}
-
-		for (String className : junitTestNames) {
-			String classNameWithDots = ResourceList.getClassNameFromResourcePath(className);
-			try {
-				final Class<?> junitClass = classLoader.loadClass(classNameWithDots);
-				junitTestClasses.add(junitClass);
-			} catch (ClassNotFoundException e) {
-				logger.error("Failed to load JUnit test class {}: {}", classNameWithDots, e);
-			}
-		}
-
-		final Class<?>[] classes = new Class<?>[junitTestClasses.size()];
-		junitTestClasses.toArray(classes);
-		Result result = runner.run(classes);
-		logger.info("Result: {}/{}", result.getFailureCount(), result.getRunCount());
-		for(Failure failure : result.getFailures()) {
-			logger.info("Failure: {}", failure.getMessage());
-			logger.info("Exception: {}", failure.getException());
-		}
+		// final List<Class<?>> junitTestClasses = new ArrayList<>();
+		// final org.evosuite.testcarver.extraction.CarvingClassLoader classLoader = new org.evosuite.testcarver.extraction.CarvingClassLoader();
+		// // TODO: This really needs to be done in a nicer way!
+		// FieldRegistry.carvingClassLoader = classLoader;
+		// try {
+		// 	logger.warn("loading class for carving");
+		// 	// instrument target class
+		// 	classLoader.loadClass(Properties.TARGET_CLASS);
+		// } catch (final ClassNotFoundException e) {
+		// 	throw new RuntimeException(e);
+		// }
 		
-		Map<Class<?>, List<TestCase>> testMap = listener.getTestCases();
-		for(Class<?> targetClass : testMap.keySet()) {
+		// logger.warn("continue loading junit tests for carving");
 
-			List<TestCase> processedTests = new ArrayList<>();
-			for (TestCase test : testMap.get(targetClass)) {
-				String testName = ((CarvedTestCase)test).getName();
-				if (test.isEmpty())
-					continue;
-				ExecutionResult executionResult = null;
-				try {
-					executionResult = TestCaseExecutor.runTest(test);
+		// for (String className : junitTestNames) {
+		// 	String classNameWithDots = ResourceList.getClassNameFromResourcePath(className);
+		// 	try {
+		// 		logger.warn("load test : " + classNameWithDots);
+		// 		final Class<?> junitClass = classLoader.loadClass(classNameWithDots);
+		// 		junitTestClasses.add(junitClass);
+		// 	} catch (ClassNotFoundException e) {
+		// 		logger.error("Failed to load JUnit test class {}: {}", classNameWithDots, e);
+		// 	}
+		// }
+
+		// final Class<?>[] classes = new Class<?>[junitTestClasses.size()];
+		// junitTestClasses.toArray(classes);
+		// Result result = runner.run(classes);
+		// logger.warn("Result: {}/{}", result.getFailureCount(), result.getRunCount());
+		// for(Failure failure : result.getFailures()) {
+		// 	logger.info("Failure: {}", failure.getMessage());
+		// 	logger.info("Exception: {}", failure.getException());
+		// }
+		
+		// Map<Class<?>, List<TestCase>> testMap = listener.getTestCases();
+		// for(Class<?> targetClass : testMap.keySet()) {
+
+		// 	List<TestCase> processedTests = new ArrayList<>();
+		// 	for (TestCase test : testMap.get(targetClass)) {
+		// 		String testName = ((CarvedTestCase)test).getName();
+		// 		if (test.isEmpty())
+		// 			continue;
+		// 		ExecutionResult executionResult = null;
+		// 		try {
+		// 			executionResult = TestCaseExecutor.runTest(test);
 					
-				} catch(Throwable t) {
-					logger.info("Error while executing carved test {}: {}", testName, t);
-					continue;
-				}
-				if (executionResult.noThrownExceptions()) {
-					logger.info("Adding carved test without exception");
-					logger.info(test.toCode());
-					processedTests.add(test);
-				} else {
-					logger.info("Exception thrown in carved test {}: {}", testName,
-							executionResult.getExceptionThrownAtPosition(executionResult.getFirstPositionOfThrownException()));
-					for (StackTraceElement elem : executionResult.getExceptionThrownAtPosition(executionResult.getFirstPositionOfThrownException()).getStackTrace()) {
-						logger.info(elem.toString());
-					}
-					logger.info(test.toCode(executionResult.exposeExceptionMapping()));
-					if (Properties.CHOP_CARVED_EXCEPTIONS) {
-						logger.info("Chopping exception of carved test");
-						chopException(test, executionResult);
-						if (test.hasObject(Properties.getTargetClassAndDontInitialise(), test.size())) {
-							processedTests.add(test);
-						} else {
-							logger.info("Chopped test is empty");
-						}
-					} else {
-						logger.info("Not adding carved test with exception: ");
-					}
-				}
-			}
-			// junitTests.addAll(listener.getTestCases());
+		// 		} catch(Throwable t) {
+		// 			logger.warn("Error while executing carved test {}: {}", testName, t);
+		// 			continue;
+		// 		}
+		// 		if (executionResult.noThrownExceptions()) {
+		// 			logger.info("Adding carved test without exception");
+		// 			logger.info(test.toCode());
+		// 			processedTests.add(test);
+		// 		} else {
+		// 			logger.info("Exception thrown in carved test {}: {}", testName,
+		// 					executionResult.getExceptionThrownAtPosition(executionResult.getFirstPositionOfThrownException()));
+		// 			for (StackTraceElement elem : executionResult.getExceptionThrownAtPosition(executionResult.getFirstPositionOfThrownException()).getStackTrace()) {
+		// 				logger.info(elem.toString());
+		// 			}
+		// 			logger.info(test.toCode(executionResult.exposeExceptionMapping()));
+		// 			if (Properties.CHOP_CARVED_EXCEPTIONS) {
+		// 				logger.info("Chopping exception of carved test");
+		// 				chopException(test, executionResult);
+		// 				if (test.hasObject(Properties.getTargetClassAndDontInitialise(), test.size())) {
+		// 					processedTests.add(test);
+		// 				} else {
+		// 					logger.info("Chopped test is empty");
+		// 				}
+		// 			} else {
+		// 				logger.info("Not adding carved test with exception: ");
+		// 			}
+		// 		}
+		// 	}
+		// 	// junitTests.addAll(listener.getTestCases());
 
-			if (processedTests.size() > 0) {
-				LoggingUtils.getEvoLogger().info(" -> Carved {} tests for class {} from existing JUnit tests",
-						processedTests.size(), targetClass);
-				if (logger.isDebugEnabled()) {
-					for (TestCase test : processedTests) {
-						logger.debug("Carved Test {}: {}", ((CarvedTestCase) test).getName(), test.toCode());
-					}
-				}
-			} else {
-				//String outcome = "";
-				//for (Failure failure : result.getFailures()) {
-				//	outcome += "(" + failure.getDescription() + ", " + failure.getTrace()
-				//			+ ") ";
-				//}
-				logger.info("It was not possible to carve any test case for class {} from {}", targetClass.getName(),
-						Arrays.toString(junitTestNames.toArray()));
-				//		+ ". Test execution results: " + outcome);
-			}
-			carvedTests.put(targetClass, processedTests);
-		}
-		carvingDone = true;
+		// 	if (processedTests.size() > 0) {
+		// 		LoggingUtils.getEvoLogger().info(" -> Carved {} tests for class {} from existing JUnit tests",
+		// 				processedTests.size(), targetClass);
+		// 		if (logger.isDebugEnabled()) {
+		// 			for (TestCase test : processedTests) {
+		// 				logger.debug("Carved Test {}: {}", ((CarvedTestCase) test).getName(), test.toCode());
+		// 			}
+		// 		}
+		// 	} else {
+		// 		//String outcome = "";
+		// 		//for (Failure failure : result.getFailures()) {
+		// 		//	outcome += "(" + failure.getDescription() + ", " + failure.getTrace()
+		// 		//			+ ") ";
+		// 		//}
+		// 		logger.info("It was not possible to carve any test case for class {} from {}", targetClass.getName(),
+		// 				Arrays.toString(junitTestNames.toArray()));
+		// 		//		+ ". Test execution results: " + outcome);
+		// 	}
+		// 	carvedTests.put(targetClass, processedTests);
+		// }
+		// carvingDone = true;
+		
 		
 		// TODO: Argh.
-		FieldRegistry.carvingClassLoader = null;
+		// FieldRegistry.carvingClassLoader = null;
 		// TODO:
 		// ClientNodeLocal client = ClientServices.getInstance().getClientNode();
 		// client.trackOutputVariable(RuntimeVariable.CarvedTests, totalNumberOfTestsCarved);
@@ -223,7 +235,7 @@ public class CarvingManager {
 			readTestCases();
 		
 		if(!carvedTests.containsKey(clazz))
-			return new ArrayList<TestCase>();
+			return new ArrayList<>();
 		
 		return carvedTests.get(clazz);
 	}

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -28,5 +28,5 @@ import org.evosuite.symbolic.expr.bv.IntegerValue;
  */
 public interface IntegerOperand extends Operand {
 
-	public IntegerValue getIntegerExpression();
+	IntegerValue getIntegerExpression();
 }

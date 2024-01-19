@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.setup;
 
 import org.evosuite.PackageInfo;
@@ -29,6 +27,8 @@ import org.evosuite.TestGenerationContext;
 import org.evosuite.classpath.ResourceList;
 import org.evosuite.coverage.branch.BranchPool;
 import org.evosuite.coverage.dataflow.DefUsePool;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.coverage.line.ReachingSpec;
 import org.evosuite.coverage.mutation.MutationPool;
 import org.evosuite.graphs.cfg.CFGMethodAdapter;
 import org.evosuite.instrumentation.LinePool;
@@ -55,11 +55,11 @@ import java.util.*;
  */
 public class DependencyAnalysis {
 
-	private static Logger logger = LoggerFactory.getLogger(DependencyAnalysis.class);
+	private static final Logger logger = LoggerFactory.getLogger(DependencyAnalysis.class);
 
-	private static Map<String, ClassNode> classCache = new LinkedHashMap<String, ClassNode>();
+	private static Map<String, ClassNode> classCache = new LinkedHashMap<>();
 
-	private static Map<String, CallGraph> callGraphs = new LinkedHashMap<String, CallGraph>();
+	private static Map<String, CallGraph> callGraphs = new LinkedHashMap<>();
 
 	private static InheritanceTree inheritanceTree = null;
 
@@ -72,39 +72,51 @@ public class DependencyAnalysis {
 		return inheritanceTree;
 	}
 
-	private static void initInheritanceTree(List<String> classPath) {
-		logger.debug("Calculate inheritance hierarchy");
-		inheritanceTree = InheritanceTreeGenerator.createFromClassPath(classPath);
+	public static void initInheritanceTree(List<String> classPath) {
+		if (inheritanceTree == null) {
+			logger.debug("Calculate inheritance hierarchy");
+			inheritanceTree = InheritanceTreeGenerator.createFromClassPath(classPath);
+		}
+		TestClusterGenerator clusterGenerator = new TestClusterGenerator(inheritanceTree);
+		TestGenerationContext.getInstance().setTestClusterGenerator(clusterGenerator);
 		InheritanceTreeGenerator.gatherStatistics(inheritanceTree);
 	}
 
-	private static void analyze(String className, List<String> classPath) throws RuntimeException,
+	public static void initCallGraph(String className) {
+		logger.warn("Calculate call tree of " + className);
+		CallGraph callGraph = CallGraphGenerator.analyze(className);
+		callGraphs.put(className, callGraph);
+		// include all the project classes in the inheritance tree and in the callgraph.
+		if (ArrayUtil.contains(Properties.CRITERION, Criterion.IBRANCH)
+				|| Properties.INSTRUMENT_CONTEXT
+//				|| ReachabilityCoverageFactory.targetCalleeClazz != null // not sure if needed?
+				) {
+
+			for (String classn : inheritanceTree.getAllClasses()) {
+				if (isTargetProject(classn)) {
+					logger.warn("analyzer other classes: " + classn);
+					CallGraphGenerator.analyzeOtherClasses(callGraph, classn);
+				}
+			}
+		}
+		
+
+
+		// TODO: Need to make sure that all classes in calltree are instrumented
+		logger.warn("Update call tree with calls to overridden methods");
+		CallGraphGenerator.update(callGraph, inheritanceTree);
+
+	}
+
+	private static void analyze(String className) throws RuntimeException,
 			ClassNotFoundException {
 
 		if (!inheritanceTree.hasClass(Properties.TARGET_CLASS)) {
 			throw new ClassNotFoundException("Target class not found in inheritance tree");
 		}
 
-		logger.debug("Calculate call tree");
-		CallGraph callGraph = CallGraphGenerator.analyze(className);
-		callGraphs.put(className, callGraph);
+		CallGraph callGraph = callGraphs.get(className);
 		loadCallTreeClasses(callGraph);
-
-		// include all the project classes in the inheritance tree and in the callgraph.
-		if (ArrayUtil.contains(Properties.CRITERION, Criterion.IBRANCH)
-				|| Properties.INSTRUMENT_CONTEXT) { 
- 
-			for (String classn : inheritanceTree.getAllClasses()) {
-				if (isTargetProject(classn)) {
-					CallGraphGenerator.analyzeOtherClasses(callGraph, classn);
-				}
-			}
-		}
-
-		// TODO: Need to make sure that all classes in calltree are instrumented
-
-		logger.debug("Update call tree with calls to overridden methods");
-		CallGraphGenerator.update(callGraph, inheritanceTree);
 
 		logger.debug("Create test cluster");
 
@@ -113,8 +125,7 @@ public class DependencyAnalysis {
 		// update: we instrument only classes reachable from the class
 		// under test, the callgraph is populated with all classes, but only the
 		// set of relevant ones are instrumented - mattia
-		TestClusterGenerator clusterGenerator = new TestClusterGenerator(inheritanceTree);
-		clusterGenerator.generateCluster(callGraph);
+		TestGenerationContext.getInstance().getTestClusterGenerator().generateCluster(callGraph);
 
 		gatherStatistics();
 	}
@@ -128,7 +139,9 @@ public class DependencyAnalysis {
 			ClassNotFoundException {
 
 		initInheritanceTree(classPath);
-		analyze(className, classPath);
+		initCallGraph(className);
+
+		analyze(className);
 	}
 
 	/**
@@ -144,7 +157,8 @@ public class DependencyAnalysis {
 		targetClasses = ResourceList.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).getAllClasses(target, false);
 		for (String className : targetClasses) {
 			Properties.TARGET_CLASS = className;
-			analyze(className, classPath);
+			initCallGraph(className);
+			analyze(className);
 		}
 
 		return targetClasses;
@@ -227,32 +241,9 @@ public class DependencyAnalysis {
 				&& !className.startsWith("sunw.")
 				&& !className.startsWith("org.jcp.")
 				&& !className.startsWith("org.ietf.") 
-				&& !className.startsWith("daikon.");
+				&& !className.startsWith("daikon.")
+				&& !className.startsWith("jdk.");
 	}
-
-//	private static String getProjectPackageApprox(String qualifiedName) {
-//		if (qualifiedName == null)
-//			throw new IllegalArgumentException();
-//		String[] splitted = qualifiedName.split("\\.");
-//		String result = "";
-//		if (splitted.length == 0)
-//			result = qualifiedName;
-//		else if (splitted.length == 1)
-//			result = splitted[0];
-//		else if (splitted.length == 2)
-//			result = splitted[0];
-//		else if (splitted[0].equals("com") || splitted[0].equals("org")
-//				|| splitted[0].equals("net") || splitted[0].equals("de")
-//				|| splitted[0].equals("it") || splitted[0].equals("ch") || splitted[0].equals("fr")
-//				|| splitted[0].equals("br") || splitted[0].equals("edu")
-//				|| splitted[0].equals("osa") || splitted[0].equals("uk")
-//				|| splitted[0].equals("gov") || splitted[0].equals("dk")) {
-//			result = splitted[0] + "." + splitted[1];
-//		} else
-//			result = splitted[0];
-//
-//		return result;
-//	}
 	
 	/**
 	 * Determine if the given class should be analyzed or instrumented
@@ -265,6 +256,20 @@ public class DependencyAnalysis {
 		if (isTargetClassName(className))
 			return true;
 
+		// TRANSFER: if it is the target, then instrument it
+//		logger.warn("comparing className=" + className + " to targetCalledClazz=" +  ReachabilityCoverageFactory.targetCalledClazz);
+//		try {
+//			throw new RuntimeException("dummy");
+//		}catch (Exception e) {
+//			logger.error("gotta see where", e);
+//		}
+		if (className.equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName)) {
+			logger.warn("found targetCalledClazz");
+			return true;
+		}
+		
+//		if (ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.contains("javax.validation"))
+		
 		if (inheritanceTree == null) {
 			return false;
 		}
@@ -277,10 +282,25 @@ public class DependencyAnalysis {
 		// Also analyze if it is in the calltree and we are considering the
 		// context
 		if (Properties.INSTRUMENT_CONTEXT
-				|| ArrayUtil.contains(Properties.CRITERION, Criterion.DEFUSE)) {
+				|| ArrayUtil.contains(Properties.CRITERION, Criterion.DEFUSE)
+				|| ArrayUtil.contains(Properties.CRITERION, Criterion.IBRANCH)) {
 			CallGraph callGraph = callGraphs.get(Properties.TARGET_CLASS);
 			if (callGraph != null && callGraph.isCalledClass(className)) {
 				return true;
+			}
+		}
+		if (ReachabilityCoverageFactory.targetCalleeClazz != null) {
+			CallGraph callGraph = callGraphs.get(Properties.TARGET_CLASS);
+			if (callGraph != null && callGraph.isCalledClass(className) 
+					&& className.equals(ReachabilityCoverageFactory.targetCalleeClazz)
+					) {
+				return true;
+			}
+			
+			if (!ReachabilityCoverageFactory.additionalClasses.isEmpty()) {
+				if (ReachabilityCoverageFactory.additionalClasses.contains(className)) {
+					return true;
+				}
 			}
 		}
 
@@ -315,6 +335,32 @@ public class DependencyAnalysis {
 				return true;
 			}
 		}
+		if (ReachabilityCoverageFactory.targetCalleeClazz != null) {
+			CallGraph callGraph = callGraphs.get(Properties.TARGET_CLASS);
+			
+			
+			if (callGraph != null && callGraph.isCalledMethod(className, methodName) 
+					){
+			
+//				logger.warn("shouldInstrument? methodName= " + methodName 
+//						+ "  is called in CG? = " + (callGraph != null && callGraph.isCalledMethod(className, methodName)));
+				
+				
+				if(Properties.INSTRUMENT_LIBRARIES || DependencyAnalysis.isTargetProject(className))
+				return true;
+			}
+			if (ReachabilityCoverageFactory.targetCalleeClazzAsNormalName.equals(className)) {
+				return true;
+			}
+		
+			if (!ReachabilityCoverageFactory.additionalClasses.isEmpty()) {
+				if (ReachabilityCoverageFactory.additionalClasses.contains(className)) {
+					return true;
+				}
+			}
+		}
+		
+		
 
 		return false;
 	}
@@ -373,12 +419,12 @@ public class DependencyAnalysis {
 				.getInstance()
 				.getClientNode()
 				.trackOutputVariable(RuntimeVariable.Total_Branches_Real,
-						((BranchPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).getBranchCounter() - BranchPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).getNumArtificialBranches()))/2);
+						((BranchPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).getBranchCounter() - BranchPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).getNumArtificialBranches()))*2);
 		ClientServices
 				.getInstance()
 				.getClientNode()
 				.trackOutputVariable(RuntimeVariable.Total_Branches_Instrumented,
-						(BranchPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).getNumArtificialBranches()));
+						(BranchPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).getNumArtificialBranches() * 2));
 		ClientServices
 				.getInstance()
 				.getClientNode()
@@ -413,7 +459,7 @@ public class DependencyAnalysis {
 						.getInstance()
 						.getClientNode()
 						.trackOutputVariable(RuntimeVariable.Mutants,
-								MutationPool.getMutantCounter());
+								MutationPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).getMutantCounter());
 				break;
 
 			default:

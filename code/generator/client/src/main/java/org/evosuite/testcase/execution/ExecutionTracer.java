@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -24,7 +24,10 @@ import java.util.Map;
 import org.evosuite.coverage.dataflow.DefUsePool;
 import org.evosuite.coverage.dataflow.Definition;
 import org.evosuite.coverage.dataflow.Use;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
 import org.evosuite.instrumentation.testability.BooleanHelper;
+import org.evosuite.runtime.mock.java.lang.MockThrowable;
+import org.evosuite.runtime.util.AtMostOnceLogger;
 import org.evosuite.seeding.ConstantPoolManager;
 import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
@@ -256,7 +259,7 @@ public class ExecutionTracer {
 	 *            a {@link java.lang.String} object.
 	 * @param caller
 	 *            a {@link java.lang.Object} object.
-	 * @throws org.evosuite.testcase.TestCaseExecutor$TimeoutExceeded
+	 * @throws org.evosuite.testcase.execution.TestCaseExecutor$TimeoutExceeded
 	 *             if any.
 	 */
 	public static void enteredMethod(String classname, String methodname, Object caller)
@@ -271,9 +274,30 @@ public class ExecutionTracer {
 
 		checkTimeout();
 
-		//logger.trace("Entering method " + classname + "." + methodname);
+//		logger.warn("Entering...");
+//		logger.warn("\t"+ "Entering method " + (classname == null ? "null classname" : classname)+ "." + (methodname == null? "null methodname" : methodname));
+//		AtMostOnceLogger.warn(logger, "\t"+ "Entering method " + (classname)+ "." + (methodname));
 		tracer.trace.enteredMethod(classname, methodname, caller);
 	}
+	
+	public static void enteredMethodWithArgument(Object... values)
+	        throws TestCaseExecutor.TimeoutExceeded {
+
+//		logger.warn("Entering enteredMethodWithArgument ");
+		ExecutionTracer tracer = getExecutionTracer();
+
+		if (tracer.disabled)
+			return;
+
+		if (isThreadNeqCurrentThread())
+			return;
+
+		checkTimeout();
+
+
+		tracer.trace.enteredMethodWithArgument(values);
+	}
+
 
 	/**
 	 * Called by instrumented code whenever a return values is produced
@@ -293,7 +317,7 @@ public class ExecutionTracer {
 		if (isThreadNeqCurrentThread())
 			return;
 
-		//logger.trace("Return value: " + value);
+//		logger.trace("Return value: " + value);
 		tracer.trace.returnValue(className, methodName, value);
 	}
 
@@ -315,6 +339,7 @@ public class ExecutionTracer {
 			return;
 
 		if (value == null) {
+			logger.warn("Return value in ExecutionTracer: " + "class=" + className + " method=" + methodName + " val is null" );
 			returnValue(0, className, methodName);
 			return;
 		}
@@ -332,7 +357,7 @@ public class ExecutionTracer {
 		int index = 0;
 		int position = 0;
 		boolean found = false;
-		boolean deleteAddresses = true;
+		boolean deleteAddresses = false;
 		char c = ' ';
 		// quite fast method to detect memory addresses in Strings.
 		while ((position = tmp.indexOf("@", index)) > 0) {
@@ -349,7 +374,19 @@ public class ExecutionTracer {
 				tmp.delete(position + 1, index);
 			}
 		}
-
+		logger.warn("Return value in ExecutionTracer: " + "class=" + className + " method=" + methodName + " val=" + value);
+		if (ReachabilityCoverageFactory.isRecording) {
+			ReachabilityCoverageFactory.recordedOutput = value;
+			ReachabilityCoverageFactory.hasRecordedOutput = true; 
+			logger.warn("recorded matchedOutput=" + value.toString());
+		} else {
+			if (ReachabilityCoverageFactory.hasRecordedOutput) {
+				if (ReachabilityCoverageFactory.recordedOutput.toString().equals(value.toString())) {
+					ReachabilityCoverageFactory.matchedOutput = true;
+					logger.warn("setting matchedOutput to true by comparing retval");
+				}
+			}
+		}
 		returnValue(tmp.toString().hashCode(), className, methodName);
 	}
 
@@ -371,6 +408,19 @@ public class ExecutionTracer {
 
 		tracer.trace.exitMethod(classname, methodname);
 		// logger.trace("Left method " + classname + "." + methodname);
+	}
+	
+	public static void leftMethodByException(String classname, String methodname) {
+		ExecutionTracer tracer = getExecutionTracer();
+		if (tracer.disabled)
+			return;
+
+		if (isThreadNeqCurrentThread())
+			return;
+
+//		tracer.trace.exitMethod(classname, methodname);
+		tracer.trace.compareAgainstSpecIfCheckingAtEnd(classname, methodname);
+//		 logger.trace("Left method " + classname + "." + methodname);
 	}
 
 	/**
@@ -416,31 +466,8 @@ public class ExecutionTracer {
 
 		checkTimeout();
 
+//		logger.warn("passed line in " + className + " method: " + methodName + " line=" + line);
 		tracer.trace.linePassed(className, methodName, line);
-	}
-
-	/**
-	 * Called by the instrumented code each time an unconditional branch is
-	 * taken. This is not enabled by default, only some coverage criteria (e.g.,
-	 * LCSAJ) use it.
-	 * 
-	 * @param opcode
-	 *            a int.
-	 * @param branch
-	 *            a int.
-	 * @param bytecode_id
-	 *            a int.
-	 */
-	public static void passedUnconditionalBranch(int opcode, int branch, int bytecode_id) {
-		ExecutionTracer tracer = getExecutionTracer();
-		if (tracer.disabled)
-			return;
-
-		if (isThreadNeqCurrentThread())
-			return;
-
-		// Add current branch to control trace
-		tracer.trace.branchPassed(branch, bytecode_id, 0.0, 0.0);
 	}
 
 	/**
@@ -679,42 +706,16 @@ public class ExecutionTracer {
 
 		checkTimeout();
 
-		// logger.trace("Called passedBranch3 with opcode "
-		//        + AbstractVisitor.OPCODES[opcode]); // +", val1="+val1+", val2="+val2+" in branch "+branch);
 		double distance_true = 0;
 		double distance_false = 0;
 		// logger.warn("Disabling tracer: passedBranch with 2 Objects");
 
 		switch (opcode) {
 		case Opcodes.IF_ACMPEQ:
-			if (val1 == null) {
-				distance_true = val2 == null ? 0.0 : 1.0;
-			} else {
-				disable();
-				try {
-					distance_true = val1.equals(val2) ? 0.0 : 1.0;
-				} catch (Throwable t) {
-					logger.debug("Equality raised exception: " + t);
-					distance_true = 1.0;
-				} finally {
-					enable();
-				}
-			}
+			distance_true = val1 == val2 ? 0.0 : 1.0;
 			break;
 		case Opcodes.IF_ACMPNE:
-			if (val1 == null) {
-				distance_true = val2 == null ? 1.0 : 0.0;
-			} else {
-				disable();
-				try {
-					distance_true = val1.equals(val2) ? 1.0 : 0.0;
-				} catch (Exception e) {
-					logger.debug("Caught exception during comparison: " + e);
-					distance_true = 1.0;
-				} finally {
-					enable();
-				}
-			}
+			distance_true = val1 != val2 ? 0.0 : 1.0;
 			break;
 		}
 
@@ -882,7 +883,22 @@ public class ExecutionTracer {
 
 		checkTimeout();
 
+		logger.warn("detected thrown exception: " + className + " at method=" + methodName + " exception =" + exception);
+		if (ReachabilityCoverageFactory.isRecording && className.equals(ReachabilityCoverageFactory.targetCalleeClazzAsNormalName)) {
+			logger.warn("setting recordedException " + (Throwable)exception);
+			ReachabilityCoverageFactory.recordedException = (Throwable)exception;
+		}
+	
+		if (exception instanceof org.evosuite.runtime.mock.java.lang.MockThrowable) {
+			MockThrowable casted = (org.evosuite.runtime.mock.java.lang.MockThrowable) exception;
+			if (casted.getCause()!= null) {
+				logger.warn("cause: " + casted.getCause());
+			}
+			logger.error("detected thrown exception=", casted);
+		}
 		tracer.trace.setExplicitException((Throwable) exception);
+		
+//		tracer.trace.compareAgainstSpecIfCheckingAtEnd(className, methodName);
 
 	}
 

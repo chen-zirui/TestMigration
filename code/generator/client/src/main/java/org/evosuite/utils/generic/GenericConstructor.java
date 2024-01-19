@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- *
- */
+
 package org.evosuite.utils.generic;
 
 import java.io.IOException;
@@ -263,16 +261,35 @@ public class GenericConstructor extends GenericAccessibleObject<GenericConstruct
 			parameterClasses[num] = parameter.getVariableClass();
 			if (!parameterClasses[num].equals(parameterTypes[num])) {
 				isExact = false;
+				break;
 			}
 		}
 		if (isExact)
 			return false;
 		try {
-			Constructor<?> otherConstructor = declaringClass.getConstructor(parameterTypes);
-			if (otherConstructor != null)
-				return true;
+			for(java.lang.reflect.Constructor<?> otherConstructor: declaringClass.getConstructors()) {
+				if (otherConstructor.equals(constructor))
+					continue;
+
+				// If the number of parameters is different we can uniquely identify the constructor
+				if(parameterTypes.length != otherConstructor.getParameterCount())
+					continue;
+
+				// Only if the parameters are assignable to both constructors do we need to care about overloading
+				boolean parametersEqual = true;
+				Class<?>[] otherParameterTypes = otherConstructor.getParameterTypes();
+				for(int i = 0; i < parameterClasses.length; i++) {
+					if(parameters.get(i).isAssignableTo(parameterTypes[i]) !=
+					   parameters.get(i).isAssignableTo(otherParameterTypes[i])) {
+						parametersEqual = false;
+						break;
+					}
+				}
+				if(parametersEqual) {
+					return true;
+				}
+			}
 		} catch (SecurityException e) {
-		} catch (NoSuchMethodException e) {
 		}
 
 		return false;
@@ -310,6 +327,18 @@ public class GenericConstructor extends GenericAccessibleObject<GenericConstruct
 		oos.writeObject(constructor.getDeclaringClass().getName());
 		oos.writeObject(org.objectweb.asm.Type.getConstructorDescriptor(constructor));
 	}
+
+	@Override
+	public boolean isPublic() { return Modifier.isPublic(constructor.getModifiers()); }
+
+	@Override
+	public boolean isPrivate() { return Modifier.isPrivate(constructor.getModifiers()); }
+
+	@Override
+	public boolean isProtected() { return Modifier.isProtected(constructor.getModifiers()); }
+
+	@Override
+	public boolean isDefault() { return !isPublic() && !isPrivate() && !isProtected(); }
 
 	@Override
 	public int hashCode() {

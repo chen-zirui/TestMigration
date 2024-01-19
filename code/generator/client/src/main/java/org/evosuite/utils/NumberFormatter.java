@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,12 +17,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.utils;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.evosuite.testcase.TestCodeVisitor;
 
 /**
  * <p>
@@ -33,16 +32,20 @@ import org.apache.commons.lang3.StringEscapeUtils;
  */
 public class NumberFormatter {
 
+	public static String getNumberString(Object value) {
+		return getNumberString(value, null);
+	}
+
 	/**
 	 * <p>
 	 * getNumberString
 	 * </p>
-	 * 
+	 *
 	 * @param value
 	 *            a {@link java.lang.Object} object.
 	 * @return a {@link java.lang.String} object.
 	 */
-	public static String getNumberString(Object value) {
+	public static String getNumberString(Object value, TestCodeVisitor visitor) {
 		if (value == null)
 			return "null";
 		else if (value.getClass().equals(char.class)
@@ -101,7 +104,7 @@ public class NumberFormatter {
 				return "(short)" + value;
 		} else if (value.getClass().equals(int.class)
 		        || value.getClass().equals(Integer.class)) {
-			int val = ((Integer) value).intValue();
+			int val = (Integer) value;
 			if (val == Integer.MAX_VALUE)
 				return "Integer.MAX_VALUE";
 			else if (val == Integer.MIN_VALUE)
@@ -114,15 +117,25 @@ public class NumberFormatter {
 			// java.util.concurrent.TimeUnit is an example where the enum
 			// elements are anonymous inner classes, and then isEnum does
 			// not return true apparently? So we check using instanceof as well.
-			
-			Class<?> clazz = value.getClass();
-			String className = clazz.getSimpleName();
-			while (clazz.getEnclosingClass() != null) {
-				String enclosingName = clazz.getEnclosingClass().getSimpleName();
-				className = enclosingName + "." + className;
-				clazz = clazz.getEnclosingClass();
+
+			String className;
+			Class<?> enumClass = value.getClass();
+			if(enumClass.isAnonymousClass()) {
+				enumClass = enumClass.getEnclosingClass();
 			}
-			
+
+			if(visitor != null) {
+				className = visitor.getClassName(enumClass);
+			} else {
+				Class<?> clazz = enumClass;
+				className = clazz.getSimpleName();
+				while (clazz.getEnclosingClass() != null) {
+					String enclosingName = clazz.getEnclosingClass().getSimpleName();
+					className = enclosingName + "." + className;
+					clazz = clazz.getEnclosingClass();
+				}
+			}
+
 			// We have to do this here to avoid a double colon in the TimeUnit example
 			if(!className.endsWith("."))
 				className += ".";
@@ -133,11 +146,11 @@ public class NumberFormatter {
 					return className  + ((Enum<?>)value).name();
 				else
 					return "Enum.valueOf("+className + "class, \"" + value + "\")";
-			} catch (Exception e) {
+			} catch (Throwable t) {
 				if (((Enum<?>)value).name() != null)
 					return className  + ((Enum<?>)value).name();
 				else
-					return "Enum.valueOf("+className + "class /* "+e+" */, \"" + value + "\")";
+					return "Enum.valueOf("+className + "class /* "+t+" */, \"" + value + "\")";
 				// return className + "valueOf(\"" + value + "\")";
 			}
 		} else if(value.getClass().equals(Boolean.class)) {

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -77,9 +77,9 @@ public class Setup {
 		}
 
 		if (args.length > 0) {
-			for (int i = 0; i < args.length; i++) {
-				String element = args[i].trim();
-				if(element.isEmpty()){
+			for (final String arg : args) {
+				String element = arg.trim();
+				if (element.isEmpty()) {
 					continue;
 				}
 				addEntryToCP(element);

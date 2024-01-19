@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -23,12 +23,18 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
+import org.evosuite.Properties;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.coverage.branch.BranchCoverageFactory;
 import org.evosuite.coverage.branch.BranchCoverageTestFitness;
+import org.evosuite.ga.archive.Archive;
+import org.evosuite.graphs.GraphPool;
 import org.evosuite.graphs.cfg.BytecodeInstruction;
 import org.evosuite.graphs.cfg.BytecodeInstructionPool;
 import org.evosuite.graphs.cfg.ControlDependency;
@@ -37,8 +43,8 @@ import org.evosuite.testcase.TestFitnessFunction;
 import org.evosuite.testcase.execution.ExecutionResult;
 
 /**
- * Fitness function for a single test on a single branch
- * 
+ * Fitness function for a single test on a single line
+ *
  * @author Gordon Fraser, Jose Miguel Rojas
  */
 public class LineCoverageTestFitness extends TestFitnessFunction {
@@ -48,7 +54,7 @@ public class LineCoverageTestFitness extends TestFitnessFunction {
 	/** Target line */
 	private final String className;
 	private final String methodName;
-	private final Integer line;
+	protected final Integer line;
 
 	protected transient BytecodeInstruction goalInstruction;
 	protected transient List<BranchCoverageTestFitness> branchFitnesses = new ArrayList<>();
@@ -59,13 +65,10 @@ public class LineCoverageTestFitness extends TestFitnessFunction {
 	 * @param methodName the method name
 	 * @throws IllegalArgumentException
 	 */
-	public LineCoverageTestFitness(String className, String methodName, Integer line) throws IllegalArgumentException{
-		if ((className == null) || (methodName == null) || (line == null)) {
-			throw new IllegalArgumentException("className, methodName and line number cannot be null");
-		}
-		this.className = className;
-		this.methodName = methodName;
-		this.line = line;
+	public LineCoverageTestFitness(String className, String methodName, Integer line) {
+		this.className = Objects.requireNonNull(className, "className cannot be null");
+		this.methodName = Objects.requireNonNull(methodName, "methodName cannot be null");
+		this.line = Objects.requireNonNull(line, "line number cannot be null");
 		setupDependencies();
 	}
 
@@ -130,24 +133,20 @@ public class LineCoverageTestFitness extends TestFitnessFunction {
 			        "an instruction is at least on the root branch of it's method");
 
 
-		branchFitnesses.sort((a,b) -> a.compareTo(b));
+		branchFitnesses.sort(Comparator.naturalOrder());
 	}
-	
+
 	@Override
 	public boolean isCovered(ExecutionResult result) {
-		for ( Integer coveredLine : result.getTrace().getCoveredLines()) {
-			if (coveredLine.intValue() == this.line.intValue()) {
-				return true;
-			}
-		}
-		return false;
+		Stream<Integer> coveredLines = result.getTrace().getCoveredLines().stream();
+		return coveredLines.anyMatch(coveredLine -> coveredLine.intValue() == this.line.intValue());
 	}
-	
+
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * Calculate fitness
-	 * 
+	 *
 	 * @param individual
 	 *            a {@link org.evosuite.testcase.ExecutableChromosome} object.
 	 * @param result
@@ -156,9 +155,31 @@ public class LineCoverageTestFitness extends TestFitnessFunction {
 	 */
 	@Override
 	public double getFitness(TestChromosome individual, ExecutionResult result) {
+		
+		if (ReachabilityCoverageFactory.abalation_turnOffOtherGoals) {
+			return 1.0;
+		}
 		double fitness = 1.0;
-		if (result.getTrace().getCoveredLines().contains(this.line)) {
+
+		// Deactivate coverage archive while measuring fitness, since branchcoverage fitness
+		// evaluating will attempt to claim coverage for it in the archive
+		boolean archive = Properties.TEST_ARCHIVE;
+		Properties.TEST_ARCHIVE = false;
+		
+		boolean debug = false; // this.getClassName().contains("Closeable");
+		
+		if (hasCalleeMethodAsTestStatement(result)) {
+			fitness = 1.0;
+			if (debug) {
+				logger.warn("rejecting " + this + " since hasCalleeMethodAsTestStatement");
+			}
+		}
+		else if (result.getTrace().getCoveredLines().contains(this.line)) {
 			fitness = 0.0;
+			
+			if (debug) {
+				logger.warn("SAT " + this );
+			}
 		} else {
 			double r = Double.MAX_VALUE;
 
@@ -166,6 +187,9 @@ public class LineCoverageTestFitness extends TestFitnessFunction {
 			for (BranchCoverageTestFitness branchFitness : branchFitnesses) {
 				double newFitness = branchFitness.getFitness(individual, result);
 				if (newFitness == 0.0) {
+					// Although the BranchCoverage goal has been covered, it is not part of the
+					// optimisation
+					individual.getTestCase().removeCoveredGoal(branchFitness);
 					// If the control dependency was covered, then likely
 					// an exception happened before the line was reached
 					newFitness = 1.0;
@@ -177,15 +201,28 @@ public class LineCoverageTestFitness extends TestFitnessFunction {
 			}
 			
 			fitness = r;
+			if (debug) {
+				logger.warn("get distance " + this + " is fitness=" + fitness);
+			}
 		}
-		updateIndividual(this, individual, fitness);
+		Properties.TEST_ARCHIVE = archive;
+		updateIndividual(individual, fitness);
+
+		if (fitness == 0.0) {
+			individual.getTestCase().addCoveredGoal(this);
+		}
+
+		if (Properties.TEST_ARCHIVE) {
+			Archive.getArchiveInstance().updateArchive(this, individual, fitness);
+		}
+
 		return fitness;
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public String toString() {
-		return className + (methodName == "" ? "" : "." + methodName) + ": Line " + line;
+		return className + (methodName.isEmpty() ? "" : "." + methodName) + ": Line " + line;
 	}
 
 	/** {@inheritDoc} */
@@ -205,13 +242,13 @@ public class LineCoverageTestFitness extends TestFitnessFunction {
 		if (getClass() != obj.getClass())
 			return false;
 		LineCoverageTestFitness other = (LineCoverageTestFitness) obj;
-		if (className != other.className) {
+		if (!className.equals(other.className)) {
 			return false;
 		} else if (! methodName.equals(other.methodName)) {
 			return false;
-		} else if (line.intValue() != other.line.intValue())
-			return false;
-		return true;
+		} else {
+			return line.intValue() == other.line.intValue();
+		}
 	}
 
 	/* (non-Javadoc)
@@ -248,13 +285,17 @@ public class LineCoverageTestFitness extends TestFitnessFunction {
 	public String getTargetMethod() {
 		return getMethod();
 	}
-	
+
 	private void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
 		ois.defaultReadObject();
-		branchFitnesses = new ArrayList<BranchCoverageTestFitness>();
-		setupDependencies();
+		branchFitnesses = new ArrayList<>();
+		if(GraphPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).getActualCFG(className,
+				methodName) != null) {
+			// TODO: Figure out why the CFG may not exist
+			setupDependencies();
+		}
 	}
-	
+
 	private void writeObject(ObjectOutputStream oos) throws ClassNotFoundException, IOException {
 		oos.defaultWriteObject();
 	}

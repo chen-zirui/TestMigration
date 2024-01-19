@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -20,8 +20,8 @@
 package org.evosuite.testcase.execution;
 
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -36,6 +36,7 @@ import org.evosuite.TestGenerationContext;
 import org.evosuite.ga.stoppingconditions.MaxStatementsStoppingCondition;
 import org.evosuite.ga.stoppingconditions.MaxTestsStoppingCondition;
 import org.evosuite.runtime.LoopCounter;
+import org.evosuite.runtime.Runtime;
 import org.evosuite.runtime.sandbox.PermissionStatistics;
 import org.evosuite.runtime.sandbox.Sandbox;
 import org.evosuite.runtime.util.JOptionPaneInputs;
@@ -89,7 +90,7 @@ public class TestCaseExecutor implements ThreadFactory {
 
 	private Set<ExecutionObserver> observers;
 
-	private final Set<Thread> stalledThreads = new HashSet<Thread>();
+	private final Set<Thread> stalledThreads = new HashSet<>();
 
 	/** Constant <code>timeExecuted=0</code> */
 	public static long timeExecuted = 0;
@@ -135,7 +136,29 @@ public class TestCaseExecutor implements ThreadFactory {
 		try {
 			TestCaseExecutor executor = getInstance();
 			logger.debug("Executing test");
+//			logger.warn("Executing test=" + test);
 			result = executor.execute(test);
+			try {
+				logger.warn("\toutcome is (executed #stmt=" + result.getExecutedStatements() 
+				+ ", #exceptions=" + result.getNumberOfThrownExceptions()
+				+ ",  first exceptions=" + result.getFirstPositionOfThrownException()
+				+ ", exceptions are " + result.explicitExceptions
+				+ ", exception values are " + result.getAllThrownExceptions()
+	//			+ ", method calls=" + result.trace.getMethodCalls()
+				+ ", covered lines= " + result.trace.getCoveredLines());
+				if (!result.getAllThrownExceptions().isEmpty()) {
+					Collection<Throwable> exn = result.getAllThrownExceptions();
+					Throwable one = exn.iterator().next();
+					logger.error("thrown exn is", one);
+					if (one.getCause() != null) {
+						logger.error("thrown exn is caused by ", one.getCause());
+					}
+				}
+			} catch (Exception e) {
+				// TRANSFER: ignore weird stuff happening during logging
+				// e.g. if it loads some stupid class/ requires some ResourceBundle stuff
+				logger.warn("error during logging outcomes=", e);
+			}
 
 			MaxStatementsStoppingCondition.statementsExecuted(result.getExecutedStatements());
 
@@ -242,7 +265,7 @@ public class TestCaseExecutor implements ThreadFactory {
 	}
 
 	public Set<ExecutionObserver> getExecutionObservers() {
-		return new LinkedHashSet<ExecutionObserver>(observers);
+		return new LinkedHashSet<>(observers);
 	}
 
 	private void resetObservers() {
@@ -298,10 +321,11 @@ public class TestCaseExecutor implements ThreadFactory {
 		resetObservers();
 		ExecutionObserver.setCurrentTest(tc);
 		MaxTestsStoppingCondition.testExecuted();
+		Runtime.getInstance().resetRuntime();
 
 		long startTime = System.currentTimeMillis();
 
-		TimeoutHandler<ExecutionResult> handler = new TimeoutHandler<ExecutionResult>();
+		TimeoutHandler<ExecutionResult> handler = new TimeoutHandler<>();
 
 		// #TODO steenbuck could be nicer (TestRunnable should be an interface
 		TestRunnable callable = new TestRunnable(tc, scope, observers);
@@ -327,6 +351,13 @@ public class TestCaseExecutor implements ThreadFactory {
 
 			Sandbox.goingToExecuteSUTCode();
 			TestGenerationContext.getInstance().goingToExecuteSUTCode();
+			
+//			if (tc.toCode().contains("quine") && tc.toCode().contains("parseStream")) {
+//				logger.warn("running a test case with `quine` in it:");
+//				logger.warn("test is :");
+//				logger.warn(tc.toCode());
+//			}
+//			
 			try {
 				result = handler.execute(callable, executor, timeout, Properties.CPU_TIMEOUT);
 			} finally {
@@ -479,6 +510,13 @@ public class TestCaseExecutor implements ThreadFactory {
 			ExecutionResult result = new ExecutionResult(tc, null);
 			result.setThrownExceptions(callable.getExceptionsThrown());
 			result.reportNewThrownException(tc.size(), new TestCaseExecutor.TimeoutExceeded());
+			
+			if (tc.toCode().contains("quine")) {
+				logger.warn("timeout case:");
+				logger.warn("timed out test is :");
+				logger.warn(tc.toCode());
+			}
+			
 			result.setTrace(ExecutionTracer.getExecutionTracer().getTrace());
 			ExecutionTracer.getExecutionTracer().clear();
 			ExecutionTracer.setKillSwitch(false);
@@ -517,13 +555,7 @@ public class TestCaseExecutor implements ThreadFactory {
 	 * @return a int.
 	 */
 	public int getNumStalledThreads() {
-		Iterator<Thread> iterator = stalledThreads.iterator();
-		while (iterator.hasNext()) {
-			Thread t = iterator.next();
-			if (!t.isAlive()) {
-				iterator.remove();
-			}
-		}
+		stalledThreads.removeIf(t -> !t.isAlive());
 		return stalledThreads.size();
 	}
 

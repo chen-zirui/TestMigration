@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -23,7 +23,6 @@ import org.evosuite.runtime.mock.StaticReplacementMock;
 import org.evosuite.runtime.mock.java.util.MockCalendar;
 
 import java.text.DateFormat;
-import java.text.spi.DateFormatProvider;
 import java.util.Locale;
 
 /**
@@ -36,65 +35,65 @@ public class MockDateFormat implements StaticReplacementMock {
         return DateFormat.class.getName();
     }
 
-    public final static DateFormat getTimeInstance() {
+    public static DateFormat getTimeInstance() {
         DateFormat format = DateFormat.getTimeInstance();
         format.setCalendar(MockCalendar.getInstance());
         return format;
     }
 
-    public final static DateFormat getTimeInstance(int style) {
+    public static DateFormat getTimeInstance(int style) {
         DateFormat format = DateFormat.getTimeInstance(style);
         format.setCalendar(MockCalendar.getInstance());
         return format;
     }
 
-    public final static DateFormat getTimeInstance(int style,
-                                                   Locale aLocale) {
+    public static DateFormat getTimeInstance(int style,
+                                             Locale aLocale) {
         DateFormat format = DateFormat.getTimeInstance(style, aLocale);
         format.setCalendar(MockCalendar.getInstance());
         return format;
     }
 
-    public final static DateFormat getDateInstance() {
+    public static DateFormat getDateInstance() {
         DateFormat format = DateFormat.getDateInstance();
         format.setCalendar(MockCalendar.getInstance());
         return format;
     }
 
-    public final static DateFormat getDateInstance(int style) {
+    public static DateFormat getDateInstance(int style) {
         DateFormat format = DateFormat.getDateInstance(style);
         format.setCalendar(MockCalendar.getInstance());
         return format;
     }
 
-    public final static DateFormat getDateInstance(int style,
-                                                   Locale aLocale) {
+    public static DateFormat getDateInstance(int style,
+                                             Locale aLocale) {
         DateFormat format = DateFormat.getDateInstance(style, aLocale);
         format.setCalendar(MockCalendar.getInstance());
         return format;
     }
 
-    public final static DateFormat getDateTimeInstance() {
+    public static DateFormat getDateTimeInstance() {
         DateFormat format = DateFormat.getDateTimeInstance();
         format.setCalendar(MockCalendar.getInstance());
         return format;
     }
 
-    public final static DateFormat getDateTimeInstance(int dateStyle,
-                                                       int timeStyle) {
+    public static DateFormat getDateTimeInstance(int dateStyle,
+                                                 int timeStyle) {
         DateFormat format = DateFormat.getDateTimeInstance(dateStyle, timeStyle);
         format.setCalendar(MockCalendar.getInstance());
         return format;
     }
 
-    public final static DateFormat getDateTimeInstance(int dateStyle, int timeStyle, Locale aLocale)
+    public static DateFormat getDateTimeInstance(int dateStyle, int timeStyle, Locale aLocale)
     {
         DateFormat format = DateFormat.getDateTimeInstance(dateStyle, timeStyle, aLocale);
         format.setCalendar(MockCalendar.getInstance());
         return format;
     }
 
-    public final static DateFormat getInstance() {
+    public static DateFormat getInstance() {
         return getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT);
     }
 

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.evosuite.Properties;
 import org.evosuite.runtime.mock.MockList;
 import org.evosuite.setup.TestUsageChecker;
@@ -40,12 +41,12 @@ public class InspectorManager {
 
 	private static InspectorManager instance = null;
 
-	private static Logger logger = LoggerFactory
+	private static final Logger logger = LoggerFactory
 			.getLogger(InspectorManager.class);
 
-	private final Map<Class<?>, List<Inspector>> inspectors = new HashMap<Class<?>, List<Inspector>>();
+	private final Map<Class<?>, List<Inspector>> inspectors = new HashMap<>();
 
-	private final Map<String, List<String>> blackList = new HashMap<String, List<String>>();
+	private final Map<String, List<String>> blackList = new HashMap<>();
 
 	private InspectorManager() {
 		// TODO: Need to replace this with proper analysis
@@ -119,6 +120,8 @@ public class InspectorManager {
 				Arrays.asList(new String[] { "toString" }));
 		blackList.put("java.awt.event.InvocationEvent",
 				Arrays.asList(new String[] { "getWhen"}));
+		blackList.put("java.lang.StringBuffer",
+				Arrays.asList(new String[] { "capacity"}));
 	}
 
 	/**
@@ -143,12 +146,24 @@ public class InspectorManager {
 		if (!Modifier.isPublic(method.getModifiers()))
 			return false;
 
-		if (!method.getReturnType().isPrimitive()
-				&& !method.getReturnType().equals(String.class)
-				&& !method.getReturnType().isEnum()) {
-			return false;
-		}
+//		if (!method.getReturnType().isPrimitive()
+//				&& !method.getReturnType().equals(String.class)
+//				&& !method.getReturnType().equals(byte[].class)
+//				&& !method.getReturnType().isEnum()
+//				&& !ClassUtils.isPrimitiveWrapper(method.getReturnType())) {
+//			return false;
+//		}
 
+		// this should generally be true
+				// but let's just do this for Tika's stuff for the time being
+		// just to see what happens	
+//				if (method.getDeclaringClass().getName().contains("TikaInputStream")) {
+//					logger.warn("see TikaInputStream, method is " + method.getName());
+//					if (method.getName().startsWith("get") && (method.getParameterTypes().length == 0)) { 
+//						return true;
+//					}
+//				}
+				
 		if (method.getReturnType().equals(void.class))
 			return false;
 
@@ -187,6 +202,12 @@ public class InspectorManager {
 				return false;
 			}
 		}
+		
+		
+		
+		// quick hack. toString is fine
+//		if(method.getName().equals("toString"))
+//			return false;
 
 		return true;
 
@@ -226,7 +247,7 @@ public class InspectorManager {
 		}
 		if (!TestUsageChecker.canUse(clazz))
 			return;
-		List<Inspector> inspectorList = new ArrayList<Inspector>();
+		List<Inspector> inspectorList = new ArrayList<>();
 		for (Method method : clazz.getMethods()) {
 			if (isInspectorMethod(method)) { // FIXXME
 				logger.debug("Inspector for class " + clazz.getSimpleName()

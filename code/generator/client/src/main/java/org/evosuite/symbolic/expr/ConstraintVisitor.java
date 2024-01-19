@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -21,9 +21,9 @@ package org.evosuite.symbolic.expr;
 
 public interface ConstraintVisitor<K,V> {
 
-	public K visit(IntegerConstraint n, V arg);
+	K visit(IntegerConstraint n, V arg);
 	
-	public K visit(RealConstraint n, V arg);
+	K visit(RealConstraint n, V arg);
 	
-	public K visit(StringConstraint n, V arg);
+	K visit(StringConstraint n, V arg);
 }

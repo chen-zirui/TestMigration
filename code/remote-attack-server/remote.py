@@ -3,9 +3,9 @@ import os
 import socketserver
 import random
 
-PORT = 8079
+PORT = 8080
 project_dir = os.environ.get('PROJECT_DIR')
-LOG_FILE = f'{project_dir}/code/remote-attack-server/access.log'
+LOG_FILE = f'/VESTA/code/remote-attack-server/access.log'
 
 class RequestHandler(http.server.SimpleHTTPRequestHandler):
     def log_request(self, code='-', size='-'):

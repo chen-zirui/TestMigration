@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.runtime.testdata;
 
 import java.io.File;
@@ -35,6 +33,8 @@ public class EvoSuiteFile implements Serializable{
 	private static final long serialVersionUID = -4900126189189434483L;
 
 	private final String path;
+
+	private final String userDir = System.getProperty("user.dir");
 
 	/**
 	 * <p>Constructor for EvoSuiteFile.</p>
@@ -65,6 +65,11 @@ public class EvoSuiteFile implements Serializable{
 	/** {@inheritDoc} */
 	@Override
 	public String toString() {
-		return path;
+		if(path.startsWith(userDir)) {
+			return path.length() > userDir.length() ? path.substring(userDir.length()+1) : path;
+		}
+		else {
+			return path;
+		}
 	}
 }

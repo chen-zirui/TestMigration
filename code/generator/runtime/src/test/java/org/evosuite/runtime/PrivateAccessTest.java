@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -57,7 +57,7 @@ public class PrivateAccessTest {
     public void testSetField_serialVersionUID(){
         try {
             //it should fail
-            PrivateAccess.setVariable(FooFields.class, null, "serialVersionUID", 42l);
+            PrivateAccess.setVariable(FooFields.class, null, "serialVersionUID", 42L);
             Assert.fail();
         } catch (IllegalArgumentException e){
             //expected

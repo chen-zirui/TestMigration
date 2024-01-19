@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -31,7 +31,7 @@ public class RegisterObjectForDeterministicHashCodeVisitor extends AdviceAdapter
 	
 	
 	protected RegisterObjectForDeterministicHashCodeVisitor(MethodVisitor mv, int access, String name, String desc) {
-		super(Opcodes.ASM5, mv, access, name, desc);
+		super(Opcodes.ASM9, mv, access, name, desc);
 	}
 
 	@Override

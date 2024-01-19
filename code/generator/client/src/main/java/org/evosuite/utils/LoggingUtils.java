@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -27,11 +27,7 @@ import java.io.ObjectInputStream;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -167,7 +163,7 @@ public class LoggingUtils {
 									/*
 									 * FIXME: this can happen if client dies or is stopped by master with "destroy" in Windows. It is not a big problem,
 									 * but anyway how we stop clients will need to be refactored.
-									 * It can also happen if client just crash. As we already report such info in ExternalProcessHandler, we do not need to
+									 * It can also happen if client just crash. As we already report such info in ExternalProcessGroupHandler, we do not need to
 									 * log it here
 									 */
 								} catch (java.io.UTFDataFormatException utfe) {

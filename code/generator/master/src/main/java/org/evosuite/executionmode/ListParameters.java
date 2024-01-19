@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -46,7 +46,7 @@ public class ListParameters {
 
 	public static Object execute(){
 
-		List<Row> rows = new ArrayList<Row>();
+		List<Row> rows = new ArrayList<>();
 
 		/*
 		 * This is necessary, as reading from evosuite-files properties

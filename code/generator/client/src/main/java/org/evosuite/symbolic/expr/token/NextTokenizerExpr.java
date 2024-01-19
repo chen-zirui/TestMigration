@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -39,9 +39,7 @@ public final class NextTokenizerExpr extends TokenizerExpr {
 			throw new ConstraintTooLongException(getSize());
 	}
 
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = -5041244020293557448L;
 
 	@Override
@@ -58,7 +56,7 @@ public final class NextTokenizerExpr extends TokenizerExpr {
 			return true;
 
 		if (obj instanceof NextTokenizerExpr) {
-			NextTokenizerExpr that = this;
+			NextTokenizerExpr that = (NextTokenizerExpr)obj;
 			return this.tokenizerExpr.equals(that.tokenizerExpr);
 		} else
 			return false;

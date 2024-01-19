@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,18 +17,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package org.evosuite.utils.generic;
 
 import java.io.Serializable;
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,8 +36,13 @@ import org.slf4j.LoggerFactory;
 import com.googlecode.gentyref.GenericTypeReflector;
 
 /**
+ * This class is meant to mimic {@link java.lang.reflect.AccessibleObject AccessibleObject} from
+ * the Java Reflections API, enhanced with a few additions and convenience methods to work
+ * around the limitations of type erasure with regards to generics and to provide means for
+ * serialization. A {@code GenericAccessibleObject} is the object-representation of one of the
+ * following: a reflected field, reflected method, or reflected constructor of a class.
+ *
  * @author Gordon Fraser
- * 
  */
 public abstract class GenericAccessibleObject<T extends GenericAccessibleObject<?>>
         implements Serializable {
@@ -54,10 +51,13 @@ public abstract class GenericAccessibleObject<T extends GenericAccessibleObject<
 
 	private static final long serialVersionUID = 7069749492563662621L;
 
+	/**
+	 * The class in which this GenericAccessibleObject (i.e. field, method or constructor) is
+	 * located in.
+	 */
 	protected GenericClass owner;
 
 	protected List<GenericClass> typeVariables = new ArrayList<>();
-
 
 	protected static Type getTypeFromExactReturnType(GenericArrayType returnType,
 	        GenericArrayType type) {
@@ -160,10 +160,21 @@ public abstract class GenericAccessibleObject<T extends GenericAccessibleObject<
 		}
 	}
 
+	/**
+	 * Constructs a new GenericAccessibleObject with the given {@code owner} class.
+	 *
+	 * @param owner the class where this accessible object is located in
+	 */
 	public GenericAccessibleObject(GenericClass owner) {
 		this.owner = owner;
 	}
 
+	/**
+	 * Changes the class loader for the owning class of this {@code GenericAccessibleObject} and for
+	 * all of its type variables.
+	 *
+	 * @param loader the new class loader to set
+	 */
 	public void changeClassLoader(ClassLoader loader) {
 		owner.changeClassLoader(loader);
 		for (GenericClass typeVariable : typeVariables) {
@@ -177,6 +188,9 @@ public abstract class GenericAccessibleObject<T extends GenericAccessibleObject<
 		}
 	}
 
+	/**
+	 * Creates and returns a copy of this {@code GenericAccessibleObject}.
+	 */
 	public abstract T copy();
 
 	public abstract T copyWithNewOwner(GenericClass newOwner);
@@ -216,16 +230,16 @@ public abstract class GenericAccessibleObject<T extends GenericAccessibleObject<
 
 		Map<TypeVariable<?>, Type> typeMap = copy.getOwnerClass().getTypeVariableMap();
 
-		logger.debug("Getting random generic instantiation of method: " + toString()
+		logger.warn("Getting random generic instantiation of method: " + toString()
 		        + " with owner type map: " + typeMap);
-		List<GenericClass> typeParameters = new ArrayList<GenericClass>();
+		List<GenericClass> typeParameters = new ArrayList<>();
 
 		// TODO: The bounds of this type parameter need to be updataed for the owner of the call
 		// which may instantiate some of the type parameters
 		for (TypeVariable<?> parameter : getTypeParameters()) {
 			GenericClass genericType = new GenericClass(parameter);
 			GenericClass concreteType = genericType.getGenericInstantiation(typeMap);
-			logger.debug("Setting parameter " + parameter + " to type "
+			logger.warn("Setting parameter " + parameter + " to type "
 			        + concreteType.getTypeName());
 			typeParameters.add(concreteType);
 		}
@@ -255,7 +269,7 @@ public abstract class GenericAccessibleObject<T extends GenericAccessibleObject<
 			return copy;
 		}
 
-		List<GenericClass> typeParameters = new ArrayList<GenericClass>();
+		List<GenericClass> typeParameters = new ArrayList<>();
 		for (TypeVariable<?> parameter : getTypeParameters()) {
 			GenericClass concreteType = new GenericClass(parameter);
 			logger.debug("(I) Setting parameter " + parameter + " to type "
@@ -283,7 +297,7 @@ public abstract class GenericAccessibleObject<T extends GenericAccessibleObject<
 
 		// We just want to have the type variables defined in the generic method here
 		// and not type variables defined in the owner
-		Map<TypeVariable<?>, Type> concreteTypes = new HashMap<TypeVariable<?>, Type>();
+		Map<TypeVariable<?>, Type> concreteTypes = new HashMap<>();
 		logger.debug("Getting type map of generated type");
 		Map<TypeVariable<?>, Type> generatorTypes = generatedType.getTypeVariableMap();
 		logger.debug("Got type map of generated type: "+generatorTypes);
@@ -334,7 +348,7 @@ public abstract class GenericAccessibleObject<T extends GenericAccessibleObject<
 		// When resolving the type variables on a non-static generic method
 		// we need to look at the owner type, and not the return type!
 
-		List<GenericClass> typeParameters = new ArrayList<GenericClass>();
+		List<GenericClass> typeParameters = new ArrayList<>();
 		logger.debug("Setting parameters with map: " + concreteTypes);
 		for (TypeVariable<?> parameter : getTypeParameters()) {
 			GenericClass concreteType = new GenericClass(parameter);
@@ -379,7 +393,7 @@ public abstract class GenericAccessibleObject<T extends GenericAccessibleObject<
 	}
 
 	protected Map<TypeVariable<?>, GenericClass> getTypeVariableMap() {
-		Map<TypeVariable<?>, GenericClass> typeMap = new HashMap<TypeVariable<?>, GenericClass>();
+		Map<TypeVariable<?>, GenericClass> typeMap = new HashMap<>();
 		int pos = 0;
 		for (TypeVariable<?> variable : getTypeParameters()) {
 			if (typeVariables.size() <= pos)
@@ -411,6 +425,14 @@ public abstract class GenericAccessibleObject<T extends GenericAccessibleObject<
 	public boolean isStatic() {
 		return false;
 	}
+
+	public abstract boolean isPublic();
+
+	public abstract boolean isPrivate();
+
+	public abstract boolean isProtected();
+
+	public abstract boolean isDefault();
 
 	/**
 	 * Maps type parameters in a type to their values.

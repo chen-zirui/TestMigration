@@ -1,9 +1,27 @@
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
+ * contributors
+ *
+ * This file is part of EvoSuite.
+ *
+ * EvoSuite is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3.0 of the License, or
+ * (at your option) any later version.
+ *
+ * EvoSuite is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.evosuite.lm;
 
 import org.evosuite.Properties;
 import org.evosuite.coverage.branch.BranchCoverageSuiteFitness;
-import org.evosuite.testcase.*;
-import org.evosuite.testsuite.AbstractTestSuiteChromosome;
+import org.evosuite.testsuite.TestSuiteChromosome;
 import org.evosuite.testsuite.TestSuiteFitnessFunction;
 
 import java.io.IOException;
@@ -13,7 +31,8 @@ import java.io.IOException;
  */
 public class LanguageModelSuiteFitness extends TestSuiteFitnessFunction {
 
-    private BranchCoverageSuiteFitness backingFitness;
+    private static final long serialVersionUID = 8985543347957256453L;
+    private final BranchCoverageSuiteFitness backingFitness;
     private LangModel languageModel;
 
 
@@ -28,14 +47,13 @@ public class LanguageModelSuiteFitness extends TestSuiteFitnessFunction {
     }
 
     @Override
-    public double getFitness(AbstractTestSuiteChromosome<? extends ExecutableChromosome> individual) {
+    public double getFitness(TestSuiteChromosome individual) {
         double fitness = backingFitness.getFitness(individual);
 
 
         //TODO: replace this ugly code with a visitor; will TestVisitor work?
-        for(ExecutableChromosome chromosome : individual.getTestChromosomes()){
-            TestChromosome test = (TestChromosome)chromosome; //TODO: HACK!
-//
+//        for(TestChromosome test : individual.getTestChromosomes()){
+            //
 //            TestCase testCase = test.getTestCase();
 //            for(StatementInterface statement : testCase){
 //                if(statement instanceof StringPrimitiveStatement){
@@ -58,8 +76,8 @@ public class LanguageModelSuiteFitness extends TestSuiteFitnessFunction {
 //
 //                }
 //            }
-
-        }
+//
+//        }
 
         return fitness;
     }

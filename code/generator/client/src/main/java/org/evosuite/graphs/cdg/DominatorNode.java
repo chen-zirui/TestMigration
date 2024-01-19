@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -50,7 +50,7 @@ class DominatorNode<V> {
 	DominatorNode<V> immediateDominator;
 
 	// auxiliary field needed for dominator computation
-	Set<DominatorNode<V>> bucket = new HashSet<DominatorNode<V>>();
+	Set<DominatorNode<V>> bucket = new HashSet<>();
 
 	// data structure needed to represented forest produced during cfg.DominatorTree computation
 	DominatorNode<V> ancestor;

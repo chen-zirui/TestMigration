@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,8 +19,11 @@
  */
 package org.evosuite.rmi.service;
 
+import org.evosuite.ga.Chromosome;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.Set;
 
 /**
  * Client Node view in the master process.
@@ -29,11 +32,11 @@ import java.rmi.RemoteException;
  * 
  */
 
-public interface ClientNodeRemote extends Remote {
+public interface ClientNodeRemote<T extends Chromosome<T>> extends Remote {
 
-	public void startNewSearch() throws RemoteException;
+	void startNewSearch() throws RemoteException;
 
-	public void cancelCurrentSearch() throws RemoteException;
+	void cancelCurrentSearch() throws RemoteException;
 
 	/**
 	 * 
@@ -42,12 +45,16 @@ public interface ClientNodeRemote extends Remote {
 	 * @throws RemoteException
 	 * @throws InterruptedException
 	 */
-	public boolean waitUntilFinished(long timeoutInMs) throws RemoteException,
+    boolean waitUntilFinished(long timeoutInMs) throws RemoteException,
 	        InterruptedException;
 
-	public void doCoverageAnalysis() throws RemoteException;
-	
-	public void doDependencyAnalysis(String fileName) throws RemoteException;
+	void doCoverageAnalysis() throws RemoteException;
 
-	public void printClassStatistics() throws RemoteException;
+	void doDependencyAnalysis(String fileName) throws RemoteException;
+
+	void printClassStatistics() throws RemoteException;
+	
+	void immigrate(Set<T> migrants) throws RemoteException;
+
+    void collectBestSolutions(Set<T> solutions) throws RemoteException;
 }

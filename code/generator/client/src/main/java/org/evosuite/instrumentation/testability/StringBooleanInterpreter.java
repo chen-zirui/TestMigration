@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.instrumentation.testability;
 
 import java.util.List;
@@ -41,6 +39,11 @@ public class StringBooleanInterpreter extends BasicInterpreter {
 
 	/** Constant <code>STRING_BOOLEAN</code> */
 	public final static BasicValue STRING_BOOLEAN = new BasicValue(null);
+
+        public StringBooleanInterpreter() {
+                super(Opcodes.ASM9);
+        }
+
 
 	/* (non-Javadoc)
 	 * @see org.objectweb.asm.tree.analysis.BasicInterpreter#naryOperation(org.objectweb.asm.tree.AbstractInsnNode, java.util.List)

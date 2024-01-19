@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -16,9 +16,6 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
- */
-/**
- * 
  */
 package org.evosuite.coverage.mutation;
 
@@ -55,7 +52,7 @@ public abstract class MutationTestFitness extends TestFitnessFunction {
 	
 	protected int mutantId;
 
-	protected final Set<BranchCoverageGoal> controlDependencies = new HashSet<BranchCoverageGoal>();
+	protected final Set<BranchCoverageGoal> controlDependencies = new HashSet<>();
 
 	protected final int diameter;
 
@@ -261,7 +258,7 @@ public abstract class MutationTestFitness extends TestFitnessFunction {
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		oos.defaultWriteObject();
-		oos.writeInt(mutation.getId());
+		oos.writeInt(mutantId);
 	}
 
 	private void readObject(ObjectInputStream ois) throws ClassNotFoundException,
@@ -269,6 +266,7 @@ public abstract class MutationTestFitness extends TestFitnessFunction {
 		ois.defaultReadObject();
 
 		mutantId = ois.readInt();
-		this.mutation = MutationPool.getMutant(mutantId);
+		this.mutation = MutationPool.getInstance(TestGenerationContext.getInstance().getClassLoaderForSUT()).getMutant(mutantId);
+		assert(this.mutation!=null):"mutation id not found " + mutantId;
 	}
 }

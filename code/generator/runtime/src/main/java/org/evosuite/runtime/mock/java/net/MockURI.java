@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -35,6 +35,12 @@ public class MockURI implements StaticReplacementMock {
         return URI.class.getName();
     }
 
+    public static final URI aHttpURI = create("http://foo.bar");
+
+    public static final URI aFileURI= create("file:///tmp/foo.bar");
+
+    public static final URI aFTPURI= create("ftp://foo.bar");
+
     /**
      * URI is a final class. It seems there is the
      * need to only mock one of its methods, in which URL is used.
@@ -42,8 +48,9 @@ public class MockURI implements StaticReplacementMock {
      * cannot be used :(
      */
     public static URL toURL(URI uri) throws MalformedURLException {
-        if (!uri.isAbsolute())
-            throw new MockIllegalArgumentException("URI is not absolute");
+    	// TRANSFER: why does the mock url need to be absolute???
+//        if (!uri.isAbsolute())
+//            throw new MockIllegalArgumentException("URI is not absolute");
         return MockURL.URL(uri.toString());
     }
 

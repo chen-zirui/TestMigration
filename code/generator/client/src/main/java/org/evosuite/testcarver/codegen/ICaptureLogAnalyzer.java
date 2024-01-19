@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -23,5 +23,5 @@ import org.evosuite.testcarver.capture.CaptureLog;
 
 public interface ICaptureLogAnalyzer
 {
-	public void analyze(final CaptureLog log, @SuppressWarnings("rawtypes") ICodeGenerator generator, final Class<?>...observedClasses);
+	void analyze(final CaptureLog log, @SuppressWarnings("rawtypes") ICodeGenerator generator, final Class<?>... observedClasses);
 }

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -31,9 +31,7 @@ import org.objectweb.asm.tree.MethodNode;
  * predicate
  */
 public class BooleanDistanceTransformer extends MethodNodeTransformer {
-	/**
-	 * 
-	 */
+	
 	private final BooleanTestabilityTransformation booleanTestabilityTransformation;
 
 	/**

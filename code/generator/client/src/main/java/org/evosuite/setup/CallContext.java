@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,19 +17,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.setup;
 
 import org.evosuite.PackageInfo;
 import org.evosuite.Properties;
+import org.evosuite.testcase.execution.MethodCall;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * <p>
@@ -49,9 +45,7 @@ import java.util.List;
  */
 public class CallContext implements Serializable {
 
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 8650619230188403356L;
 
     private final List<Call> context;
@@ -74,21 +68,72 @@ public class CallContext implements Serializable {
         addJUnitExcludes();
 
         int startPos = stackTrace.length - 1;
-		List<Call> context = new ArrayList<Call>();
-		while (shouldSkipEntry(stackTrace[startPos].getClassName())) {
+		int endPos = 0;
+		List<Call> context = new ArrayList<>();
+
+		// Stack traces may be empty, e.g. if an exception is thrown in a constructor call in a test
+		while (startPos >= 0 && shouldSkipEntry(stackTrace[startPos].getClassName())) {
 			startPos--;
 		}
-		int endPos = 0;
-        while (shouldSkipEntry(stackTrace[endPos].getClassName())) {
+		while (endPos < stackTrace.length && shouldSkipEntry(stackTrace[endPos].getClassName())) {
 			endPos++;
 		}
 
 		for (int i = startPos; i >= endPos; i--) {
 			StackTraceElement element = stackTrace[i];
-			
-			context.add(new Call(element.getClassName(), element.getMethodName()));
-		} 
+			Call newCall = new Call(element.getClassName(), element.getMethodName());
+			boolean skip = false;
+			if(context.size() >= 2) { // Need at least a sequence of three for this check to make sense
+				Call previousCall1 = context.get(context.size() - 1);
+				Call previousCall2 = context.get(context.size() - 2);
+				if(previousCall1.equals(newCall) && previousCall2.equals(newCall)) {
+					skip = true;
+				}
+			}
+			if(!skip)
+			context.add(newCall);
+		}
 		this.context=context;
+		hcode = this.context.hashCode();
+	}
+
+	/**
+	 * Constructor for CallContext.
+	 *
+	 * @param stackTrace
+	 */
+	public CallContext(LinkedList<MethodCall> stackTrace) {
+		addJUnitExcludes();
+
+		int startPos = stackTrace.size() - 1;
+		int endPos = 0;
+		List<Call> context = new ArrayList<>();
+
+		while (startPos >= 0 && shouldSkipEntry(stackTrace.get(startPos).className)) {
+			startPos--;
+		}
+
+		while (endPos < stackTrace.size() && shouldSkipEntry(stackTrace.get(endPos).className)) {
+			endPos++;
+		}
+
+		for (int i = startPos; i >= endPos; i--) {
+			MethodCall element = stackTrace.get(i);
+
+			Call newCall = new Call(element.className, element.methodName);
+
+			boolean skip = false;
+			if(context.size() >= 2) { // Need at least a sequence of three for this check to make sense
+				Call previousCall1 = context.get(context.size() - 1);
+				Call previousCall2 = context.get(context.size() - 2);
+				if(previousCall1.equals(newCall) && previousCall2.equals(newCall)) {
+					skip = true;
+				}
+			}
+			if(!skip)
+				context.add(newCall);
+		}
+		this.context = context;
 		hcode = this.context.hashCode();
 	}
 
@@ -101,7 +146,7 @@ public class CallContext implements Serializable {
 	public CallContext(String className, String methodName) {
         addJUnitExcludes();
 
-        List<Call> context = new ArrayList<Call>();
+        List<Call> context = new ArrayList<>();
 		context.add(new Call(className, methodName));
 		this.context=context;
 		hcode = this.context.hashCode();
@@ -110,7 +155,7 @@ public class CallContext implements Serializable {
 	public CallContext() {
         addJUnitExcludes();
 
-        List<Call> context = new ArrayList<Call>();
+        List<Call> context = new ArrayList<>();
 		this.context=context;
 		hcode = this.context.hashCode();
 	}
@@ -118,8 +163,7 @@ public class CallContext implements Serializable {
 	public CallContext(Collection<Call> contextt) {
         addJUnitExcludes();
 
-		List<Call> context = new ArrayList<Call>();
-		context.addAll(contextt);
+        List<Call> context = new ArrayList<>(contextt);
 		this.context=context;
 		hcode = this.context.hashCode();
 	}
@@ -147,6 +191,8 @@ public class CallContext implements Serializable {
     }
 
     private boolean shouldSkipEntry(String entry) {
+    	if(entry.isEmpty())
+    		return true;
         for(String excludedPackage : excludedPackages) {
             if (entry.startsWith(excludedPackage))
                 return true;

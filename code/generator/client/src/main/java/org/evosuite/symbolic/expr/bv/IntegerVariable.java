@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -112,7 +112,7 @@ public final class IntegerVariable extends AbstractExpression<Long> implements
 
 	@Override
 	public Set<Variable<?>> getVariables() {
-		Set<Variable<?>> variables = new HashSet<Variable<?>>();
+		Set<Variable<?>> variables = new HashSet<>();
 		variables.add(this);
 		return variables;
 	}
@@ -123,7 +123,7 @@ public final class IntegerVariable extends AbstractExpression<Long> implements
 	@Override
 	public Set<Object> getConstants() {
 		// Do not include original values?
-		return new HashSet<Object>();
+		return new HashSet<>();
 	}
 	
 	@Override

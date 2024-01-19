@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -34,7 +34,7 @@ import org.evosuite.symbolic.expr.ref.ReferenceExpression;
  */
 public final class OperandStack implements Iterable<Operand> {
 
-	private final Deque<Operand> stack = new LinkedList<Operand>();
+	private final Deque<Operand> stack = new LinkedList<>();
 
 	public OperandStack() {
 	}

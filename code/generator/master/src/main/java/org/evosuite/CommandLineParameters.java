@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -122,7 +122,13 @@ public class CommandLineParameters {
 		Option inheritance = new Option("inheritanceTree","Cache inheritance tree during setup");
 		Option heapDump = new Option("heapdump", "Create heap dump on client VM out of memory error");
 		Option base_dir = new Option("base_dir", true, "Working directory in which tests and reports will be placed");
+		
+		Option parallel = new Option("parallel", true, "Start parallel run with n clients, communicate every i " 
+                + "iteration x individuals (rate), expects #num_parallel_clients #migrants_iteration_frequency #migrants_communication_rate");
+		parallel.setArgs(3);
+		parallel.setArgName("n i x");
 
+		Option enablePreview = new Option("enable_preview", false, "enable-preview for experimental Java features?");
 
 		@SuppressWarnings("static-access")
 		Option property = OptionBuilder.withArgName("property=value").hasArgs(2).withValueSeparator().withDescription("use value for given property").create("D");
@@ -154,6 +160,8 @@ public class CommandLineParameters {
 		options.addOption(projectCP);
 		options.addOption(heapDump);
 		options.addOption(startedByCtg);
+		options.addOption(parallel);
+		options.addOption(enablePreview);
 
 		return options;
 	}
@@ -258,6 +266,10 @@ public class CommandLineParameters {
 
 		if (line.hasOption("heapdump")) {
 			javaOpts.add("-XX:+HeapDumpOnOutOfMemoryError");
+		}
+		
+		if (line.hasOption("enable_preview")) {
+			javaOpts.add("--enable-preview");
 		}
 	}
 }

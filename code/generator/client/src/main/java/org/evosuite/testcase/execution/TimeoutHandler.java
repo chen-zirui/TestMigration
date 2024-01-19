@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -102,7 +102,7 @@ public class TimeoutHandler<T> {
 	private T executeWithTimeout(final Callable<T> testcase, ExecutorService executor,
 	        long timeout) throws InterruptedException, ExecutionException,
 	        TimeoutException {
-		task = new FutureTask<T>(testcase);
+		task = new FutureTask<>(testcase);
 		executor.execute(task);
 		T result = task.get(timeout, TimeUnit.MILLISECONDS);
 		return result;
@@ -113,7 +113,7 @@ public class TimeoutHandler<T> {
 	        ExecutionException, TimeoutException {
 		long[] other_thread_ids = bean.getAllThreadIds();
 
-		task = new FutureTask<T>(testcase);
+		task = new FutureTask<>(testcase);
 		executor.execute(task);
 		T result = null;
 
@@ -130,8 +130,8 @@ public class TimeoutHandler<T> {
 				long cpu_usage = 0;
 
 				outer: for (long id : all_thread_ids) {
-					for (int i = 0; i < other_thread_ids.length; i++)
-						if (id == other_thread_ids[i])
+					for (final long other_thread_id : other_thread_ids)
+						if (id == other_thread_id)
 							continue outer;
 
 					//id is "new"

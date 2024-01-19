@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -36,7 +36,7 @@ public class DebugStatisticsBackend  extends ConsoleStatisticsBackend{
 	private static Map<String, OutputVariable<?>> latestWritten;
 	
 	@Override
-	public void writeData(Chromosome result, Map<String, OutputVariable<?>> data) {
+	public void writeData(Chromosome<?> result, Map<String, OutputVariable<?>> data) {
 		super.writeData(result, data);
 		latestWritten = new LinkedHashMap<>();
 		latestWritten.putAll(data);

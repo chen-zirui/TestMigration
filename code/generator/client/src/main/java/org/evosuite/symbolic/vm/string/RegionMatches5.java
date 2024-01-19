@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -44,7 +44,7 @@ public final class RegionMatches5 extends SymbolicFunction {
 	@Override
 	public Object executeFunction() {
 
-		ReferenceConstant symb_receiver = (ReferenceConstant) this
+		ReferenceConstant symb_receiver = this
 				.getSymbReceiver();
 		String conc_receiver = (String) this.getConcReceiver();
 		StringValue stringReceiverExpr = env.heap.getField(
@@ -70,7 +70,7 @@ public final class RegionMatches5 extends SymbolicFunction {
 				|| ooffsetExpr.containsSymbolicVariable()
 				|| lenExpr.containsSymbolicVariable()) {
 
-			ArrayList<Expression<?>> other = new ArrayList<Expression<?>>();
+			ArrayList<Expression<?>> other = new ArrayList<>();
 			other.add(toffsetExpr);
 			other.add(ooffsetExpr);
 			other.add(lenExpr);

@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
+ * contributors
+ *
+ * This file is part of EvoSuite.
+ *
+ * EvoSuite is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3.0 of the License, or
+ * (at your option) any later version.
+ *
+ * EvoSuite is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.evosuite.lm;
 
 import org.evosuite.Properties;
@@ -17,7 +36,7 @@ import java.util.Set;
  */
 public abstract class LanguageModelSearch implements Comparator<Chromosome> {
     protected static final int GENERATIONS = 1000000;
-    private static Logger logger = LoggerFactory.getLogger(LanguageModelSearch.class);
+    private static final Logger logger = LoggerFactory.getLogger(LanguageModelSearch.class);
     protected final LangModel languageModel;
     protected final String startPoint;
     protected final ValueMinimizer.Minimization objective;
@@ -120,8 +139,7 @@ public abstract class LanguageModelSearch implements Comparator<Chromosome> {
 
         do{
 
-            Set<Integer> choices = new HashSet<Integer>();
-            choices.addAll(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
+            Set<Integer> choices = new HashSet<>(Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
 
             boolean foundValidChar = false;
             String nextChar;

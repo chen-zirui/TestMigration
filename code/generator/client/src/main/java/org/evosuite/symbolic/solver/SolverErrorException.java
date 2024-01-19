@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -21,9 +21,7 @@ package org.evosuite.symbolic.solver;
 
 public final class SolverErrorException extends Exception {
 
-	/**
-	 * 
-	 */
+	
 	private static final long serialVersionUID = -7137967938819634760L;
 
 	public SolverErrorException(String msg) {

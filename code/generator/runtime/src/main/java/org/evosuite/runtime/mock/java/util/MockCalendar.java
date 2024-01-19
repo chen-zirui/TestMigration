@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -20,7 +20,6 @@
 package org.evosuite.runtime.mock.java.util;
 
 import org.evosuite.runtime.mock.OverrideMock;
-import sun.util.BuddhistCalendar;
 
 import java.text.DateFormat;
 import java.util.*;
@@ -29,6 +28,7 @@ import java.util.*;
  * Created by arcuri on 1/25/15.
  */
 public abstract class MockCalendar extends Calendar implements OverrideMock{
+    private static final long serialVersionUID = 7787669189246845968L;
 
     /*
         Note: there are many methods in Calendar, but here we just need to mock the ones that

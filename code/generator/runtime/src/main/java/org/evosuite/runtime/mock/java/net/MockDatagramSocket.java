@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -33,8 +33,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.*;
 import java.nio.channels.DatagramChannel;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
 
 /**
  * TODO need to implement rollback
@@ -43,7 +41,7 @@ import java.security.PrivilegedExceptionAction;
  */
 public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
 
-    private static Logger logger = LoggerFactory.getLogger(MockDatagramSocket.class);
+    private static final Logger logger = LoggerFactory.getLogger(MockDatagramSocket.class);
 
     private static final int ST_NOT_CONNECTED = 0;
     private static final int ST_CONNECTED = 1;
@@ -529,7 +527,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
         }
         if (isClosed())
             throw new SocketException("Socket is closed");
-        getImpl().setOption(SocketOptions.SO_TIMEOUT, new Integer(timeout));
+        getImpl().setOption(SocketOptions.SO_TIMEOUT, timeout);
     }
 
     @Override
@@ -544,7 +542,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
         Object o = getImpl().getOption(SocketOptions.SO_TIMEOUT);
         /* extra type safety */
         if (o instanceof Integer) {
-            return ((Integer) o).intValue();
+            return (Integer) o;
         } else {
             return 0;
         }
@@ -562,7 +560,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
         }
         if (isClosed())
             throw new SocketException("Socket is closed");
-        getImpl().setOption(SocketOptions.SO_SNDBUF, new Integer(size));
+        getImpl().setOption(SocketOptions.SO_SNDBUF, size);
     }
 
     @Override
@@ -575,7 +573,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
         int result = 0;
         Object o = getImpl().getOption(SocketOptions.SO_SNDBUF);
         if (o instanceof Integer) {
-            result = ((Integer)o).intValue();
+            result = (Integer) o;
         }
         return result;
     }
@@ -592,7 +590,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
         }
         if (isClosed())
             throw new SocketException("Socket is closed");
-        getImpl().setOption(SocketOptions.SO_RCVBUF, new Integer(size));
+        getImpl().setOption(SocketOptions.SO_RCVBUF, size);
     }
 
     @Override
@@ -606,7 +604,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
         int result = 0;
         Object o = getImpl().getOption(SocketOptions.SO_RCVBUF);
         if (o instanceof Integer) {
-            result = ((Integer)o).intValue();
+            result = (Integer) o;
         }
         return result;
     }
@@ -620,7 +618,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
         if (isClosed())
             throw new SocketException("Socket is closed"); //TODO
         // Integer instead of Boolean for compatibility with older DatagramSocketImpl
-            getImpl().setOption(SocketOptions.SO_REUSEADDR, Boolean.valueOf(on));
+            getImpl().setOption(SocketOptions.SO_REUSEADDR, on);
     }
 
     @Override
@@ -631,7 +629,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
         if (isClosed())
             throw new SocketException("Socket is closed"); //TODO
         Object o = getImpl().getOption(SocketOptions.SO_REUSEADDR);
-        return ((Boolean)o).booleanValue();
+        return (Boolean) o;
     }
 
     @Override
@@ -642,7 +640,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
         }
         if (isClosed())
             throw new SocketException("Socket is closed"); //TODO
-        getImpl().setOption(SocketOptions.SO_BROADCAST, Boolean.valueOf(on));
+        getImpl().setOption(SocketOptions.SO_BROADCAST, on);
     }
 
     @Override
@@ -652,7 +650,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
         }
         if (isClosed())
             throw new SocketException("Socket is closed"); //TODO
-        return ((Boolean)(getImpl().getOption(SocketOptions.SO_BROADCAST))).booleanValue();
+        return (Boolean) (getImpl().getOption(SocketOptions.SO_BROADCAST));
     }
 
     @Override
@@ -666,7 +664,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
 
         if (isClosed())
             throw new SocketException("Socket is closed"); //TODO
-        getImpl().setOption(SocketOptions.IP_TOS, new Integer(tc));
+        getImpl().setOption(SocketOptions.IP_TOS, tc);
     }
 
     @Override
@@ -676,7 +674,7 @@ public class MockDatagramSocket extends DatagramSocket implements OverrideMock{
         }
         if (isClosed())
             throw new SocketException("Socket is closed"); //TODO
-        return ((Integer)(getImpl().getOption(SocketOptions.IP_TOS))).intValue();
+        return (Integer) (getImpl().getOption(SocketOptions.IP_TOS));
     }
 
 }

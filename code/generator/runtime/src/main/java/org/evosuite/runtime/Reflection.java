@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -23,6 +23,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -31,7 +32,8 @@ import java.util.List;
 import org.evosuite.runtime.instrumentation.InstrumentedClass;
 import org.evosuite.runtime.instrumentation.RemoveFinalClassAdapter;
 import org.evosuite.runtime.util.ReflectionUtils;
-import org.mockito.asm.Opcodes;
+
+import static java.util.Comparator.comparing;
 
 /**
  * The content of arrays in reflection methods may differ between classloaders, therefore
@@ -44,12 +46,7 @@ public class Reflection {
 
 	private static <T> T[] sortArrayInPlace(T[] original) {
 		List<T> methods = Arrays.asList(original);
-		Collections.sort(methods, new Comparator<T>() {
-			@Override
-			public int compare(T o1, T o2) {
-				return o1.toString().compareTo(o2.toString());
-			}
-		});
+		methods.sort(comparing(Object::toString));
 		
 		methods.toArray(original);
 		return original;
@@ -107,7 +104,7 @@ public class Reflection {
 	public static int getModifiers(Class<?> clazz) {
 		int modifier = clazz.getModifiers();
 		if(RemoveFinalClassAdapter.finalClasses.contains(clazz.getCanonicalName())) {
-			modifier = modifier | Opcodes.ACC_FINAL;
+			modifier = modifier | Modifier.FINAL;
 		}
 		return modifier;
 	}
@@ -138,7 +135,7 @@ public class Reflection {
 		if (object instanceof Number) {
 			return ((Number) object).intValue();
 		} else if (object instanceof Character) {
-			return ((Character) object).charValue();
+			return (Character) object;
 		} else
 			return 0;
 	}
@@ -147,7 +144,7 @@ public class Reflection {
 		if (object instanceof Number) {
 			return ((Number) object).longValue();
 		} else if (object instanceof Character) {
-			return ((Character) object).charValue();
+			return (Character) object;
 		} else
 			return 0L;
 	}
@@ -156,7 +153,7 @@ public class Reflection {
 		if (object instanceof Number) {
 			return ((Number) object).floatValue();
 		} else if (object instanceof Character) {
-			return ((Character) object).charValue();
+			return (Character) object;
 		} else
 			return 0F;
 	}
@@ -165,14 +162,14 @@ public class Reflection {
 		if (object instanceof Number) {
 			return ((Number) object).doubleValue();
 		} else if (object instanceof Character) {
-			return ((Character) object).charValue();
+			return (Character) object;
 		} else
 			return 0.0;
 	}
 
 	private static char getCharValue(Object object) {
 		if (object instanceof Character) {
-			return ((Character) object).charValue();
+			return (Character) object;
 		} else if (object instanceof Number) {
 			return (char) ((Number) object).intValue();
 		} else

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -104,7 +104,7 @@ public class MockRuntime implements StaticReplacementMock{
 		return exec(runtime, cmdarray, envp, dir);
 	}
 
-	public static Process exec(Runtime runtime, String cmdarray[]) throws IOException {
+	public static Process exec(Runtime runtime, String[] cmdarray) throws IOException {
 		return exec(runtime, cmdarray, null, null);
 	}
 
@@ -155,13 +155,14 @@ public class MockRuntime implements StaticReplacementMock{
 	}
 
 
-	
 	public static InputStream getLocalizedInputStream(Runtime runtime, InputStream in) {
-		return runtime.getLocalizedInputStream(in);
+		// inlined runtime.getLocalizedInputStream for Java 11 compatibility.
+		return in;
 	}
 
 	public static OutputStream getLocalizedOutputStream(Runtime runtime, OutputStream out) {
-		return runtime.getLocalizedOutputStream(out);
+		// inlined runtime.getLocalizedOutputStream for Java 11 compatibility.
+		return out;
 	}
 
 	//-------------------------------------------------

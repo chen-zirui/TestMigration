@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -22,6 +22,7 @@ package org.evosuite.coverage.dataflow;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Objects;
 import java.util.Set;
 
 import org.evosuite.Properties;
@@ -164,7 +165,7 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 	private static final long serialVersionUID = 1L;
 
 	/** Constant <code>singleFitnessTime=0l</code> */
-	public static long singleFitnessTime = 0l;
+	public static long singleFitnessTime = 0L;
 
 	// debugging flags
 	private final static boolean DEBUG = Properties.DEFUSE_DEBUG_MODE;
@@ -200,12 +201,8 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 	 *            object.
 	 */
 	public DefUseCoverageTestFitness(Definition def, Use use, DefUsePairType type) {
-		if (def == null)
-			throw new IllegalArgumentException("null given for definition. type: "
-			        + type.toString());
-		if (use == null)
-			throw new IllegalArgumentException("null given for use. def was "
-			        + def.toString() + ". type: " + type.toString());
+		Objects.requireNonNull(def, "null given for definition. type: " + type.toString());
+		Objects.requireNonNull(use, "null given for use. def was " + def.toString() + ". type: " + type.toString());
 
 		initRegularDefUse(def, use, type);
 	}
@@ -240,8 +237,8 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 		this.goalDefinition = def;
 		this.goalUse = use;
 		this.goalVariable = def.getVariableName();
-		this.goalDefinitionFitness = new StatementCoverageTestFitness(goalDefinition);
-		this.goalUseFitness = new StatementCoverageTestFitness(goalUse);
+		this.goalDefinitionFitness = new StatementCoverageTestFitness(goalDefinition.getClassName(), goalDefinition.getMethodName(), goalDefinition.getInstructionId());
+		this.goalUseFitness = new StatementCoverageTestFitness(goalUse.getClassName(), goalUse.getMethodName(), goalUse.getInstructionId());
 
 		this.type = type;
 	}
@@ -251,7 +248,7 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 		goalDefinition = null;
 		goalDefinitionFitness = null;
 		goalUse = use;
-		goalUseFitness = new StatementCoverageTestFitness(goalUse);
+		goalUseFitness = new StatementCoverageTestFitness(goalUse.getClassName(), goalUse.getMethodName(), goalUse.getInstructionId());
 
 		this.type = DefUsePairType.PARAMETER;
 	}
@@ -273,7 +270,14 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 		DefUseFitnessCalculator calculator = new DefUseFitnessCalculator(this,
 		        individual, result);
 
+		// Deactivate coverage archive while measuring fitness, as auxiliar fitness functions
+		// could attempt to claim coverage for it in the archive
+		boolean archive = Properties.TEST_ARCHIVE;
+		Properties.TEST_ARCHIVE = false;
+
 		double fitness = calculator.calculateDUFitness();
+
+		Properties.TEST_ARCHIVE = archive;
 
 		if (ArrayUtil.contains(Properties.CRITERION, Criterion.DEFUSE) && fitness == 0.0)
 			setCovered(individual, result.getTrace(), -1); // TODO objectId wrong
@@ -282,7 +286,7 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 
 		singleFitnessTime += System.currentTimeMillis() - start;
 
-		updateIndividual(this, individual, fitness);
+		updateIndividual(individual, fitness);
 
 		return fitness;
 	}
@@ -304,8 +308,7 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 	}
 
 	public boolean isAlias() {
-		return goalDefinition != null ? !goalUse.getVariableName().equals(goalDefinition.getVariableName())
-		        : false;
+		return goalDefinition != null && !goalUse.getVariableName().equals(goalDefinition.getVariableName());
 	}
 
 	/**
@@ -415,7 +418,7 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 			logger.debug("==============================================================");
 		}
 		this.coveringObjectId = objectId;
-		updateIndividual(this, individual, 0);
+		updateIndividual(individual, 0);
 
 		if (DEBUG)
 			if (!DefUseFitnessCalculator.traceCoversGoal(this, individual, trace))
@@ -431,7 +434,7 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 		}
 	}
 
-	private void postFitnessDebugInfo(Chromosome individual, ExecutionResult result,
+	private void postFitnessDebugInfo(Chromosome<?> individual, ExecutionResult result,
 	        double fitness) {
 		if (DEBUG) {
 			if (fitness != 0) {
@@ -630,9 +633,7 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 				return false;
 		} else if (!goalVariable.equals(other.goalVariable))
 			return false;
-		if (type != other.type)
-			return false;
-		return true;
+		return type == other.type;
 	}
 
 	/* (non-Javadoc)
@@ -691,6 +692,9 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 		Integer useId = (Integer) ois.readObject();
 		Integer defId = (Integer) ois.readObject();
 		Use use = DefUsePool.getUseByUseId(useId);
+		//TODO: Need to find a better solution.
+		if(use == null)
+			return;
 
 		if (type == DefUsePairType.PARAMETER) {
 			initParameterUse(use);
@@ -708,9 +712,9 @@ public class DefUseCoverageTestFitness extends TestFitnessFunction {
 	 */
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		oos.writeObject(type);
-		oos.writeObject(Integer.valueOf(goalUse.useId));
+		oos.writeObject(goalUse.useId);
 		if (goalDefinition != null)
-			oos.writeObject(Integer.valueOf(goalDefinition.defId));
+			oos.writeObject(goalDefinition.defId);
 		else
 			oos.writeObject(0);
 	}

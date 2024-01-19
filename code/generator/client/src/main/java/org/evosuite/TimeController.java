@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -28,6 +28,7 @@ import org.evosuite.rmi.service.ClientState;
 import org.evosuite.runtime.util.Inputs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.evosuite.classpath.ClassPathHacker;
 
 
 /**
@@ -128,18 +129,18 @@ public class TimeController {
 		Properties.getInstance();
 
 
-		phaseTimeouts.put(ClientState.SEARCH, (Long) 1000l * getSearchBudgetInSeconds());
-		phaseTimeouts.put(ClientState.MINIMIZATION, (Long) 1000l * Properties.MINIMIZATION_TIMEOUT);
-		phaseTimeouts.put(ClientState.ASSERTION_GENERATION, (Long) 1000l * Properties.ASSERTION_TIMEOUT);
-		phaseTimeouts.put(ClientState.CARVING, (Long) 1000l * Properties.CARVING_TIMEOUT);
-		phaseTimeouts.put(ClientState.INITIALIZATION, (Long) 1000l * Properties.INITIALIZATION_TIMEOUT);
-        phaseTimeouts.put(ClientState.JUNIT_CHECK, (Long) 1000l * Properties.JUNIT_CHECK_TIMEOUT);
-		phaseTimeouts.put(ClientState.WRITING_TESTS, (Long) 1000l * Properties.WRITE_JUNIT_TIMEOUT);
+		phaseTimeouts.put(ClientState.SEARCH, 1000L * getSearchBudgetInSeconds());
+		phaseTimeouts.put(ClientState.MINIMIZATION, 1000L * Properties.MINIMIZATION_TIMEOUT);
+		phaseTimeouts.put(ClientState.ASSERTION_GENERATION, 1000L * Properties.ASSERTION_TIMEOUT);
+		phaseTimeouts.put(ClientState.CARVING, 1000L * Properties.CARVING_TIMEOUT);
+		phaseTimeouts.put(ClientState.INITIALIZATION, 1000L * Properties.INITIALIZATION_TIMEOUT);
+        phaseTimeouts.put(ClientState.JUNIT_CHECK, 1000L * Properties.JUNIT_CHECK_TIMEOUT);
+		phaseTimeouts.put(ClientState.WRITING_TESTS, 1000L * Properties.WRITE_JUNIT_TIMEOUT);
 
 		if(timeSpentInEachPhase!=null){
 			timeSpentInEachPhase.clear();
 		} else {
-			timeSpentInEachPhase = new ConcurrentHashMap<ClientState,Long>();
+			timeSpentInEachPhase = new ConcurrentHashMap<>();
 		}
 	}
 
@@ -212,7 +213,7 @@ public class TimeController {
 		if (Properties.STOPPING_CONDITION == StoppingCondition.MAXTIME) {
 			return (int) Properties.SEARCH_BUDGET;
 		} else {
-			return (int) Properties.GLOBAL_TIMEOUT;
+			return Properties.GLOBAL_TIMEOUT;
 		}
 	}
 
@@ -234,7 +235,8 @@ public class TimeController {
 		}
         if(Properties.JUNIT_TESTS){
 			time += Properties.WRITE_JUNIT_TIMEOUT;
-			if(Properties.JUNIT_CHECK) {
+            if (Properties.JUNIT_CHECK == Properties.JUnitCheckValues.TRUE || (
+                      Properties.JUNIT_CHECK == Properties.JUnitCheckValues.OPTIONAL && ClassPathHacker.isJunitCheckAvailable())) {
 				time += Properties.JUNIT_CHECK_TIMEOUT;
 			}
         }

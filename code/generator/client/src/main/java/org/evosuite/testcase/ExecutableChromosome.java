@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,22 +19,23 @@
  */
 package org.evosuite.testcase;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.evosuite.coverage.mutation.Mutation;
 import org.evosuite.coverage.mutation.MutationExecutionResult;
 import org.evosuite.ga.Chromosome;
 import org.evosuite.testcase.execution.ExecutionResult;
 import org.evosuite.testsuite.TestSuiteFitnessFunction;
-public abstract class ExecutableChromosome extends Chromosome {
+
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.HashMap;
+import java.util.Map;
+public abstract class ExecutableChromosome<E extends ExecutableChromosome<E>> extends Chromosome<E> {
+
 	private static final long serialVersionUID = 1L;
 
 	protected transient ExecutionResult lastExecutionResult = null;
 
-	protected transient Map<Mutation, MutationExecutionResult> lastMutationResult = new HashMap<Mutation, MutationExecutionResult>();
+	protected transient Map<Mutation, MutationExecutionResult> lastMutationResult = new HashMap<>();
 
 	/**
 	 * <p>Constructor for ExecutableChromosome.</p>
@@ -103,7 +104,7 @@ public abstract class ExecutableChromosome extends Chromosome {
 	 *
 	 * @param other a {@link org.evosuite.testcase.ExecutableChromosome} object.
 	 */
-	protected abstract void copyCachedResults(ExecutableChromosome other);
+	protected abstract void copyCachedResults(E other);
 
 	/**
 	 * <p>executeForFitnessFunction</p>
@@ -112,12 +113,12 @@ public abstract class ExecutableChromosome extends Chromosome {
 	 * @return a {@link org.evosuite.testcase.execution.ExecutionResult} object.
 	 */
 	abstract public ExecutionResult executeForFitnessFunction(
-	        TestSuiteFitnessFunction testSuiteFitnessFunction);
-	
+			TestSuiteFitnessFunction testSuiteFitnessFunction);
+
 	private void readObject(ObjectInputStream ois) throws ClassNotFoundException,
     IOException {
 		ois.defaultReadObject();
 		lastExecutionResult = null;
-		lastMutationResult = new HashMap<Mutation, MutationExecutionResult>();
+		lastMutationResult = new HashMap<>();
 	}
 }

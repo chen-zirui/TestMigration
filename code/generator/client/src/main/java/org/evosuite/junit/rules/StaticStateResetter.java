@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -47,8 +47,7 @@ public class StaticStateResetter extends BaseRule {
 
 	@Override
 	protected void after() {
-		for (int i=0; i< classNames.length;i++) {
-			String classNameToReset = classNames[i];
+		for (String classNameToReset : classNames) {
 			try {
 				org.evosuite.runtime.classhandling.ClassResetter.getInstance().reset(classNameToReset);
 			} catch (Throwable t) {

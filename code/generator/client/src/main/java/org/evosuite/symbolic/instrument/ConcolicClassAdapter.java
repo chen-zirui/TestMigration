@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -41,7 +41,7 @@ final class ConcolicClassAdapter extends ClassVisitor {
   private final String className;
   
   ConcolicClassAdapter(ClassVisitor cv, String className) {
-    super(Opcodes.ASM4, cv);
+    super(Opcodes.ASM9, cv);
     this.className = className;
   }
   

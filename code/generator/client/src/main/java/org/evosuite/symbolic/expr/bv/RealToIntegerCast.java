@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -91,8 +91,7 @@ public final class RealToIntegerCast extends AbstractExpression<Long> implements
 
 	@Override
 	public Set<Variable<?>> getVariables() {
-		Set<Variable<?>> variables = new HashSet<Variable<?>>();
-		variables.addAll(this.expr.getVariables());
+        Set<Variable<?>> variables = new HashSet<>(this.expr.getVariables());
 		return variables;
 	}
 

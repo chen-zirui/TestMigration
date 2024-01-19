@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -51,6 +51,6 @@ public interface StaticReplacementMock extends EvoSuiteMock{
 	 * 
 	 * @return a fully qualifying String
 	 */
-	public String getMockedClassName();
+	String getMockedClassName();
 	
 }

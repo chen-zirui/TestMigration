@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,7 +19,7 @@
  */
 package org.evosuite.assertion;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.evosuite.testcase.TestCase;
@@ -65,12 +65,12 @@ public class EqualsAssertion extends Assertion {
 	@Override
 	public String getCode() {
 		if (source.isPrimitive() && dest.isPrimitive()) {
-			if (((Boolean) value).booleanValue())
+			if ((Boolean) value)
 				return "assertTrue(" + source.getName() + " == " + dest.getName() + ");";
 			else
 				return "assertFalse(" + source.getName() + " == " + dest.getName() + ");";
 		} else {
-			if (((Boolean) value).booleanValue())
+			if ((Boolean) value)
 				return "assertTrue(" + source.getName() + ".equals((java.lang.Object)" + dest.getName()
 				        + "));";
 			else
@@ -83,7 +83,7 @@ public class EqualsAssertion extends Assertion {
 	@Override
 	public boolean evaluate(Scope scope) {
 		try {
-			if (((Boolean) value).booleanValue()) {
+			if ((Boolean) value) {
 				if (source.getObject(scope) == null)
 					return dest.getObject(scope) == null;
 				else
@@ -119,11 +119,8 @@ public class EqualsAssertion extends Assertion {
 			return false;
 		EqualsAssertion other = (EqualsAssertion) obj;
 		if (dest == null) {
-			if (other.dest != null)
-				return false;
-		} else if (!dest.equals(other.dest))
-			return false;
-		return true;
+			return other.dest == null;
+		} else return dest.equals(other.dest);
 	}
 
 	/*
@@ -134,7 +131,7 @@ public class EqualsAssertion extends Assertion {
 	/** {@inheritDoc} */
 	@Override
 	public Set<VariableReference> getReferencedVariables() {
-		Set<VariableReference> vars = new HashSet<VariableReference>();
+		Set<VariableReference> vars = new LinkedHashSet<>();
 		vars.add(source);
 		vars.add(dest);
 		return vars;

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,15 +17,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package org.evosuite.testcase.statements.numeric;
 
 import org.evosuite.Properties;
 import org.evosuite.testcase.TestCase;
 import org.evosuite.utils.Randomness;
-import org.objectweb.asm.commons.GeneratorAdapter;
 
 
 /**
@@ -74,7 +70,7 @@ public class CharPrimitiveStatement extends NumericalPrimitiveStatement<Characte
 	@Override
 	public void delta() {
 		int delta = Randomness.nextInt(2 * Properties.MAX_DELTA) - Properties.MAX_DELTA;
-		value = (char) (value.charValue() + delta);
+		value = (char) (value + delta);
 	}
 
 	/* (non-Javadoc)
@@ -92,7 +88,7 @@ public class CharPrimitiveStatement extends NumericalPrimitiveStatement<Characte
 	/** {@inheritDoc} */
 	@Override
 	public void randomize() {
-		value = (char) (Randomness.nextChar());
+		value = Randomness.nextChar();
 	}
 
 	/* (non-Javadoc)

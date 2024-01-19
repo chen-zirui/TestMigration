@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -34,7 +34,7 @@ public abstract class ArrayUtil {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Set<T> asSet(T... values) {
-		return new HashSet<T>(Arrays.asList(values));
+		return new HashSet<>(Arrays.asList(values));
 	}
 
 	/** Constant <code>DEFAULT_JOIN_SEPARATOR="IterUtil.DEFAULT_JOIN_SEPARATOR"</code> */
@@ -163,9 +163,12 @@ public abstract class ArrayUtil {
 	 */
 	public static boolean contains(Object[] array, Object object) {
 	    for (Object obj : array) {
-	    	if (object instanceof String && obj.toString().equals(object))
-		        return true;
-	    	else if (obj.equals(object))
+	    	if(obj == object)
+	    		return true;
+			else if (obj != null && obj.equals(object))
+				return true;
+	    	else if (object instanceof String && obj.toString().equals(object))
+	    		// TODO: Does this check really make sense?
 	            return true;
 	    }
 	    return false;

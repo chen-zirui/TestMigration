@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -39,7 +39,7 @@ public class SerializationSuiteChromosomeFactory
 
     private static final Logger logger = LoggerFactory.getLogger(SerializationSuiteChromosomeFactory.class);
 
-    private List<TestChromosome> previousSuite = new ArrayList<TestChromosome>();
+    private List<TestChromosome> previousSuite = new ArrayList<>();
 
     private ChromosomeFactory<TestChromosome> defaultFactory;
 
@@ -61,9 +61,7 @@ public class SerializationSuiteChromosomeFactory
         }
     }
 
-    /**
-     * 
-     */
+
     @Override
     public TestSuiteChromosome getChromosome() {
 
@@ -74,7 +72,7 @@ public class SerializationSuiteChromosomeFactory
             logger.debug("seeding previous test suite");
 
             for (TestChromosome tc : this.previousSuite) {
-                TestChromosome clone = (TestChromosome) tc.clone();
+                TestChromosome clone = tc.clone();
                 clone.getTestCase().removeAssertions(); // no assertions are used during search
                 tsc.addTest(clone);
             }
@@ -83,7 +81,7 @@ public class SerializationSuiteChromosomeFactory
 
             int numTests = Randomness.nextInt(Properties.MIN_INITIAL_TESTS, Properties.MAX_INITIAL_TESTS + 1);
             for (int i = 0; i < numTests; i++) {
-                TestChromosome tc = (TestChromosome) this.defaultFactory.getChromosome();
+                TestChromosome tc = this.defaultFactory.getChromosome();
                 tsc.addTest(tc);
             }
         }

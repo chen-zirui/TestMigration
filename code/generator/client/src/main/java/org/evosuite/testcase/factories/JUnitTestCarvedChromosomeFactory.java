@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -45,7 +45,7 @@ public class JUnitTestCarvedChromosomeFactory implements
 
 	private static final Logger logger = LoggerFactory.getLogger(JUnitTestCarvedChromosomeFactory.class);
 
-	private final List<TestCase> junitTests = new ArrayList<TestCase>();
+	private final List<TestCase> junitTests = new ArrayList<>();
 
 	private final ChromosomeFactory<TestChromosome> defaultFactory;
 

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,6 +19,7 @@
  */
 package org.evosuite.ga.comparators;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import org.evosuite.ga.Chromosome;
@@ -29,25 +30,26 @@ import org.evosuite.ga.FitnessFunction;
  * 
  * @author José Campos
  */
-public class SortByFitness
-    implements Comparator<Chromosome>
-{
-    private FitnessFunction<?> ff;
+public class SortByFitness<T extends Chromosome<T>> implements Comparator<T>, Serializable {
 
-    private boolean order;
+    private static final long serialVersionUID = 4982933698286500461L;
+
+    private final FitnessFunction<T> ff;
+
+    private final boolean order;
 
     /**
      * 
      * @param ff
-     * @param des descending order
+     * @param desc descending order
      */
-    public SortByFitness(FitnessFunction<?> ff, boolean desc) {
+    public SortByFitness(FitnessFunction<T> ff, boolean desc) {
         this.ff = ff;
         this.order = desc;
     }
 
     @Override
-    public int compare(Chromosome c1, Chromosome c2)
+    public int compare(T c1, T c2)
     {
         if (c1 == null)
             return 1;
@@ -57,21 +59,8 @@ public class SortByFitness
         double objetive1 = c1.getFitness(this.ff);
         double objetive2 = c2.getFitness(this.ff);
 
-        if (this.order) {
-            if (objetive1 < objetive2)
-                return 1;
-            else if (objetive1 > objetive2)
-                return -1;
-            else
-                return 0;
-        }
-        else {
-            if (objetive1 < objetive2)
-                return -1;
-            else if (objetive1 > objetive2)
-                return 1;
-            else
-                return 0;
-        }
+        return this.order
+                ? Double.compare(objetive2, objetive1)
+                : Double.compare(objetive1, objetive2);
     }
 }

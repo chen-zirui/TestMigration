@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,13 +17,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite;
 
-import org.dom4j.DocumentFactory;
-import org.dom4j.dom.DOMDocumentFactory;
 import org.evosuite.classpath.ClassPathHacker;
 import org.evosuite.junit.writer.TestSuiteWriterUtils;
 import org.evosuite.result.TestGenerationResult;
@@ -53,7 +49,13 @@ import org.slf4j.LoggerFactory;
  */
 public class ClientProcess {
 
-	private static Logger logger = LoggerFactory.getLogger(ClientProcess.class);
+	private static final Logger logger = LoggerFactory.getLogger(ClientProcess.class);
+
+	public final static String CLIENT_PREFIX = "Client-";
+
+	public final static String DEFAULT_CLIENT_NAME = CLIENT_PREFIX + "0";
+
+	private static String identifier;
 
 	public static TestGenerationResult result;
 
@@ -65,26 +67,25 @@ public class ClientProcess {
 	public void run() {
 		Properties.getInstance();
 		setupRuntimeProperties();
-		handleShadingSpecialCases();
 		JDKClassResetter.init();
 		Sandbox.setCheckForInitialization(Properties.SANDBOX);
 		MockFramework.enable();
 
-		if (TestSuiteWriterUtils.needToUseAgent() && Properties.JUNIT_CHECK) {
+		if (TestSuiteWriterUtils.needToUseAgent() && (Properties.JUNIT_CHECK == Properties.JUnitCheckValues.TRUE || Properties.JUNIT_CHECK == Properties.JUnitCheckValues.OPTIONAL)) {
 			initializeToolJar();
 		}
 
 		MSecurityManager.setupMasterNodeRemoteHandling(MasterNodeRemote.class);
 
-		LoggingUtils.getEvoLogger().info("* Connecting to master process on port "
+		LoggingUtils.getEvoLogger().info("* " + getPrettyPrintIdentifier() + "Connecting to master process on port "
 				+ Properties.PROCESS_COMMUNICATION_PORT);
 
-		boolean registered = ClientServices.getInstance().registerServices();
+		boolean registered = ClientServices.getInstance().registerServices(getIdentifier());
 
 		if (!registered) {
 			result = TestGenerationResultBuilder.buildErrorResult("Could not connect to master process on port "
 					+ Properties.PROCESS_COMMUNICATION_PORT);
-			throw new RuntimeException("Could not connect to master process on port "
+			throw new RuntimeException(getPrettyPrintIdentifier() + "Could not connect to master process on port "
 					+ Properties.PROCESS_COMMUNICATION_PORT);
 		}
 
@@ -140,43 +141,24 @@ public class ClientProcess {
         RuntimeSettings.useVNET = Properties.VIRTUAL_NET;
         RuntimeSettings.useSeparateClassLoader = Properties.USE_SEPARATE_CLASSLOADER;
 		RuntimeSettings.className = Properties.TARGET_CLASS;
-		RuntimeSettings.useJEE = Properties.JEE;
 		RuntimeSettings.applyUIDTransformation = true;
 		RuntimeSettings.isRunningASystemTest = Properties.IS_RUNNING_A_SYSTEM_TEST;
         MethodCallReplacementCache.resetSingleton();
     }
 
 
-	private static void handleShadingSpecialCases(){
+	/**
+	 * Returns the client's identifier.
+	 */
+	public static String getIdentifier() {
+		return identifier;
+	}
 
-		String shadePrefix = PackageInfo.getShadedPackageForThirdPartyLibraries()+".";
-
-		if(! DocumentFactory.class.getName().startsWith(shadePrefix)){
-			//if not shaded (eg in system tests), then nothing to do
-			return;
+	public static String getPrettyPrintIdentifier() {
+		if (Properties.NUM_PARALLEL_CLIENTS == 1) {
+			return "";
 		}
-
-		String defaultFactory = System.getProperty("org.dom4j.factory", "org.dom4j.DocumentFactory");
-		String defaultDomSingletonClass= System.getProperty(
-				"org.dom4j.dom.DOMDocumentFactory.singleton.strategy", "org.dom4j.util.SimpleSingleton");
-		String defaultSingletonClass = System.getProperty(
-				"org.dom4j.DocumentFactory.singleton.strategy", "org.dom4j.util.SimpleSingleton");
-
-		System.setProperty("org.dom4j.factory" , shadePrefix + defaultFactory);
-		System.setProperty("org.dom4j.dom.DOMDocumentFactory.singleton.strategy" ,
-				shadePrefix + defaultDomSingletonClass);
-		System.setProperty("org.dom4j.DocumentFactory.singleton.strategy" ,
-				shadePrefix + defaultSingletonClass);
-
-		DocumentFactory.getInstance(); //force loading
-		DOMDocumentFactory.getInstance();
-
-		//restore in case SUT uses its own dom4j
-		System.setProperty("org.dom4j.factory" ,defaultFactory);
-		System.setProperty("org.dom4j.dom.DOMDocumentFactory.singleton.strategy",
-				defaultDomSingletonClass);
-		System.setProperty("org.dom4j.DocumentFactory.singleton.strategy",
-				defaultSingletonClass);
+		return identifier + ": ";
 	}
 
 	/**
@@ -195,9 +177,15 @@ public class ClientProcess {
 		 * threads change it if this thread is still running
 		 */
 		boolean onThread = Properties.CLIENT_ON_THREAD;
+		
+        if (args.length > 0) {
+            identifier = args[0];
+        } else {
+            identifier = DEFAULT_CLIENT_NAME;
+        }
 
 		try {
-			LoggingUtils.getEvoLogger().info("* Starting client");
+			LoggingUtils.getEvoLogger().info("* Starting " + getIdentifier());
 			ClientProcess process = new ClientProcess();
 			TimeController.resetSingleton();
 			process.run();
@@ -209,7 +197,7 @@ public class ClientProcess {
 				System.exit(0);
 			}
 		} catch (Throwable t) {
-			logger.error("Error when generating tests for: " + Properties.TARGET_CLASS
+			logger.error(getPrettyPrintIdentifier() + "Error when generating tests for: " + Properties.TARGET_CLASS
 					+ " with seed " + Randomness.getSeed()+". Configuration id : "+Properties.CONFIGURATION_ID, t);
 			t.printStackTrace();
 

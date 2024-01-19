@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -50,7 +50,7 @@ public class VariableReferenceImpl implements VariableReference {
 	 * The testCase in which this VariableReference is valid
 	 */
 	protected TestCase testCase;
-	protected final PassiveChangeListener<Void> changeListener = new PassiveChangeListener<Void>();
+	protected final PassiveChangeListener<Void> changeListener = new PassiveChangeListener<>();
 	protected Integer stPosition;
 	private String originalCode;
 

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -34,6 +34,7 @@ import org.evosuite.ga.FitnessFunction;
 import org.evosuite.ga.metaheuristics.GeneticAlgorithm;
 import org.evosuite.ga.stoppingconditions.MaxStatementsStoppingCondition;
 import org.evosuite.ga.stoppingconditions.StoppingCondition;
+import org.evosuite.rmi.service.ClientState;
 import org.evosuite.statistics.RuntimeVariable;
 import org.evosuite.testcase.execution.ExecutionResult;
 import org.evosuite.testcase.execution.ExecutionTracer;
@@ -65,6 +66,10 @@ public class IndividualTestStrategy extends TestGenerationStrategy {
 	
 	@Override
 	public TestSuiteChromosome generateTests() {
+		// In order to improve strategy's performance, in here we explicitly disable EvoSuite's
+		// archive, as it is not used anyway by this strategy
+		Properties.TEST_ARCHIVE = false;
+
 		// Set up search algorithm
 		LoggingUtils.getEvoLogger().info("* Setting up search algorithm for individual test generation");
 		ExecutionTracer.enableTraceCalls();
@@ -78,7 +83,7 @@ public class IndividualTestStrategy extends TestGenerationStrategy {
 		// Get list of goals
         List<TestFitnessFactory<? extends TestFitnessFunction>> goalFactories = getFitnessFactories();
 		// long goalComputationStart = System.currentTimeMillis();
-		List<TestFitnessFunction> goals = new ArrayList<TestFitnessFunction>();
+		List<TestFitnessFunction> goals = new ArrayList<>();
 		LoggingUtils.getEvoLogger().info("* Total number of test goals: ");
         for (TestFitnessFactory<? extends TestFitnessFunction> goalFactory : goalFactories) {
             goals.addAll(goalFactory.getCoverageGoals());
@@ -106,10 +111,11 @@ public class IndividualTestStrategy extends TestGenerationStrategy {
 
 		// Bootstrap with random testing to cover easy goals
 		//statistics.searchStarted(suiteGA);
+		ClientServices.getInstance().getClientNode().changeState(ClientState.SEARCH);
 
-		StoppingCondition stoppingCondition = getStoppingCondition();
-		TestSuiteChromosome suite = (TestSuiteChromosome) bootstrapRandomSuite(fitnessFunctions.get(0), goalFactories.get(0)); // FIXME: just one fitness and one factory?!
-		Set<Integer> covered = new HashSet<Integer>();
+		StoppingCondition<TestSuiteChromosome> stoppingCondition = getStoppingCondition();
+		TestSuiteChromosome suite = bootstrapRandomSuite(fitnessFunctions.get(0), goalFactories.get(0)); // FIXME: just one fitness and one factory?!
+		Set<Integer> covered = new HashSet<>();
 		int covered_goals = 0;
 		int num = 0;
 
@@ -187,7 +193,7 @@ public class IndividualTestStrategy extends TestGenerationStrategy {
 					// fitness_function.toString());
 					logger.info("Found solution, adding to test suite at "
 					        + MaxStatementsStoppingCondition.getNumExecutedStatements());
-					TestChromosome best = (TestChromosome) ga.getBestIndividual();
+					TestChromosome best = ga.getBestIndividual();
 					best.getTestCase().addCoveredGoal(fitnessFunction);
 					suite.addTest(best);
 					// Calculate and keep track of overall fitness
@@ -296,7 +302,7 @@ public class IndividualTestStrategy extends TestGenerationStrategy {
 	        List<? extends TestFitnessFunction> goals, Set<Integer> covered,
 	        TestChromosome best) {
 
-		Set<Integer> r = new HashSet<Integer>();
+		Set<Integer> r = new HashSet<>();
 		ExecutionResult result = best.getLastExecutionResult();
 		assert (result != null);
 		// if (result == null) {

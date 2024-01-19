@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -56,7 +56,7 @@ public final class SmtOperatorCollector implements SmtExprVisitor<Void, Void> {
 		return null;
 	}
 
-	private final Set<Operator> operators = new HashSet<Operator>();
+	private final Set<Operator> operators = new HashSet<>();
 
 	@Override
 	public Void visit(SmtOperation n, Void arg) {

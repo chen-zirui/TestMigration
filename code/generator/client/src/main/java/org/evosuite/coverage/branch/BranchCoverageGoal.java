@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -39,9 +39,16 @@ import org.evosuite.testcase.execution.ExecutionResult;
 public class BranchCoverageGoal implements Serializable, Comparable<BranchCoverageGoal> {
 
 	private static final long serialVersionUID = 2962922303111452419L;
-	
+
+	/**
+	 * The branch to be covered. If set to {@code null} it means we want to cover the root branch
+	 * of the given method, i.e., just call the method.
+	 */
 	private transient Branch branch;
-	
+
+	/**
+	 * Whether to make the branch instruction jump.
+	 */
 	private final boolean value;
 	private final String className;
 	private final String methodName;
@@ -60,17 +67,17 @@ public class BranchCoverageGoal implements Serializable, Comparable<BranchCovera
 	
 	/**
 	 * Can be used to create an arbitrary {@code BranchCoverageGoal} trying to cover the
-	 * given {@code Branch}
-	 * 
+	 * given {@code Branch}.
+	 *
 	 * <p>
 	 * If the given branch is {@code null}, this goal will try to cover the root branch
 	 * of the method identified by the given name - meaning it will just try to
-	 * call the method at hand
-	 * 
+	 * call the method at hand.
+	 *
 	 * <p>
 	 * Otherwise this goal will try to reach the given branch and if value is
-	 * true, make the branchInstruction jump and visa versa
-	 * 
+	 * true, make the branchInstruction jump and visa versa.
+	 *
 	 * @param branch
 	 *            a {@link org.evosuite.coverage.branch.Branch} object.
 	 * @param value
@@ -344,6 +351,13 @@ public class BranchCoverageGoal implements Serializable, Comparable<BranchCovera
 
 	@Override
 	public int compareTo(BranchCoverageGoal o) {
+		if(branch != null && o.getBranch() != null && branch.isInstrumented() != o.getBranch().isInstrumented()) {
+			if(branch.isInstrumented()) {
+				return 1;
+			} else {
+				return -1;
+			}
+		}
 		int diff = lineNumber - o.lineNumber;
 		if(diff == 0) {
 			return 0;

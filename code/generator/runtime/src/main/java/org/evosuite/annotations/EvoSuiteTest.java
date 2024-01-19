@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -35,7 +35,7 @@ public @interface EvoSuiteTest {
     /**
      * Default empty exception
      */
-    static class None extends Throwable {
+    class None extends Throwable {
         private static final long serialVersionUID = 2L;
 
         private None() {

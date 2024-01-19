@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -27,9 +27,7 @@ import org.evosuite.runtime.mock.OverrideMock;
 
 public class MockJComponent extends JComponent implements OverrideMock {
 
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1745297916366590682L;
 
 	public Dimension getPreferredSize() {

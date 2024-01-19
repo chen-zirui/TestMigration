@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -117,17 +117,17 @@ public final class EvoSuiteSolver extends Solver {
 			return satResult;
 		} else {
 			setConcreteValues(variables, initialValues);
-			log.debug("Returning null, search was not successful");
-			SolverResult unsatResult = SolverResult.newUNSAT();
-			return unsatResult;
+			log.debug("Returning unknown, search was not successful");
+			SolverResult unknownResult = SolverResult.newUnknown();
+			return unknownResult;
 		}
 
 	}
 
 	private static void randomizeValues(Set<Variable<?>> variables, Set<Object> constants) {
-		Set<String> stringConstants = new HashSet<String>();
-		Set<Long> longConstants = new HashSet<Long>();
-		Set<Double> realConstants = new HashSet<Double>();
+		Set<String> stringConstants = new HashSet<>();
+		Set<Long> longConstants = new HashSet<>();
+		Set<Double> realConstants = new HashSet<>();
 		for (Object o : constants) {
 			if (o instanceof String)
 				stringConstants.add((String) o);
@@ -166,7 +166,7 @@ public final class EvoSuiteSolver extends Solver {
 	}
 
 	private static Set<Object> getConstants(Collection<Constraint<?>> constraints) {
-		Set<Object> constants = new HashSet<Object>();
+		Set<Object> constants = new HashSet<>();
 		for (Constraint<?> c : constraints) {
 			constants.addAll(c.getConstants());
 		}

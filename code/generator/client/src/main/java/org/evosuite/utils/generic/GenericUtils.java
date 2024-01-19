@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,6 +19,7 @@
  */
 package org.evosuite.utils.generic;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -34,6 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GenericUtils {
+
+	/** Constant to represent @NotNull annotation */
+	public final static String NONNULL = "Nonnull";
 
 	public static boolean isAssignable(Type type, TypeVariable<?> typeVariable) {
 		boolean isAssignable = true;
@@ -174,7 +178,7 @@ public class GenericUtils {
 			return getMatchingTypeParameters((ParameterizedType) p1.getGenericComponentType(),
 			                                 (ParameterizedType) p2.getGenericComponentType());
 		} else {
-			Map<TypeVariable<?>, Type> map = new HashMap<TypeVariable<?>, Type>();
+			Map<TypeVariable<?>, Type> map = new HashMap<>();
 			return map;
 		}
 	}
@@ -189,7 +193,7 @@ public class GenericUtils {
 	public static Map<TypeVariable<?>, Type> getMatchingTypeParameters(
 	        ParameterizedType p1, ParameterizedType p2) {
 		logger.debug("Matching generic types between "+p1+" and "+p2);
-		Map<TypeVariable<?>, Type> map = new HashMap<TypeVariable<?>, Type>();
+		Map<TypeVariable<?>, Type> map = new HashMap<>();
 		if (!p1.getRawType().equals(p2.getRawType())) {
 			logger.debug("Raw types do not match!");
 			
@@ -217,8 +221,8 @@ public class GenericUtils {
 						logger.debug(a+" is a type variable: "+((TypeVariable<?>)a).getGenericDeclaration());
 						if(b instanceof TypeVariable<?>) {
 							logger.debug(b+" is a type variable: "+((TypeVariable<?>)b).getGenericDeclaration());
-							if(commonsMap.containsKey((TypeVariable<?>)a) && !(commonsMap.get((TypeVariable<?>)a) instanceof WildcardType) && !(commonsMap.get((TypeVariable<?>)a) instanceof TypeVariable<?>))
-								map.put((TypeVariable<?>)b, commonsMap.get((TypeVariable<?>)a));
+							if(commonsMap.containsKey(a) && !(commonsMap.get(a) instanceof WildcardType) && !(commonsMap.get(a) instanceof TypeVariable<?>))
+								map.put((TypeVariable<?>)b, commonsMap.get(a));
 							//else
 							//	map.put((TypeVariable<?>)a, b);
 						}
@@ -280,4 +284,25 @@ public class GenericUtils {
 
 		return map;
 	}
+
+	/**
+	 * Returns true if the annotation is present in the annotationList, false otherwise.
+	 * 
+	 * @param annotationList
+	 * @param annotationTypeName
+	 * @return boolean
+	 */
+	public static boolean isAnnotationTypePresent(Annotation[] annotationList, String annotationTypeName) {
+		for (Annotation annotation : annotationList) {
+
+			if ((null != annotationTypeName)
+					&& annotationTypeName.equalsIgnoreCase(annotation.annotationType().getSimpleName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	
 }

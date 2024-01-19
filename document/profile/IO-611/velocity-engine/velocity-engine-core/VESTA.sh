@@ -1,2 +1,0 @@
-export NOW_DIR=/****/TestMigration/resource/IO-611/velocity-engine/velocity-engine-core
-$PYTHON $PROJECT_DIR/main/VESTA.py IO-611 velocity-engine velocity-engine-core "org.apache.velocity.shaded.commons.io.FilenameUtils:normalize(java.lang.String,boolean)" velocity-engine-core-2.2-SNAPSHOT.jar //foo//bar

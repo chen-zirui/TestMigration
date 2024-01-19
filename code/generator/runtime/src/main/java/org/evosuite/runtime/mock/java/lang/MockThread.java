@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,6 +19,7 @@
  */
 package org.evosuite.runtime.mock.java.lang;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.evosuite.runtime.annotation.EvoSuiteExclude;
 import org.evosuite.runtime.RuntimeSettings;
 import org.evosuite.runtime.mock.MockFramework;
@@ -27,6 +28,7 @@ import org.evosuite.runtime.thread.ThreadCounter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +42,17 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MockThread extends Thread implements OverrideMock {
 
+    static {
+        final Integer javaVersion = Integer.valueOf(SystemUtils.JAVA_VERSION.split("\\.")[0]);
+        if(javaVersion < 11){
+            try {
+                Method destroy = MockThread.class.getMethod("destroy");
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     // ----- mock internals -------
 
     private static final Logger logger = LoggerFactory.getLogger(MockThread.class);
@@ -50,7 +63,7 @@ public class MockThread extends Thread implements OverrideMock {
         threadMap.clear();
     }
 
-    private boolean isSutRelated(){
+    private boolean isSutRelated() {
         String sut = RuntimeSettings.className;
         String threadName = this.getClass().getName();
         String targetName = target==null ? null : target.getClass().getName();
@@ -66,11 +79,11 @@ public class MockThread extends Thread implements OverrideMock {
         return  match(sut,threadName) || match(sut,targetName);
     }
 
-    private boolean match(String sut, String other){
-        if(other==null || other.length() < sut.length()){
+    private boolean match(String sut, String other) {
+        if(other==null || other.length() < sut.length()) {
             return false;
         }
-        if(other.length() == sut.length()){
+        if(other.length() == sut.length()) {
             //is the thread the SUT itself?
             return other.equals(sut);
         } else {
@@ -123,12 +136,12 @@ public class MockThread extends Thread implements OverrideMock {
         return Thread.activeCount();
     }
 
-    public static int enumerate(Thread tarray[]) {
+    public static int enumerate(Thread[] tarray) {
         return Thread.enumerate(tarray);
     }
 
     public static void dumpStack() {
-        if(!MockFramework.isEnabled()){
+        if(!MockFramework.isEnabled()) {
             Thread.dumpStack();
         } else {
             new MockException("Stack trace").printStackTrace();
@@ -136,7 +149,7 @@ public class MockThread extends Thread implements OverrideMock {
     }
 
     public static Map<Thread, StackTraceElement[]> getAllStackTraces() {
-        if(! MockFramework.isEnabled()){
+        if(!MockFramework.isEnabled()) {
             return Thread.getAllStackTraces();
         }
         //get actual running threads, and then replace stack traces
@@ -144,14 +157,14 @@ public class MockThread extends Thread implements OverrideMock {
         //this will ask for permissions, but we grant it anyway
         Set<Thread> threads =  Thread.getAllStackTraces().keySet();
         Map<Thread, StackTraceElement[]> m = new HashMap<>(threads.size());
-        for(Thread t : threads){
+        for(Thread t : threads) {
             m.put(t,MockThrowable.getDefaultStackTrace());
         }
 
         return m;
     }
 
-    public static boolean holdsLock(Object obj){
+    public static boolean holdsLock(Object obj) {
         return Thread.holdsLock(obj);
     }
 
@@ -216,12 +229,12 @@ public class MockThread extends Thread implements OverrideMock {
         mockSetup(name);
     }
 
-    private void mockSetup(String name){
-        if(!MockFramework.isEnabled()){
+    private void mockSetup(String name) {
+        if(!MockFramework.isEnabled()) {
             return;
         }
 
-        if(name == null){
+        if(name == null) {
             /*
                 If SUT did not specify any name, we need
                 to change the one automatically given by the JVM,
@@ -237,12 +250,12 @@ public class MockThread extends Thread implements OverrideMock {
     @EvoSuiteExclude
     public synchronized void start() {
 
-        if(!MockFramework.isEnabled()){
+        if(!MockFramework.isEnabled()) {
             super.start();
             return;
         }
 
-        if(!isSutRelated()){
+        if(!isSutRelated()) {
             //no point in starting those 3rd party threads
             return;
         }
@@ -274,10 +287,12 @@ public class MockThread extends Thread implements OverrideMock {
         return super.isInterrupted();
     }
 
-    @Override
+    // @Override
+    // No @Override to guarantee Java 11 compatibility
     @EvoSuiteExclude
     public void destroy() {
-        super.destroy();
+        // inlined super.destroy()
+        throw new NoSuchMethodError();
     }
 
 
@@ -299,7 +314,7 @@ public class MockThread extends Thread implements OverrideMock {
 
     @Override
     public StackTraceElement[] getStackTrace() {
-        if(!MockFramework.isEnabled()){
+        if(!MockFramework.isEnabled()) {
             return super.getStackTrace();
         }
         return MockThrowable.getDefaultStackTrace();
@@ -308,14 +323,14 @@ public class MockThread extends Thread implements OverrideMock {
 
     @Override
     public long getId() {
-        if(!MockFramework.isEnabled()){
+        if(!MockFramework.isEnabled()) {
             return super.getId();
         }
 
         synchronized (threadMap) {
             int identity = java.lang.System.identityHashCode(this);
             if (!threadMap.containsKey(identity)) {
-                threadMap.put(identity, Long.valueOf(threadMap.size()));
+                threadMap.put(identity, (long) threadMap.size());
             }
             return threadMap.get(identity);
         }

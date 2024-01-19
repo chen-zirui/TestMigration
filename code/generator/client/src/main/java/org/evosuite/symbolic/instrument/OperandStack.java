@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -118,7 +118,7 @@ final class OperandStack {
 			mv.visitIntInsn(SIPUSH, i);
 			return;
 		}
-		mv.visitLdcInsn(Integer.valueOf(i));
+		mv.visitLdcInsn(i);
 	}
 	
 	
@@ -270,7 +270,7 @@ final class OperandStack {
 		pushInt(paramNr);
 		pushInt(calleeLocalsIndex);
 		String signature = desc(VOID_TYPE, type, INT_TYPE, INT_TYPE);
-		mv.visitMethodInsn(INVOKESTATIC, VM_FQ, CALLER_STACK_PARAM, signature);
+		mv.visitMethodInsn(INVOKESTATIC, VM_FQ, CALLER_STACK_PARAM, signature, false);
 	}
 
 	/**

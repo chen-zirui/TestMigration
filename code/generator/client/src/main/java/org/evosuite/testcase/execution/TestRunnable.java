@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.evosuite.PackageInfo;
 import org.evosuite.Properties;
-import org.evosuite.runtime.Runtime;
 import org.evosuite.runtime.System.SystemExitException;
 import org.evosuite.runtime.jvm.ShutdownHookHandler;
 import org.evosuite.runtime.thread.KillSwitch;
@@ -91,13 +90,8 @@ public class TestRunnable implements InterfaceTestRunnable {
 		this.scope = scope;
 		this.observers = observers;
 		runFinished = false;
-		
-		KillSwitch killSwitch = new KillSwitch() {			
-			@Override
-			public void setKillSwitch(boolean kill) {
-				ExecutionTracer.setKillSwitch(kill);
-			}
-		};
+
+		KillSwitch killSwitch = ExecutionTracer::setKillSwitch;
 		Set<String> threadsToIgnore = new LinkedHashSet<>();
 		threadsToIgnore.add(TestCaseExecutor.TEST_EXECUTION_THREAD);
 		threadsToIgnore.addAll(Arrays.asList(Properties.IGNORE_THREADS));
@@ -139,9 +133,7 @@ public class TestRunnable implements InterfaceTestRunnable {
 	protected void informObservers_before(Statement s) {
 		ExecutionTracer.disable();
 		try {
-			for (ExecutionObserver observer : observers) {
-				observer.beforeStatement(s, scope);
-			}
+			observers.forEach(o -> o.beforeStatement(s, scope));
 		} finally {
 			ExecutionTracer.enable();
 		}
@@ -159,9 +151,7 @@ public class TestRunnable implements InterfaceTestRunnable {
 	protected void informObservers_after(Statement s, Throwable exceptionThrown) {
 		ExecutionTracer.disable();
 		try {
-			for (ExecutionObserver observer : observers) {
-				observer.afterStatement(s, scope, exceptionThrown);
-			}
+			observers.forEach(o -> o.afterStatement(s, scope, exceptionThrown));
 		} finally {
 			ExecutionTracer.enable();
 		}
@@ -170,9 +160,7 @@ public class TestRunnable implements InterfaceTestRunnable {
 	protected void informObservers_finished(ExecutionResult result) {
 		ExecutionTracer.disable();
 		try {
-			for (ExecutionObserver observer : observers) {
-				observer.testExecutionFinished(result, scope);
-			}
+			observers.forEach(o -> o.testExecutionFinished(result, scope));
 		} finally {
 			ExecutionTracer.enable();
 		}
@@ -186,7 +174,8 @@ public class TestRunnable implements InterfaceTestRunnable {
 
 		runFinished = false;
 		ExecutionResult result = new ExecutionResult(test, null);
-		Runtime.getInstance().resetRuntime();
+		// TODO: Moved this to TestCaseExecutor so it is not part of the test execution timeout
+		//		Runtime.getInstance().resetRuntime();
 		ExecutionTracer.enable();
 
 		PrintStream out = (Properties.PRINT_TO_SYSTEM ? System.out : new PrintStream(byteStream));
@@ -388,14 +377,18 @@ public class TestRunnable implements InterfaceTestRunnable {
 				logger.debug("Cause is null");
 			}
 		}
+//		logger.warn("Exception thrown in statement: " + s.getCode()
+//		        + " - " + exceptionThrown.getClass().getName() + " - "
+//		        + exceptionThrown.getMessage());
+//		for (StackTraceElement elem : exceptionThrown.getStackTrace()) {
+//			logger.warn(elem.toString());
+//		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public Map<Integer, Throwable> getExceptionsThrown() {
-		HashMap<Integer, Throwable> copy = new HashMap<Integer, Throwable>();
-		copy.putAll(exceptionsThrown);
-		return copy;
+		return new HashMap<>(exceptionsThrown);
 	}
 
 	/** {@inheritDoc} */

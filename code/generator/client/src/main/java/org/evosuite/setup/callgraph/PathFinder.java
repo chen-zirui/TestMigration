@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -42,7 +42,7 @@ public class PathFinder {
 		if(!g.containsVertex(startingVertex)){
 			return new HashSet<>();
 		}
-		PathFinderDFSIterator<E> dfs = new PathFinderDFSIterator<E>(g, startingVertex);
+		PathFinderDFSIterator<E> dfs = new PathFinderDFSIterator<>(g, startingVertex);
 		while (dfs.hasNext()) {
 			dfs.next();
 		}
@@ -53,7 +53,7 @@ public class PathFinder {
 		if(!g.containsVertex(startingVertex)){
 			return new HashSet<>();
 		}
-		PathFinderDFSIterator<E> dfs = new PathFinderDFSIterator<E>(g, startingVertex,true);
+		PathFinderDFSIterator<E> dfs = new PathFinderDFSIterator<>(g, startingVertex, true);
 		while (dfs.hasNext()) {
 			dfs.next();
 		}

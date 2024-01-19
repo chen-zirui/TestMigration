@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.symbolic.expr.bv;
 
 import java.util.HashSet;
@@ -31,7 +29,7 @@ import org.evosuite.symbolic.DSEStats;
 import org.evosuite.symbolic.expr.AbstractExpression;
 import org.evosuite.symbolic.expr.BinaryExpression;
 import org.evosuite.symbolic.expr.Expression;
-import org.evosuite.symbolic.expr.ExpressionExecutor;
+import org.evosuite.symbolic.expr.ExpressionEvaluator;
 import org.evosuite.symbolic.expr.ExpressionVisitor;
 import org.evosuite.symbolic.expr.Operator;
 import org.evosuite.symbolic.expr.Variable;
@@ -110,7 +108,7 @@ public final class StringBinaryToIntegerExpression extends
 	public String toString() {
 		if (op == Operator.INDEXOFC) {
 
-			Long longObject = (Long) right.accept(new ExpressionExecutor(),
+			Long longObject = (Long) right.accept(new ExpressionEvaluator(),
 					null);
 			return "(" + left + op.toString() + "\'"
 					+ Character.toChars(longObject.intValue())[0] + "\')";
@@ -144,7 +142,7 @@ public final class StringBinaryToIntegerExpression extends
 
 	@Override
 	public Set<Variable<?>> getVariables() {
-		Set<Variable<?>> variables = new HashSet<Variable<?>>();
+		Set<Variable<?>> variables = new HashSet<>();
 		variables.addAll(this.left.getVariables());
 		variables.addAll(this.right.getVariables());
 		return variables;
@@ -152,7 +150,7 @@ public final class StringBinaryToIntegerExpression extends
 
 	@Override
 	public Set<Object> getConstants() {
-		Set<Object> result = new HashSet<Object>();
+		Set<Object> result = new HashSet<>();
 		result.addAll(this.left.getConstants());
 		result.addAll(this.right.getConstants());
 		return result;

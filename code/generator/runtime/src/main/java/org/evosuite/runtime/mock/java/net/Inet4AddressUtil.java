@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,11 +19,9 @@
  */
 package org.evosuite.runtime.mock.java.net;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Constructor;
 import java.net.Inet4Address;
-import java.net.InetAddress;
 
 
 import org.slf4j.Logger;
@@ -75,7 +73,7 @@ public class Inet4AddressUtil {
 		return null; 
 	}
 	
-	public static Inet4Address createNewInstance(String hostName, byte addr[]){
+	public static Inet4Address createNewInstance(String hostName, byte[] addr){
 		try {
 			return constructorStringByteArray.newInstance(hostName,addr);
 		} catch ( SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {

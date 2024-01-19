@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -30,8 +30,8 @@ import org.evosuite.ga.Chromosome;
  *
  * @param <T> the chromosome type
  */
-public interface LocalSearch<T extends Chromosome> {
+public interface LocalSearch<T extends Chromosome<T>> {
 
-	public boolean doSearch(T individual, LocalSearchObjective<T> objective);
+	boolean doSearch(T individual, LocalSearchObjective<T> objective);
 	
 }

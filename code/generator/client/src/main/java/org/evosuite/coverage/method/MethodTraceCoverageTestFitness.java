@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,10 +19,13 @@
  */
 package org.evosuite.coverage.method;
 
+import org.evosuite.Properties;
+import org.evosuite.ga.archive.Archive;
 import org.evosuite.testcase.TestChromosome;
 import org.evosuite.testcase.TestFitnessFunction;
 import org.evosuite.testcase.execution.ExecutionResult;
-import org.evosuite.testcase.execution.MethodCall;
+
+import java.util.Objects;
 
 /**
  * Fitness function for a single test on a single method.
@@ -41,14 +44,10 @@ public class MethodTraceCoverageTestFitness extends TestFitnessFunction {
 	 * Constructor - fitness is specific to a method
 	 * @param className the class name
 	 * @param methodName the method name
-	 * @throws IllegalArgumentException
 	 */
 	public MethodTraceCoverageTestFitness(String className, String methodName) throws IllegalArgumentException{
-		if ((className == null) || (methodName == null)) {
-			throw new IllegalArgumentException("className and methodName cannot be null");
-		}
-		this.className = className;
-		this.methodName = methodName;
+		this.className = Objects.requireNonNull(className, "className cannot be null");
+		this.methodName = Objects.requireNonNull(methodName, "methodName cannot be null");
 	}
 
 	/**
@@ -87,13 +86,25 @@ public class MethodTraceCoverageTestFitness extends TestFitnessFunction {
 	@Override
 	public double getFitness(TestChromosome individual, ExecutionResult result) {
 		double fitness = 1.0;
-		for (MethodCall call : result.getTrace().getMethodCalls()) {
-			if (call.className.equals(className) && call.methodName.equals(methodName)) {
+		String thisCanonicalName = className + "." + methodName;
+		for (String key : result.getTrace().getMethodExecutionCount().keySet()) {
+			String canonicalName = key.replace('$', '.'); // Goals contain canonical method names
+			if (canonicalName.equals(thisCanonicalName)) {
 				fitness = 0.0;
 				break;
 			}
 		}
-		updateIndividual(this, individual, fitness);
+
+		updateIndividual(individual, fitness);
+
+		if (fitness == 0.0) {
+		  individual.getTestCase().addCoveredGoal(this);
+		}
+
+		if (Properties.TEST_ARCHIVE) {
+			Archive.getArchiveInstance().updateArchive(this, individual, fitness);
+		}
+
 		return fitness;
 	}
 
@@ -120,11 +131,9 @@ public class MethodTraceCoverageTestFitness extends TestFitnessFunction {
 		if (getClass() != obj.getClass())
 			return false;
 		MethodTraceCoverageTestFitness other = (MethodTraceCoverageTestFitness) obj;
-		if (className != other.className) {
+		if (! className.equals(other.className)) {
 			return false;
-		} else if (! methodName.equals(other.methodName))
-			return false;
-		return true;
+		} else return methodName.equals(other.methodName);
 	}
 
 	/* (non-Javadoc)

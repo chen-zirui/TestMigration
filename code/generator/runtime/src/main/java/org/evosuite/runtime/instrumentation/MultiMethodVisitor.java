@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -22,11 +22,7 @@ package org.evosuite.runtime.instrumentation;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.Attribute;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.*;
 
 /**
  * MethodVisitor that acts as a proxy to two other visitors
@@ -38,7 +34,7 @@ public class MultiMethodVisitor extends MethodVisitor {
 	MethodVisitor mv1;
 	MethodVisitor mv2;
 
-	Map<Label, Label> label_mapping = new HashMap<Label, Label>();
+	Map<Label, Label> label_mapping = new HashMap<>();
 
 	/**
 	 * <p>Constructor for MultiMethodVisitor.</p>
@@ -47,7 +43,7 @@ public class MultiMethodVisitor extends MethodVisitor {
 	 * @param mv2 a {@link org.objectweb.asm.MethodVisitor} object.
 	 */
 	public MultiMethodVisitor(MethodVisitor mv1, MethodVisitor mv2) {
-		super(Opcodes.ASM5);
+		super(Opcodes.ASM9);
 		this.mv1 = mv1;
 		this.mv2 = mv2;
 	}
@@ -263,6 +259,13 @@ public class MultiMethodVisitor extends MethodVisitor {
 	public void visitMultiANewArrayInsn(String arg0, int arg1) {
 		mv1.visitMultiANewArrayInsn(arg0, arg1);
 		mv2.visitMultiANewArrayInsn(arg0, arg1);
+	}
+
+
+	@Override
+	public void visitInvokeDynamicInsn(String name, String desc, Handle bsm, Object... bsmArgs) {
+		mv1.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
+		mv2.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
 	}
 
 	/* (non-Javadoc)

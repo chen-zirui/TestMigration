@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
+
 package org.evosuite.testcase.execution;
 
 import java.util.HashMap;
@@ -28,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.evosuite.coverage.dataflow.DefUse;
+import org.evosuite.coverage.line.ReachingSpec;
 import org.evosuite.setup.CallContext;
 import org.evosuite.testcase.execution.ExecutionTraceImpl.BranchEval;
 
@@ -714,7 +713,17 @@ public class ExecutionTraceProxy implements ExecutionTrace, Cloneable {
 	public void getStaticPassed(String classNameWithDots, String fieldName) {
 		trace.getStaticPassed(classNameWithDots, fieldName);
 	}
-
+	
+	@Override
+	public void enteredMethodWithArgument(Object... value) {
+		trace.enteredMethodWithArgument(value);
+	}
+	
+	@Override
+	public List<List<Object>> getArgumentsPassedToTargetFunction() {
+		return trace.getArgumentsPassedToTargetFunction();
+	}
+	
 	@Override
 	public Set<String> getClassesWithStaticWrites() {
 		return trace.getClassesWithStaticWrites();
@@ -735,4 +744,20 @@ public class ExecutionTraceProxy implements ExecutionTrace, Cloneable {
 		return trace.getInitializedClasses();
 	}
 
+	@Override
+	public ReachingSpec getSpecOfArgumentsToTargetFunction() {
+		return trace.getSpecOfArgumentsToTargetFunction();
+	}
+	@Override
+	public double similarityOfActualToSpec() {
+		return trace.similarityOfActualToSpec();
+	}
+
+	@Override
+	public void compareAgainstSpecIfCheckingAtEnd(String classname, String methodname) {
+		trace.compareAgainstSpecIfCheckingAtEnd(classname, methodname);
+	}
+	
+
+	
 }

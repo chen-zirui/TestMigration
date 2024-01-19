@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -28,6 +28,8 @@ import java.lang.reflect.Field;
  * Created by gordon on 28/01/2016.
  */
 public class MockDefaultListSelectionModel extends DefaultListSelectionModel implements OverrideMock {
+
+    private static final long serialVersionUID = 8871874273079985592L;
 
     public String toString() {
         String s =  ((getValueIsAdjusting()) ? "~" : "=");

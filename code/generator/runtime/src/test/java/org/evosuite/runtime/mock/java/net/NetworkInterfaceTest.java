@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -54,7 +54,7 @@ public class NetworkInterfaceTest {
 			
 			Assert.assertNotNull(nis.getNetworkInterface());
 			Assert.assertNotNull(nis.getNetworkInterface().getName());
-			Assert.assertTrue(! nis.getNetworkInterface().getName().trim().isEmpty());
+            Assert.assertFalse(nis.getNetworkInterface().getName().trim().isEmpty());
 			Assert.assertTrue(nis.getNetworkInterface().getIndex() > 0); //check that it is set, and we did not put any 0 
 		}
 		

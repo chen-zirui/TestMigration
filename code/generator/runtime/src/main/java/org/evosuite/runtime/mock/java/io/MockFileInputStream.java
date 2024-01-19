@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -59,7 +59,7 @@ public class MockFileInputStream extends FileInputStream implements LeakingResou
 	public MockFileInputStream(String name) throws FileNotFoundException {
 		this( name != null ? 
 						(!MockFramework.isEnabled() ? new File(name) : new MockFile(name)) : 
-							null
+				(File)null
 				);
 	}
 
@@ -110,7 +110,7 @@ public class MockFileInputStream extends FileInputStream implements LeakingResou
 		return NativeMockedIO.read(path, position); 
 	}
 
-	private  int readBytes(byte b[], int off, int len) throws IOException{
+	private  int readBytes(byte[] b, int off, int len) throws IOException{
 
 		if(!MockFramework.isEnabled()){
 			return super.read(b, off, len);
@@ -176,12 +176,12 @@ public class MockFileInputStream extends FileInputStream implements LeakingResou
 	}
 
 	@Override
-	public int read(byte b[]) throws IOException {
+	public int read(byte[] b) throws IOException {
 		return readBytes(b, 0, b.length);
 	}
 
 	@Override
-	public int read(byte b[], int off, int len) throws IOException {
+	public int read(byte[] b, int off, int len) throws IOException {
 		return readBytes(b, off, len);
 	}
 

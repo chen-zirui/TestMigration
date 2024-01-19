@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -20,7 +20,8 @@
 package org.evosuite.instrumentation;
 
 import org.evosuite.PackageInfo;
-import org.evosuite.testcase.execution.ExecutionTrace;
+import org.evosuite.coverage.line.ReachabilityCoverageFactory;
+import org.evosuite.coverage.line.ReachabilitySpecUnderInferenceUtils;
 import org.evosuite.testcase.execution.ExecutionTracer;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -35,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class ReturnValueAdapter extends MethodVisitor {
 
 	@SuppressWarnings("unused")
-	private static Logger logger = LoggerFactory.getLogger(LineNumberMethodAdapter.class);
+	private static final Logger logger = LoggerFactory.getLogger(LineNumberMethodAdapter.class);
 
 	private final String fullMethodName;
 
@@ -53,7 +54,7 @@ public class ReturnValueAdapter extends MethodVisitor {
 	 */
 	public ReturnValueAdapter(MethodVisitor mv, String className, String methodName,
 	        String desc) {
-		super(Opcodes.ASM5, mv);
+		super(Opcodes.ASM9, mv);
 		fullMethodName = methodName + desc;
 		this.methodName = methodName;
 		this.className = className;
@@ -67,6 +68,33 @@ public class ReturnValueAdapter extends MethodVisitor {
 	/** {@inheritDoc} */
 	@Override
 	public void visitInsn(int opcode) {
+		
+if (ReachabilityCoverageFactory.targetCalleeMethod == null ) {
+			
+			// try to init again. maybe we forgot to call init.
+			ReachabilitySpecUnderInferenceUtils.init();
+			
+			
+		}
+		
+
+	
+		
+		
+//		int numberOfArgumentsOfCalleeMethod = ReachabilitySpecUnderInferenceUtils.calleeSpecification == null ? 0 :
+//			ReachabilitySpecUnderInferenceUtils.calleeSpecification.argBoolInspectors.size();
+//		
+//		int numberOfArgumentsOfCurrentMethod = countChar(this.desc.split("\\)")[0], ';');
+//		
+		if (
+				ReachabilityCoverageFactory.targetCalleeMethod != null 
+				&& ReachabilityCoverageFactory.targetCalleeMethod.contains(ReachabilityCoverageFactory.descriptorToActualName(fullMethodName)) 
+//				|| ReachabilityCoverageFactory.targetCalleeMethod.contains("")
+				
+				) {
+			
+			logger.warn("Return value adaptor: matching. methodName=" + fullMethodName);
+			
 		if (!methodName.equals("<clinit>")) {
 			switch (opcode) {
 			case Opcodes.IRETURN:
@@ -91,6 +119,8 @@ public class ReturnValueAdapter extends MethodVisitor {
 			default:
 				break;
 			}
+		}
+		
 		}
 		super.visitInsn(opcode);
 

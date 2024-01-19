@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -54,7 +54,7 @@ public final class I_ParseInt extends SymbolicFunction {
 				SymbolicHeap.$STRING_VALUE, conc_string, symb_string_ref,
 				conc_string);
 
-		long longValue = (long) conc_integer;
+		long longValue = conc_integer;
 
 		StringToIntegerCast parse_int_value = new StringToIntegerCast(
 				symb_string_value, longValue);

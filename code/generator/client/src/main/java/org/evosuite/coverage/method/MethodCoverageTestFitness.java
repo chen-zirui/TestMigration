@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -19,17 +19,23 @@
  */
 package org.evosuite.coverage.method;
 
-import org.evosuite.testcase.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+
+import org.evosuite.Properties;
+import org.evosuite.ga.archive.Archive;
+import org.evosuite.testcase.TestChromosome;
+import org.evosuite.testcase.TestFitnessFunction;
 import org.evosuite.testcase.execution.ExecutionResult;
 import org.evosuite.testcase.statements.ConstructorStatement;
 import org.evosuite.testcase.statements.EntityWithParametersStatement;
 import org.evosuite.testcase.statements.MethodStatement;
 import org.evosuite.testcase.statements.Statement;
 
-import java.util.Set;
-
 /**
- * Fitness function for a single test on a single method (no exception)
+ * Fitness function for a single test on a single method (including calls that throw exceptions)
  *
  * @author Gordon Fraser, Jose Miguel Rojas
  */
@@ -45,14 +51,10 @@ public class MethodCoverageTestFitness extends TestFitnessFunction {
      * Constructor - fitness is specific to a method
      * @param className the class name
      * @param methodName the method name
-     * @throws IllegalArgumentException
      */
-    public MethodCoverageTestFitness(String className, String methodName) throws IllegalArgumentException{
-        if ((className == null) || (methodName == null)) {
-            throw new IllegalArgumentException("className and methodName cannot be null");
-        }
-        this.className = className;
-        this.methodName = methodName;
+    public MethodCoverageTestFitness(String className, String methodName) {
+        this.className = Objects.requireNonNull(className, "className cannot be null");
+        this.methodName = Objects.requireNonNull(methodName, "methodName cannot be null");
     }
 
     /**
@@ -92,8 +94,12 @@ public class MethodCoverageTestFitness extends TestFitnessFunction {
     public double getFitness(TestChromosome individual, ExecutionResult result) {
         double fitness = 1.0;
 
-        Set<Integer> exceptionPositions = result.getPositionsWhereExceptionsWereThrown();
+        List<Integer> exceptionPositions = asSortedList(result.getPositionsWhereExceptionsWereThrown());
         for (Statement stmt : result.test) {
+            if (!isValidPosition(exceptionPositions, stmt.getPosition())) {
+              break;
+            }
+
             if ((stmt instanceof MethodStatement || stmt instanceof ConstructorStatement)) {
                 EntityWithParametersStatement ps = (EntityWithParametersStatement)stmt;
                 String className  = ps.getDeclaringClassName();
@@ -105,11 +111,34 @@ public class MethodCoverageTestFitness extends TestFitnessFunction {
                     break;
                 }
             }
-            if(exceptionPositions.contains(stmt.getPosition()))
-                break;
         }
-        updateIndividual(this, individual, fitness);
+
+        updateIndividual(individual, fitness);
+
+        if (fitness == 0.0) {
+            individual.getTestCase().addCoveredGoal(this);
+        }
+
+        if (Properties.TEST_ARCHIVE) {
+            Archive.getArchiveInstance().updateArchive(this, individual, fitness);
+        }
+
+//        logger.warn("method :" +  toString() + " fitness= " + fitness);
         return fitness;
+    }
+
+    private boolean isValidPosition(List<Integer> exceptionPositions, Integer position) {
+        if (Properties.BREAK_ON_EXCEPTION) {
+            return exceptionPositions.isEmpty() || position <= exceptionPositions.get(0);
+        } else {
+            return true;
+        }
+    }
+
+    private <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
+        List<T> list = new ArrayList<>(c);
+        java.util.Collections.sort(list);
+        return list;
     }
 
     /** {@inheritDoc} */
@@ -137,9 +166,7 @@ public class MethodCoverageTestFitness extends TestFitnessFunction {
         MethodCoverageTestFitness other = (MethodCoverageTestFitness) obj;
         if (!className.equals(other.className)) {
             return false;
-        } else if (! methodName.equals(other.methodName))
-            return false;
-        return true;
+        } else return methodName.equals(other.methodName);
     }
 
     /* (non-Javadoc)

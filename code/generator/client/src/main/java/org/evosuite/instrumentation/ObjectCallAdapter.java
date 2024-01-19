@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -51,7 +51,7 @@ public class ObjectCallAdapter extends MethodVisitor {
 	 *            a {@link java.util.Map} object.
 	 */
 	public ObjectCallAdapter(MethodVisitor mv, Map<String, String> descriptors) {
-		super(Opcodes.ASM5, mv);
+		super(Opcodes.ASM9, mv);
 		this.descriptors = descriptors;
 	}
 

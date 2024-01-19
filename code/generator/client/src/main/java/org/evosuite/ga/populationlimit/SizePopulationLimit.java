@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * 
- */
 package org.evosuite.ga.populationlimit;
 
 import java.util.List;
@@ -33,20 +30,33 @@ import org.evosuite.ga.Chromosome;
  *
  * @author fraser
  */
-public class SizePopulationLimit implements PopulationLimit {
+public class SizePopulationLimit<T extends Chromosome<T>> implements PopulationLimit<T> {
 
 	private static final long serialVersionUID = 7978512501601348014L;
+
+	public SizePopulationLimit() {
+	}
+
+	/**
+	 * Copy constructor.
+	 *
+	 * This constructor is used by {@link org.evosuite.ga.metaheuristics.TestSuiteAdapter} to adapt the generic type
+	 * parameter.
+	 *
+	 * This constructor shall preserve the current state of the SizePopulationLimit (if existing).
+	 *
+	 * @param other
+	 */
+	public SizePopulationLimit(SizePopulationLimit<?> other) {
+	}
 
 	/* (non-Javadoc)
 	 * @see org.evosuite.ga.PopulationLimit#isPopulationFull(java.util.List)
 	 */
 	/** {@inheritDoc} */
 	@Override
-	public boolean isPopulationFull(List<? extends Chromosome> population) {
-		int size = 0;
-		for (Chromosome chromosome : population)
-			size += chromosome.size();
-
+	public boolean isPopulationFull(List<T> population) {
+		final int size = population.stream().mapToInt(Chromosome::size).sum();
 		return size >= Properties.POPULATION;
 	}
 

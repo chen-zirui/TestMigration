@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -27,12 +27,15 @@ import org.evosuite.testsuite.TestSuiteChromosome;
  *
  * @author Jose Miguel Rojas
  */
-public abstract class DirectSequenceOutputVariableFactory<T extends Number> extends SequenceOutputVariableFactory {
+public class DirectSequenceOutputVariableFactory<T extends Number> extends SequenceOutputVariableFactory<T> {
 
     protected T value;
+    private final Class<T> type;
 
-    public DirectSequenceOutputVariableFactory(RuntimeVariable variable) {
+    public DirectSequenceOutputVariableFactory(RuntimeVariable variable, Class<T> type, T startValue) {
         super(variable);
+        this.type = type;
+        this.value = startValue;
     }
 
     @Override
@@ -47,4 +50,22 @@ public abstract class DirectSequenceOutputVariableFactory<T extends Number> exte
     public void setValue(T value) {
         this.value = value;
     };
+    
+    @SuppressWarnings("unchecked")
+    public void setValue(Object value) {
+      if(this.type.isInstance(value)) {
+        this.setValue((T)value);
+      } else {
+        throw new IllegalArgumentException("value of type " + value.getClass().getName() 
+            + " is incompatible with expected type " +  this.type.getName());
+      }
+    }
+    
+    public static DirectSequenceOutputVariableFactory<Double> getDouble(RuntimeVariable variable) {
+      return new DirectSequenceOutputVariableFactory<>(variable, Double.class, 0.0);
+    }
+    
+    public static DirectSequenceOutputVariableFactory<Integer> getInteger(RuntimeVariable variable) {
+      return new DirectSequenceOutputVariableFactory<>(variable, Integer.class, 0);
+    }
 }

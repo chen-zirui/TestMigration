@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -38,11 +38,11 @@ public final class Capturer {
 	private static CaptureLog currentLog;
 	private static boolean isCaptureStarted = false;
 	private static boolean isShutdownHookAdded = false;
-	private static final ArrayList<CaptureLog> logs = new ArrayList<CaptureLog>();
+	private static final ArrayList<CaptureLog> logs = new ArrayList<>();
 
 	public static final String DEFAULT_SAVE_LOC = "captured.log";
 
-	private static final ArrayList<String[]> classesToBeObserved = new ArrayList<String[]>();
+	private static final ArrayList<String[]> classesToBeObserved = new ArrayList<>();
 
 	private static final transient Logger logger = LoggerFactory.getLogger(Capturer.class);
 
@@ -167,8 +167,8 @@ public final class Capturer {
 			throw new CapturerException(msg);
 		}
 
-		final ArrayList<String> args = new ArrayList<String>(
-		        Arrays.asList(classesToBeObservedString.split("\\s+")));
+		final ArrayList<String> args = new ArrayList<>(
+				Arrays.asList(classesToBeObservedString.split("\\s+")));
 		if (args.isEmpty()) {
 			final String msg = "no class to be observed specified";
 			logger.error(msg);
@@ -223,10 +223,15 @@ public final class Capturer {
 			final CaptureLog log = currentLog;
 			currentLog = null;
 
-			logger.info("Capturer has been stopped successfully");
+			logger.warn("Capturer has been stopped successfully");
 
 			FieldRegistry.clear();
-			logger.debug("Done");
+			logger.warn("stopCapture Done");
+			try {
+				throw new RuntimeException("stop Capture done");
+			} catch (Exception e) {
+				logger.error("stop capture done", e);
+			}
 			return log;
 		}
 
@@ -249,17 +254,22 @@ public final class Capturer {
 				//(currentLog) {
 				setCapturing(false);
 
-				if (logger.isDebugEnabled()) {
-					logger.debug("Method call captured:  captureId={} receiver={} type={} method={} methodDesc={} params={}",
+//				if (logger.isDebugEnabled()) {
+					logger.info("Method call captured:  captureId={} receiver={} type={} method={} methodDesc={} params={}",
 							captureId, System.identityHashCode(receiver),
 							receiver.getClass().getName(), methodName,
 							methodDesc, Arrays.toString(methodParams));
-				}
+//				}
 				
 				currentLog.log(captureId, receiver, methodName, methodDesc, methodParams);
 				if(TimeController.getInstance().isThereStillTimeInThisPhase())
 					setCapturing(true);
 				//}
+			} else {
+				logger.info("Method call not captured:  captureId={} receiver={} type={} method={} methodDesc={} params={}",
+						captureId, System.identityHashCode(receiver),
+						receiver.getClass().getName(), methodName,
+						methodDesc, Arrays.toString(methodParams));
 			}
 		} catch(Throwable t) {
 			// TODO: Handle properly?

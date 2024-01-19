@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -32,7 +32,7 @@ import org.evosuite.utils.Randomness;
  *
  * @author Gordon Fraser
  */
-public class SteadyStateGA<T extends Chromosome> extends MonotonicGA<T> {
+public class SteadyStateGA<T extends Chromosome<T>> extends MonotonicGA<T> {
 
 	private static final long serialVersionUID = 7301010503732698233L;
 	
@@ -52,7 +52,6 @@ public class SteadyStateGA<T extends Chromosome> extends MonotonicGA<T> {
 	 *
 	 * Perform one iteration of the search
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	protected void evolve() {
 		logger.debug("Generating offspring");
@@ -61,8 +60,8 @@ public class SteadyStateGA<T extends Chromosome> extends MonotonicGA<T> {
 		T parent1 = selectionFunction.select(population);
 		T parent2 = selectionFunction.select(population);
 		
-		T offspring1 = (T)parent1.clone();
-		T offspring2 = (T)parent2.clone();
+		T offspring1 = parent1.clone();
+		T offspring2 = parent2.clone();
 
 		try {
 			// Crossover

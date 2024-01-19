@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -36,7 +36,7 @@ public class CreateClassResetMethodAdapter extends MethodVisitor {
 
 	public CreateClassResetMethodAdapter(MethodVisitor mv, String className,
 			List<StaticField> staticFields, List<String> finalFields) {
-		super(Opcodes.ASM5, mv);
+		super(Opcodes.ASM9, mv);
 		this.className = className;
 		this.staticFields = staticFields;
 		this.finalFields = finalFields;
@@ -51,6 +51,7 @@ public class CreateClassResetMethodAdapter extends MethodVisitor {
 					&& !staticField.name.startsWith("__cobertura")
 					&& !staticField.name.startsWith("$jacoco")
 					&& !staticField.name.startsWith("$VRc") // Old Emma
+					&& !staticField.name.startsWith("$gzoltar")
 					) {
 
 				if (staticField.value != null) {

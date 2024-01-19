@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,9 +17,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- *
- */
+
 package org.evosuite.junit.writer;
 
 import org.evosuite.Properties;
@@ -195,7 +193,7 @@ public class TestSuiteWriter implements Opcodes {
             throw new IllegalArgumentException("Test classes should have name ending with 'Test'. Invalid input name: " + name);
         }
 
-        List<File> generated = new ArrayList<File>();
+        List<File> generated = new ArrayList<>();
         String dir = TestSuiteWriterUtils.makeDirectory(directory);
         String content = "";
 
@@ -204,20 +202,19 @@ public class TestSuiteWriter implements Opcodes {
         LoopCounter.getInstance().setActive(true); //be sure it is active here, as JUnit checks might have left it to false
 
         List<ExecutionResult> results = new ArrayList<>();
-        for (int i = 0; i < testCases.size(); i++) {
-            TestCase test = testCases.get(i);
+        for (TestCase test : testCases) {
             boolean added = false;
-            if(!TimeController.getInstance().hasTimeToExecuteATestCase()) {
+            if (!TimeController.getInstance().hasTimeToExecuteATestCase()) {
                 logger.info("Using cached result");
-                for(ExecutionResult result : cachedResults) {
-                    if(result != null && result.test == test) {
+                for (ExecutionResult result : cachedResults) {
+                    if (result != null && result.test == test) {
                         results.add(result);
                         added = true;
                         break;
                     }
                 }
             }
-            if(!added) {
+            if (!added) {
                 ExecutionResult result = runTest(test);
                 results.add(result);
             }
@@ -234,7 +231,13 @@ public class TestSuiteWriter implements Opcodes {
         // Avoid downcasts that could break
         removeUnnecessaryDownCasts(results);
 
-        if (Properties.OUTPUT_GRANULARITY == OutputGranularity.MERGED) {
+        // Sometimes some timeouts lead to assertions being attached to statements
+        // related to exceptions. This is not currently handled, so as a workaround
+        // let's try to remove any remaining assertions. TODO: Better solution
+        removeAssertionsAfterException(results);
+
+
+        if (Properties.OUTPUT_GRANULARITY == OutputGranularity.MERGED || testCases.size() == 0) {
             File file = new File(dir + "/" + name + ".java");
             //executor.newObservers();
             content = getUnitTestsAllInSameFile(name, results);
@@ -251,7 +254,7 @@ public class TestSuiteWriter implements Opcodes {
             }
         }
 
-        if (Properties.TEST_SCAFFOLDING) {
+        if (Properties.TEST_SCAFFOLDING && !Properties.NO_RUNTIME_DEPENDENCY) {
             String scaffoldingName = Scaffolding.getFileName(name);
             File file = new File(dir + "/" + scaffoldingName + ".java");
             String scaffoldingContent = Scaffolding.getScaffoldingFileContent(name, results,
@@ -293,6 +296,18 @@ public class TestSuiteWriter implements Opcodes {
         }
     }
 
+    private void removeAssertionsAfterException(List<ExecutionResult> results) {
+        for(ExecutionResult result : results) {
+            if(result.noThrownExceptions())
+                continue;
+            int exceptionPosition = result.getFirstPositionOfThrownException();
+            // TODO: Not clear how that can happen...
+            if(result.test.size() > exceptionPosition)
+                result.test.getStatement(exceptionPosition).removeAssertions();
+        }
+    }
+
+
     /**
      * Create JUnit file for given class name
      *
@@ -311,7 +326,7 @@ public class TestSuiteWriter implements Opcodes {
 
         builder.append(getHeader(name, name, results));
 
-        if (!Properties.TEST_SCAFFOLDING) {
+        if (!Properties.TEST_SCAFFOLDING && !Properties.NO_RUNTIME_DEPENDENCY) {
             builder.append(new Scaffolding().getBeforeAndAfterMethods(name, wasSecurityException, results));
         }
         
@@ -388,8 +403,8 @@ public class TestSuiteWriter implements Opcodes {
      */
     protected String getImports(List<ExecutionResult> results) {
         StringBuilder builder = new StringBuilder();
-        Set<Class<?>> imports = new HashSet<Class<?>>();
-        Set<Class<?>> accessedClasses = new HashSet<Class<?>>();
+        Set<Class<?>> imports = new HashSet<>();
+        Set<Class<?>> accessedClasses = new HashSet<>();
         boolean wasSecurityException = TestSuiteWriterUtils.hasAnySecurityException(results);
         boolean hasException = false;
 
@@ -406,13 +421,14 @@ public class TestSuiteWriter implements Opcodes {
 
         if(doesUseMocks(results)){
             String mockito = Mockito.class.getCanonicalName();
-            String extension = MockitoExtension.class.getCanonicalName();
             builder.append("import static "+mockito+".*;"+NEWLINE);
-            builder.append("import static "+extension+".*;"+NEWLINE);
+            // MockitoExtension is now deprecated
+            //String extension = MockitoExtension.class.getCanonicalName();
+            //builder.append("import static "+extension+".*;"+NEWLINE);
             imports.add(ViolatedAssumptionAnswer.class);
         }
 
-        if(hasException) {
+        if(hasException && !Properties.NO_RUNTIME_DEPENDENCY) {
         	builder.append("import static "+ EvoAssertions.class.getCanonicalName()+".*;"+NEWLINE);
         }
 
@@ -421,7 +437,7 @@ public class TestSuiteWriter implements Opcodes {
             imports.add(DebugGraphics.class);
         }
 
-        if (TestSuiteWriterUtils.needToUseAgent()) {
+        if (TestSuiteWriterUtils.needToUseAgent() && !Properties.NO_RUNTIME_DEPENDENCY) {
             imports.add(EvoRunner.class);
             imports.add(EvoRunnerParameters.class);
             imports.add(RunWith.class);
@@ -461,9 +477,13 @@ public class TestSuiteWriter implements Opcodes {
             importNames.add(java.util.concurrent.TimeUnit.class.getCanonicalName());
         }
 
-        if (!Properties.TEST_SCAFFOLDING) {
+        if (!Properties.TEST_SCAFFOLDING && !Properties.NO_RUNTIME_DEPENDENCY) {
             importNames.addAll(Scaffolding.getScaffoldingImports(wasSecurityException, results));
         }
+
+        // If a CodeUnderTestException happens, the test will be chopped before that exception
+        // but it would still be in the imports
+        importNames.remove(CodeUnderTestException.class.getCanonicalName());
 
         List<String> importsSorted = new ArrayList<>(importNames);
 
@@ -512,13 +532,13 @@ public class TestSuiteWriter implements Opcodes {
         builder.append(adapter.getImports());
         builder.append(getImports(results));
 
-        if (TestSuiteWriterUtils.needToUseAgent()) {
+        if (TestSuiteWriterUtils.needToUseAgent() && !Properties.NO_RUNTIME_DEPENDENCY) {
             builder.append(getRunner());
         }
 
         builder.append(adapter.getClassDefinition(test_name));
 
-        if (Properties.TEST_SCAFFOLDING) {
+        if (Properties.TEST_SCAFFOLDING && !Properties.NO_RUNTIME_DEPENDENCY) {
             builder.append(" extends " + Scaffolding.getFileName(scaffolding_name));
         }
 
@@ -552,10 +572,6 @@ public class TestSuiteWriter implements Opcodes {
             list.add("separateClassLoader = true");
         }
 
-        if(Properties.JEE){
-            list.add("useJEE = true");
-        }
-        
         if (Properties.REPLACE_GUI) {
             list.add("mockGUI = true");
         }

@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -21,6 +21,7 @@ package org.evosuite.ga;
 
 import java.io.Serializable;
 
+import org.evosuite.runtime.util.AtMostOnceLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,32 +30,33 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Gordon Fraser
  */
-public abstract class FitnessFunction<T extends Chromosome> implements Serializable {
+public abstract class FitnessFunction<T extends Chromosome<T>> implements Serializable {
 
 	private static final long serialVersionUID = -8876797554111396910L;
 
 	/** Constant <code>logger</code> */
 	protected static final Logger logger = LoggerFactory.getLogger(FitnessFunction.class);
 
-	/**
-	 * Make sure that the individual gets to know about its fitness
-	 * 
-	 * @param individual
-	 *            a {@link org.evosuite.ga.Chromosome} object.
-	 * @param fitness
-	 *            a double.
-	 */
-	protected void updateIndividual(FitnessFunction<?> ff, T individual, double fitness) {
-		individual.setFitness(ff, fitness);
-	}
-	
-	protected void updateIndividual(FitnessFunction<?> ff, T individual, double fitness, int toCoverTargets) {
-		individual.setFitness(ff, fitness);
-	}
+    /**
+     * Make sure that the individual gets to know about its fitness
+     *
+     * @param individual
+     *            a {@link org.evosuite.ga.Chromosome} object.
+     * @param fitness
+     *            a double.
+     */
+    protected void updateIndividual(T individual, double fitness) {
+//    	AtMostOnceLogger.warn(logger, "fitness function of " + this + " is =" + fitness);
+        individual.setFitness(this, fitness);
+        // the following assumes updateIndividual is called from a 'getFitness' method,
+        // which seems to be case for all classes that extends 'FitnessFunction'
+        individual.increaseNumberOfEvaluations();
+    }
 
 	/**
 	 * If the fitness function as an archive, returns the best individual in the archive.
 	 * returns null otherwise
+	 *
 	 * @return
 	 */
 	public T getBestStoredIndividual(){

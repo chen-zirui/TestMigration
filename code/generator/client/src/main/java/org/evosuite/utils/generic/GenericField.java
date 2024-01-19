@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -17,19 +17,15 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with EvoSuite. If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- *
- */
+
 package org.evosuite.utils.generic;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.evosuite.TestGenerationContext;
 import org.evosuite.ga.ConstructionFailedException;
 import org.evosuite.setup.TestClusterGenerator;
@@ -93,6 +89,16 @@ public class GenericField extends GenericAccessibleObject<GenericField> {
 			        + returnType.getClassName() + " for field " + toString());
 		}
 		*/
+	}
+
+	@Override
+	public TypeVariable<?>[] getTypeParameters() {
+
+		if(field.getGenericType() instanceof TypeVariable) {
+			return ArrayUtils.toArray((TypeVariable<?>)field.getGenericType());
+		} else {
+			return super.getTypeParameters();
+		}
 	}
 
 	@Override
@@ -239,6 +245,20 @@ public class GenericField extends GenericAccessibleObject<GenericField> {
 			                                         + field.getDeclaringClass());
 		}
 	}
+
+	@Override
+	public boolean isPublic() { return Modifier.isPublic(field.getModifiers()); }
+
+	@Override
+	public boolean isPrivate() { return Modifier.isPrivate(field.getModifiers()); }
+
+	@Override
+	public boolean isProtected() { return Modifier.isProtected(field.getModifiers()); }
+
+	@Override
+	public boolean isDefault() { return !isPublic() && !isPrivate() && !isProtected(); }
+
+
 
 	@Override
 	public int hashCode() {

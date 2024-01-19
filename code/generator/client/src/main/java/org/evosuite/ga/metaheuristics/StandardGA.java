@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -26,7 +26,6 @@ import org.evosuite.Properties;
 import org.evosuite.ga.Chromosome;
 import org.evosuite.ga.ChromosomeFactory;
 import org.evosuite.ga.ConstructionFailedException;
-import org.evosuite.ga.FitnessFunction;
 import org.evosuite.utils.Randomness;
 
 
@@ -35,7 +34,7 @@ import org.evosuite.utils.Randomness;
  *
  * @author Gordon Fraser
  */
-public class StandardGA<T extends Chromosome> extends GeneticAlgorithm<T> {
+public class StandardGA<T extends Chromosome<T>> extends GeneticAlgorithm<T> {
 
 	private static final long serialVersionUID = 5043503777821916152L;
 	
@@ -51,23 +50,20 @@ public class StandardGA<T extends Chromosome> extends GeneticAlgorithm<T> {
 	}
 
 	/** {@inheritDoc} */
-	@SuppressWarnings("unchecked")
 	@Override
 	protected void evolve() {
 
-		List<T> newGeneration = new ArrayList<T>();
-
 		// Elitism
-		newGeneration.addAll(elitism());
-		
+		List<T> newGeneration = new ArrayList<>(elitism());
+
 		// new_generation.size() < population_size
 		while (!isNextPopulationFull(newGeneration)) {
 
 			T parent1 = selectionFunction.select(population);
 			T parent2 = selectionFunction.select(population);
 
-			T offspring1 = (T)parent1.clone();
-			T offspring2 = (T)parent2.clone();
+			T offspring1 = parent1.clone();
+			T offspring2 = parent2.clone();
 
 			try {
 				if (Randomness.nextDouble() <= Properties.CROSSOVER_RATE) {

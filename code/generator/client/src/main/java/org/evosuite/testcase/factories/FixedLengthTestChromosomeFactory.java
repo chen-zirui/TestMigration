@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -43,21 +43,24 @@ public class FixedLengthTestChromosomeFactory implements
 	}
 
 	/**
-	 * Create a random individual
-	 * 
-	 * @param size
+	 * Creates and returns a random test case. Note that the {@code size} argument only serves as a
+	 * hint for this method; it will try to generate a test case of <em>at least</em> the given
+	 * {@code size}, but it may fail to do so, in which case a test case with fewer statements
+	 * is returned.
+	 *
+	 * @param size the minimum intended size of the test case
+	 * @return a random test case
 	 */
 	private TestCase getRandomTestCase(int size) {
 		TestCase test = new DefaultTestCase();
-		int num = 0;
 		TestFactory testFactory = TestFactory.getInstance();
 
 		// Then add random stuff
-		while (test.size() < size && num < Properties.MAX_ATTEMPTS) {
-			testFactory.insertRandomStatement(test, test.size());
-			num++;
+		for (int num = 0; test.size() < size && num < Properties.MAX_ATTEMPTS; num++) {
+			testFactory.insertRandomStatement(test, test.size() - 1);
 		}
-		//logger.debug("Randomized test case:" + test.toCode());
+
+		logger.info("Randomized test case:" + test.toCode());
 
 		return test;
 	}

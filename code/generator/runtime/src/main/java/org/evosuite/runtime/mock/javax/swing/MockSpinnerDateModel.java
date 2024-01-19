@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -31,6 +31,8 @@ import java.util.Date;
  * Created by gordon on 01/02/2016.
  */
 public class MockSpinnerDateModel extends SpinnerDateModel implements OverrideMock {
+
+    private static final long serialVersionUID = -7236911608512230647L;
 
     public MockSpinnerDateModel(Date value, Comparable start, Comparable end, int calendarField) {
         super(value, start, end, calendarField);

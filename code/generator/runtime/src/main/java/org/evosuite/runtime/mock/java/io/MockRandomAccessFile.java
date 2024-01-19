@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -21,7 +21,6 @@ package org.evosuite.runtime.mock.java.io;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
@@ -32,7 +31,6 @@ import org.evosuite.runtime.mock.MockFramework;
 import org.evosuite.runtime.mock.OverrideMock;
 import org.evosuite.runtime.mock.java.lang.MockIllegalArgumentException;
 import org.evosuite.runtime.mock.java.lang.MockNullPointerException;
-import org.evosuite.runtime.vfs.VFile;
 import org.evosuite.runtime.vfs.VirtualFileSystem;
 
 public class MockRandomAccessFile extends RandomAccessFile implements LeakingResource,  OverrideMock{
@@ -150,7 +148,7 @@ public class MockRandomAccessFile extends RandomAccessFile implements LeakingRes
 		writeBytes(new byte[]{(byte)b},0,1);
 	}
 
-	private void writeBytes(byte b[], int off, int len) throws IOException{
+	private void writeBytes(byte[] b, int off, int len) throws IOException{
 		
 		if(closed || !canWrite){
 			throw new IOException();
@@ -214,7 +212,7 @@ public class MockRandomAccessFile extends RandomAccessFile implements LeakingRes
 	
 	// ---------   override methods ----------------
 	
-	private  int readBytes(byte b[], int off, int len) throws IOException{
+	private  int readBytes(byte[] b, int off, int len) throws IOException{
 		int counter = 0;
 		for(int i=0; i<len; i++){
 			int v = read();
@@ -231,7 +229,7 @@ public class MockRandomAccessFile extends RandomAccessFile implements LeakingRes
 	}
 	
 	@Override
-	public int read(byte b[], int off, int len) throws IOException {
+	public int read(byte[] b, int off, int len) throws IOException {
 		if(!MockFramework.isEnabled()){
 			return super.read(b, off, len);
 		}
@@ -240,7 +238,7 @@ public class MockRandomAccessFile extends RandomAccessFile implements LeakingRes
 	}
 
 	@Override
-	public int read(byte b[]) throws IOException {
+	public int read(byte[] b) throws IOException {
 		if(!MockFramework.isEnabled()){
 			return super.read(b);
 		}
@@ -258,7 +256,7 @@ public class MockRandomAccessFile extends RandomAccessFile implements LeakingRes
 	}
 
 	@Override
-	public void write(byte b[]) throws IOException {
+	public void write(byte[] b) throws IOException {
 		if(!MockFramework.isEnabled()){
 			super.write(b);
 			return;
@@ -268,10 +266,10 @@ public class MockRandomAccessFile extends RandomAccessFile implements LeakingRes
 	}
 
 	@Override
-	public void write(byte b[], int off, int len) throws IOException {
+	public void write(byte[] b, int off, int len) throws IOException {
 		if(!MockFramework.isEnabled()){
 			super.write(b, off, len);
-			return ;
+			return;
 		}
 
 		writeBytes(b, off, len);

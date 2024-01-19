@@ -1,5 +1,5 @@
-/**
- * Copyright (C) 2010-2016 Gordon Fraser, Andrea Arcuri and EvoSuite
+/*
+ * Copyright (C) 2010-2018 Gordon Fraser, Andrea Arcuri and EvoSuite
  * contributors
  *
  * This file is part of EvoSuite.
@@ -129,10 +129,14 @@ public class ExceptionCoverageHelper {
             return true;
         }
 
-        // This is to cover cases not handled by CodeUnderTestException, or if bug in EvoSuite itself
-        if (t.getStackTrace() != null && t.getStackTrace().length > 0 
-                && t.getStackTrace()[0].getClassName().startsWith(PackageInfo.getEvoSuitePackage()+".testcase")) {
-            return true;
+        if (t.getStackTrace() != null && t.getStackTrace().length > 0 && t.getStackTrace()[0] != null) {
+            // This is to cover cases not handled by CodeUnderTestException, or if bug in EvoSuite itself
+            if(t.getStackTrace()[0].getClassName().startsWith(PackageInfo.getEvoSuitePackage()+".testcase"))
+                return true;
+
+            // Enum valueOf exceptions are not interesting, they just result from invalid strings
+            if(t.getStackTrace()[0].getClassName().startsWith(Enum.class.getCanonicalName()) && t.getStackTrace()[0].getMethodName().startsWith("valueOf"))
+                return true;
         }
 
         return false;
