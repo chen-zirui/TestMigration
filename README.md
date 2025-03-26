@@ -1,9 +1,9 @@
-We will provide a docker image soon.
+
 
 
 ## VESTA (Vulnerability Exploit-based Software Testing Auto-Generator)
 
-
+Please visit https://zenodo.org/records/15088769 to get our Docker image.
 
 #### 1. Overview
 
